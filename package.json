@@ -43,7 +43,7 @@
         "eslint": "^7.0.0",
         "eslint-plugin-react-hooks": "^4.0.2",
         "eslint-plugin-sort-imports-es6-autofix": "^0.5.0",
-        "fp-ts": "^2.6.1",
+        "fp-ts": "^2.6.6",
         "fp-ts-rxjs": "^0.6.9",
         "html-webpack-plugin": "^4.3.0",
         "io-ts": "^2.2.6",
@@ -61,7 +61,7 @@
         "webpack-dev-server": "^3.11.0"
     },
     "peerDependencies": {
-        "fp-ts": "^2.6.1",
+        "fp-ts": "^2.6.6",
         "io-ts": "^2.2.6",
         "react": "^16.13.1",
         "react-dom": "^16.13.1",
