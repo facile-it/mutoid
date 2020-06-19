@@ -1,0 +1,90 @@
+{
+    "scripts": {
+        "dev-server": "webpack-dev-server --mode development --open --hot",
+        "lint": "eslint . --ext .ts,.tsx",
+        "lint-fix": "eslint --fix",
+        "prettier": "prettier --check \"{src,test,dtslint,example}/**/*.{ts,tsx}\"",
+        "prettier-fix": "prettier --write \"./{src,test,dtslint,example}/**/*.ts\"",
+        "pretest": "yarn lint && yarn prettier",
+        "test": "yarn test-unit",
+        "test-unit": "jest",
+        "test-type": "dtslint dtslint",
+        "prebuild": "rm -rf lib && mkdir lib",
+        "build": "tsc",
+        "postbuild": "prettier --write \"./lib/**/*.ts\"",
+        "prepublish": "yarn build"
+    },
+    "name": "mutoid",
+    "version": "0.0.4",
+    "description": "Reactive library for state management, data fetching, caching",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/facile-it/mutoid.git"
+    },
+    "author": "Iacopo <siuvdlec@gmail.com>",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/facile-it/mutoid/issues"
+    },
+    "homepage": "https://github.com/facile-it/mutoid",
+    "files": [
+        "lib"
+    ],
+    "main": "lib/index.js",
+    "typings": "lib/index.d.ts",
+    "dependencies": {},
+    "devDependencies": {
+        "@types/jest": "^26.0.0",
+        "@types/react": "^16.9.35",
+        "@types/react-dom": "^16.9.8",
+        "@typescript-eslint/eslint-plugin": "^2.32.0",
+        "@typescript-eslint/parser": "^2.32.0",
+        "dtslint": "github:gcanti/dtslint",
+        "eslint": "^7.0.0",
+        "eslint-plugin-react-hooks": "^4.0.2",
+        "eslint-plugin-sort-imports-es6-autofix": "^0.5.0",
+        "fp-ts": "^2.6.6",
+        "fp-ts-rxjs": "^0.6.9",
+        "html-webpack-plugin": "^4.3.0",
+        "io-ts": "^2.2.6",
+        "jest": "^26.0.1",
+        "prettier": "^2.0.5",
+        "react": "^16.13.1",
+        "react-dom": "^16.13.1",
+        "rxjs": "^6.5.5",
+        "source-map-loader": "^0.2.4",
+        "ts-jest": "^26.1.0",
+        "ts-loader": "^7.0.4",
+        "typescript": "^3.9.5",
+        "webpack": "^4.43.0",
+        "webpack-cli": "^3.3.11",
+        "webpack-dev-server": "^3.11.0"
+    },
+    "peerDependencies": {
+        "fp-ts": "^2.6.6",
+        "io-ts": "^2.2.6",
+        "react": "^16.13.1",
+        "react-dom": "^16.13.1",
+        "rxjs": "^6.5.5"
+    },
+    "tags": [
+        "typescript",
+        "reactive",
+        "algebraic-data-types",
+        "reactivex",
+        "rxjs",
+        "fp-ts",
+        "io-ts",
+        "react"
+    ],
+    "keywords": [
+        "typescript",
+        "reactive",
+        "algebraic-data-types",
+        "reactivex",
+        "rxjs",
+        "fp-ts",
+        "io-ts",
+        "react"
+    ]
+}

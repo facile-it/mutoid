@@ -1,0 +1,5 @@
+node_modules
+lib
+.idea
+coverage
+yarn-error.log
