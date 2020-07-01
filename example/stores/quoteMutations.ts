@@ -1,22 +1,22 @@
-import * as MH from '../../src/http'
 import { Observable, of } from 'rxjs'
-import { fetchQuote, fetchQuoteWithDelay, fetchQuoteWithParams } from '../resources/quoteResource'
 import { map } from 'rxjs/operators'
-import { quoteState } from './quoteStore'
+import * as MH from '../../src/http'
+import { fetchQuote, fetchQuoteWithDelay, fetchQuoteWithParams } from '../resources/quoteResource'
+import { QuoteState } from './quoteStore'
 
-export const fetchQuoteMutation = MH.resourceFetcherToMutation(fetchQuote, (o, s: quoteState) =>
+export const fetchQuoteMutation = MH.resourceFetcherToMutation(fetchQuote, (o, s: QuoteState) =>
     o.pipe(map(c => ({ ...s, quote: c })))
 )
 
-export const fetchQuoteMutationWithParams = MH.resourceFetcherToMutation(fetchQuoteWithParams, (o, s: quoteState) =>
+export const fetchQuoteMutationWithParams = MH.resourceFetcherToMutation(fetchQuoteWithParams, (o, s: QuoteState) =>
     o.pipe(map(c => ({ ...s, quote: c })))
 )
 
-export const fetchQuoteMutationWithDelay = MH.resourceFetcherToMutation(fetchQuoteWithDelay, (o, s: quoteState) =>
+export const fetchQuoteMutationWithDelay = MH.resourceFetcherToMutation(fetchQuoteWithDelay, (o, s: QuoteState) =>
     o.pipe(map(c => ({ ...s, quote: c })))
 )
 
-export const resetQuoteMutation = () => (s: quoteState): Observable<quoteState> => {
+export const resetQuoteMutation = () => (s: QuoteState): Observable<QuoteState> => {
     return of({
         ...s,
         quote: MH.resourceInit,

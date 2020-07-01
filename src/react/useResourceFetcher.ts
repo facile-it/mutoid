@@ -1,15 +1,16 @@
-import { Observable } from 'rxjs'
-import { ResourceInit, resourceInit } from '../http'
-import { take, takeUntil } from 'rxjs/operators'
 import { useCallback, useState } from 'react'
+import { Observable } from 'rxjs'
+import { take, takeUntil } from 'rxjs/operators'
+import { ResourceInit, resourceInit } from '../http'
 
 export const useResourceFetcher = <
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     AR extends (...p: any) => Observable<any>,
     R = ReturnType<AR> extends Observable<infer S> ? S : never,
-    P extends Array<any> = Parameters<AR>
+    P extends Array<unknown> = Parameters<AR>
 >(
     ajaxToResource: AR,
-    notifierTakeUntil?: Observable<any>,
+    notifierTakeUntil?: Observable<unknown>,
     iniState: R | ResourceInit = resourceInit
 ): [R | ResourceInit, (...p: P) => void] => {
     const [value, setValue] = useState<R | ResourceInit>(iniState)

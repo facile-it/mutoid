@@ -1,9 +1,13 @@
 import * as C from 'fp-ts/lib/Console'
-import * as MS from '../src/state'
+import * as T from 'fp-ts/lib/Task'
+import { identity } from 'fp-ts/lib/function'
+import { pipe } from 'fp-ts/lib/pipeable'
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
-import * as T from 'fp-ts/lib/Task'
 import { Subject } from 'rxjs'
+import { resourceFold } from '../src/http'
+import { useMutation, useResourceFetcher, useSelector } from '../src/react'
+import * as MS from '../src/state'
 import { fetchQuote, fetchQuoteWithDelay, fetchQuoteWithParams, quoteResource } from './resources/quoteResource'
 import {
     fetchQuoteMutation,
@@ -11,13 +15,8 @@ import {
     fetchQuoteMutationWithParams,
     resetQuoteMutation,
 } from './stores/quoteMutations'
-import { pipe } from 'fp-ts/lib/pipeable'
 import { quoteStore } from './stores/quoteStore'
-import { resourceFold } from '../src/http'
-import { sessionStore } from './stores/sessionStore'
-import { useMutation, useResourceFetcher, useSelector } from '../src/react'
-
-const Name: React.FC = () => <>{useSelector(sessionStore, s => s.userName)}</>
+import { sessionStore, parseEnvMutation } from './stores/sessionStore'
 
 const renderQuote = (quote: quoteResource): React.ReactChild => {
     return resourceFold(quote)({
@@ -46,16 +45,7 @@ const QuoteFromState: React.FC = () => {
     React.useEffect(() => {
         pipe(
             MS.toTask(quoteStore),
-            T.chain(qs =>
-                pipe(
-                    MS.toTask(sessionStore),
-                    T.map((ss): [typeof qs, typeof ss] => [qs, ss])
-                )
-            ),
-            T.map(
-                ([qs, ss]) =>
-                    `Ciao ${ss.userName}, app loaded. Lo stato delle quote in questo momento è: ${qs.quote.tag}`
-            ),
+            T.map(qs => `App loaded. Lo stato delle quote in questo momento è: ${qs.quote.tag}`),
             T.chainIOK(C.log)
         )()
     }, [])
@@ -203,11 +193,9 @@ const QuoteWithHookWithDelay: React.FC = () => {
     )
 }
 
-ReactDOM.render(
+const App: React.FC<{ name: string }> = props => (
     <>
-        <h1>
-            Hello <Name />
-        </h1>
+        <h1>Hello {props.name}</h1>
         <div>
             <QuoteFromState />
         </div>
@@ -226,6 +214,34 @@ ReactDOM.render(
         <div>
             <QuoteWithHookWithDelay />
         </div>
-    </>,
+    </>
+)
+
+declare const ENV: string | undefined
+declare const APIKEY: string | undefined
+declare const USERNAME: string | undefined
+
+const AppInitializer: React.FC = () => {
+    const sessionState = useSelector(sessionStore, identity)
+    const parseEnv = useMutation(sessionStore, parseEnvMutation)
+
+    React.useEffect(() => {
+        parseEnv(ENV, APIKEY, USERNAME)
+    }, [parseEnv])
+
+    switch (sessionState.status) {
+        case 'init':
+            return <h1>loading ...</h1>
+        case 'error':
+            return <h1>Error {sessionState.message}</h1>
+        case 'done':
+            return <App name={sessionState.userName} />
+    }
+}
+
+ReactDOM.render(
+    <React.StrictMode>
+        <AppInitializer />
+    </React.StrictMode>,
     document.getElementById('root')
 )

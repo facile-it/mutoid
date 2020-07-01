@@ -1,8 +1,9 @@
-const path = require('path')
-const webpack = require('webpack')
+/* eslint-disable @typescript-eslint/no-var-requires */
 const HtmlWebpackPlugin = require('html-webpack-plugin')
+const webpack = require('webpack')
+const path = require('path')
 
-module.exports = (env, argv) => {
+module.exports = () => {
     const config = {
         entry: './example/index.tsx',
         devtool: false,
@@ -16,7 +17,7 @@ module.exports = (env, argv) => {
         },
         output: {
             path: path.join(__dirname, '/dist'),
-            filename: argv.mode === 'production' ? 'bundle.[hash].js' : 'bundle.js',
+            filename: 'bundle.js',
         },
         module: {
             rules: [
@@ -31,6 +32,11 @@ module.exports = (env, argv) => {
                 template: './example/index.html',
             }),
             new webpack.SourceMapDevToolPlugin(),
+            new webpack.DefinePlugin({
+                ENV: JSON.stringify('dev'),
+                APIKEY: JSON.stringify('xxx'),
+                USERNAME: JSON.stringify(process.env.USERNAME),
+            }),
         ],
     }
 

@@ -1,10 +1,10 @@
+import * as t from 'io-ts'
+import { of } from 'rxjs'
+import { AjaxError, AjaxResponse } from 'rxjs/ajax'
+import { map } from 'rxjs/operators'
+import { TestScheduler } from 'rxjs/testing'
 import * as MH from '../src/http'
 import * as MS from '../src/state/index'
-import * as t from 'io-ts'
-import { AjaxError, AjaxResponse } from 'rxjs/ajax'
-import { TestScheduler } from 'rxjs/testing'
-import { map } from 'rxjs/operators'
-import { of } from 'rxjs'
 
 describe('http', () => {
     const testSchedulerBuilder = () =>
@@ -214,7 +214,7 @@ describe('http', () => {
         type nameResource = MH.Resource<typeof decoders>
 
         const state: { name: nameResource } = { name: MH.resourceInit }
-        const store = MS.of(state)
+        const store = MS.of(() => ({ initState: state, name: 'test' }))
 
         const ajax = of({
             status: 200,
@@ -225,7 +225,7 @@ describe('http', () => {
 
         const mutation = MH.resourceFetcherToMutation(
             () => MH.ajaxToResource(ajax, decoders),
-            (o, _s: typeof state) => o.pipe(map(n => ({ name: n })))
+            (o, _S: typeof state) => o.pipe(map(n => ({ name: n })))
         )
 
         const task = MS.toTask(store)

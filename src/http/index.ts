@@ -1,28 +1,28 @@
 import * as E from 'fp-ts/lib/Either'
+import { pipe } from 'fp-ts/lib/pipeable'
 import * as t from 'io-ts'
+import { Observable, concat, of } from 'rxjs'
 import { AjaxError, AjaxResponse } from 'rxjs/ajax'
 import { AjaxErrorNames } from 'rxjs/internal/observable/dom/AjaxObservable'
-import { Observable, concat, of } from 'rxjs'
-import { StatusCode } from './status'
 import { catchError, map, switchMap, take } from 'rxjs/operators'
-import { pipe } from 'fp-ts/lib/pipeable'
+import { StatusCode } from './status'
 
-export type ResourceInit = {
+export interface ResourceInit {
     tag: 'init'
 }
 
-export type ResourceSubmitted = {
+export interface ResourceSubmitted {
     tag: 'submitted'
 }
 
-export type ResourceDone<S, P> = {
+export interface ResourceDone<S, P> {
     tag: 'done'
     status: S
     payload: P
 }
 
 // T extends string, D, AE extends { type: T, detail: D } = never
-export type ResourceFail<AE = unknown> = {
+export interface ResourceFail<AE = unknown> {
     tag: 'fail'
     error:
         | {
@@ -76,20 +76,30 @@ type ResourceDecoders = { [k in StatusCode]?: t.Decode<unknown, unknown> }
 type ajaxToResourceSubject<AE = unknown> = AjaxResponse | ResourceFail<AE>
 export type ajaxSubject<AE = unknown> = Observable<ajaxToResourceSubject<AE>>
 
-export const ajaxToResource = <DS extends ResourceDecoders, AE>(
-    ajax$: ajaxSubject<AE>,
-    decoders: DS
-): Observable<decodersDictToResourceDone<DS> | ResourceFail<AE> | ResourceSubmitted> =>
-    concat(
-        of(resourceSubmitted),
-        ajax$.pipe(
-            map(applyDecoder(decoders)),
-            catchError(
-                (e): Observable<decodersDictToResourceDone<DS> | ResourceFail<AE>> =>
-                    of(isAjaxError(e) ? applyDecoder(decoders)(e) : resourceFail({ type: 'unknownError', detail: e }))
-            )
-        )
-    ).pipe(take(2))
+// ---
+
+const dict: { [k in AjaxErrorNames]: true } = {
+    AjaxError: true,
+    AjaxTimeoutError: true,
+}
+
+const isResourceFail = <AE>(r: any | ResourceFail<AE>): r is ResourceFail<AE> => r.tag === 'fail'
+
+const isAjaxError = (e: any): e is AjaxError => Object.prototype.hasOwnProperty.call(dict, e.name)
+
+interface DecodeError {
+    key: string
+    actual?: unknown
+    requestType: string
+}
+type decodeErrors = Array<DecodeError>
+
+const formatDecodeError = (es: t.Errors): decodeErrors =>
+    es.reduce(
+        (c, e) =>
+            c.concat(e.context.map((b): DecodeError => ({ key: b.key, actual: b.actual, requestType: b.type.name }))),
+        [] as decodeErrors
+    )
 
 const applyDecoder = <DS extends ResourceDecoders>(decoders: DS) => <AE>(
     response: AjaxResponse | AjaxError | ResourceFail<AE>
@@ -120,14 +130,22 @@ const applyDecoder = <DS extends ResourceDecoders>(decoders: DS) => <AE>(
     })
 }
 
-const dict: { [k in AjaxErrorNames]: true } = {
-    AjaxError: true,
-    AjaxTimeoutError: true,
-}
+// ---
 
-const isResourceFail = <AE>(r: any | ResourceFail<AE>): r is ResourceFail<AE> => r.tag === 'fail'
-
-const isAjaxError = (e: any): e is AjaxError => dict.hasOwnProperty(e.name)
+export const ajaxToResource = <DS extends ResourceDecoders, AE>(
+    ajax$: ajaxSubject<AE>,
+    decoders: DS
+): Observable<decodersDictToResourceDone<DS> | ResourceFail<AE> | ResourceSubmitted> =>
+    concat(
+        of(resourceSubmitted),
+        ajax$.pipe(
+            map(applyDecoder(decoders)),
+            catchError(
+                (e): Observable<decodersDictToResourceDone<DS> | ResourceFail<AE>> =>
+                    of(isAjaxError(e) ? applyDecoder(decoders)(e) : resourceFail({ type: 'unknownError', detail: e }))
+            )
+        )
+    ).pipe(take(2))
 
 export const resourceFetcherToMutation = <
     AJ extends (...args: any) => Observable<R>,
@@ -157,13 +175,3 @@ export const resourceFold = <DS extends ResourceDecoders, AE>(resource: Resource
             return dodo.onfail(resource)
     }
 }
-
-type decodeError = { key: string; actual?: unknown; requestType: string }
-type decodeErrors = Array<decodeError>
-
-const formatDecodeError = (es: t.Errors): decodeErrors =>
-    es.reduce(
-        (c, e) =>
-            c.concat(e.context.map((b): decodeError => ({ key: b.key, actual: b.actual, requestType: b.type.name }))),
-        [] as decodeErrors
-    )

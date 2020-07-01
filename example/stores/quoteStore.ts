@@ -1,13 +1,13 @@
+import { resourceInit } from '../../src/http'
 import * as MS from '../../src/state'
 import { quoteResource } from '../resources/quoteResource'
-import { resourceInit } from '../../src/http'
 
-export interface quoteState {
+export interface QuoteState {
     quote: quoteResource
 }
 
-const quoteState: quoteState = {
+const quoteState: QuoteState = {
     quote: resourceInit,
 }
 
-export const quoteStore = MS.of(quoteState)
+export const quoteStore = MS.of(() => ({ name: 'quote', initState: quoteState }))
