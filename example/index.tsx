@@ -193,29 +193,38 @@ const QuoteWithHookWithDelay: React.FC = () => {
     )
 }
 
-const App: React.FC<{ name: string }> = props => (
-    <>
-        <h1>Hello {props.name}</h1>
-        <div>
-            <QuoteFromState />
-        </div>
-        <div>
-            <QuoteFromStateWithParams />
-        </div>
-        <div>
-            <QuoteFromStateWithDelay />
-        </div>
-        <div>
-            <QuoteWithHook />
-        </div>
-        <div>
-            <QuoteWithHookWithParams />
-        </div>
-        <div>
-            <QuoteWithHookWithDelay />
-        </div>
-    </>
-)
+const App: React.FC<{ name: string }> = props => {
+    React.useEffect(() => {
+        // eslint-disable-next-line no-console
+        const sub = quoteStore().notifier$.subscribe(console.log)
+
+        return () => sub.unsubscribe()
+    }, [])
+
+    return (
+        <>
+            <h1>Hello {props.name}</h1>
+            <div>
+                <QuoteFromState />
+            </div>
+            <div>
+                <QuoteFromStateWithParams />
+            </div>
+            <div>
+                <QuoteFromStateWithDelay />
+            </div>
+            <div>
+                <QuoteWithHook />
+            </div>
+            <div>
+                <QuoteWithHookWithParams />
+            </div>
+            <div>
+                <QuoteWithHookWithDelay />
+            </div>
+        </>
+    )
+}
 
 declare const ENV: string | undefined
 declare const APIKEY: string | undefined
@@ -228,6 +237,13 @@ const AppInitializer: React.FC = () => {
     React.useEffect(() => {
         parseEnv(ENV, APIKEY, USERNAME)
     }, [parseEnv])
+
+    React.useEffect(() => {
+        // eslint-disable-next-line no-console
+        const sub = sessionStore().notifier$.subscribe(console.log)
+
+        return () => sub.unsubscribe()
+    }, [])
 
     switch (sessionState.status) {
         case 'init':

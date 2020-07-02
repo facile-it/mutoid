@@ -7,6 +7,8 @@ import { AjaxErrorNames } from 'rxjs/internal/observable/dom/AjaxObservable'
 import { catchError, map, switchMap, take } from 'rxjs/operators'
 import { StatusCode } from './status'
 
+// type
+
 export interface ResourceInit {
     tag: 'init'
 }
@@ -76,12 +78,12 @@ type ResourceDecoders = { [k in StatusCode]?: t.Decode<unknown, unknown> }
 type ajaxToResourceSubject<AE = unknown> = AjaxResponse | ResourceFail<AE>
 export type ajaxSubject<AE = unknown> = Observable<ajaxToResourceSubject<AE>>
 
-// ---
-
 const dict: { [k in AjaxErrorNames]: true } = {
     AjaxError: true,
     AjaxTimeoutError: true,
 }
+
+// utility
 
 const isResourceFail = <AE>(r: any | ResourceFail<AE>): r is ResourceFail<AE> => r.tag === 'fail'
 
@@ -130,7 +132,7 @@ const applyDecoder = <DS extends ResourceDecoders>(decoders: DS) => <AE>(
     })
 }
 
-// ---
+// combinator
 
 export const ajaxToResource = <DS extends ResourceDecoders, AE>(
     ajax$: ajaxSubject<AE>,
@@ -157,6 +159,8 @@ export const resourceFetcherToMutationEffect = <
     aj: AJ,
     apOperators: (i: Observable<R>, s: SS) => Observable<S>
 ) => (...i: I) => (s: SS): Observable<S> => aj(...i).pipe(switchMap(r => apOperators(of(r), s)))
+
+// destructors
 
 export const resourceFold = <DS extends ResourceDecoders, AE>(resource: Resource<DS, AE>) => <R>(dodo: {
     onInit: () => R

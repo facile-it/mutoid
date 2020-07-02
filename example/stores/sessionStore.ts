@@ -40,7 +40,7 @@ export type SessionState =
 
 // constructor
 
-export const sessionStore = MS.ctor<SessionState>(() => ({ name: 'session', initState: { status: 'init' } }))
+export const sessionStore = MS.ctor<'session', SessionState>(() => ({ name: 'session', initState: { status: 'init' } }))
 
 // mutation
 

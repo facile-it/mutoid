@@ -30,7 +30,7 @@ describe('state', () => {
     })
 
     test('mutationRunner', async () => {
-        const store = MS.ctor(() => ({ initState: { name: 'mutoid', age: 15 }, name: 'test' }))
+        const store = MS.ctor(() => ({ initState: { name: 'mutoid', age: 15 }, name: 'test' as const }))
 
         const task = MS.toTask(store)
 

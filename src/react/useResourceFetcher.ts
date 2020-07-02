@@ -4,7 +4,6 @@ import { take, takeUntil } from 'rxjs/operators'
 import { ResourceInit, resourceInit } from '../http'
 
 export const useResourceFetcher = <
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     AR extends (...p: any) => Observable<any>,
     R = ReturnType<AR> extends Observable<infer S> ? S : never,
     P extends Array<unknown> = Parameters<AR>
