@@ -10,12 +10,12 @@ import { useMutation, useResourceFetcher, useSelector } from '../src/react'
 import * as MS from '../src/state'
 import { fetchQuote, fetchQuoteWithDelay, fetchQuoteWithParams, quoteResource } from './resources/quoteResource'
 import {
+    quoteStore,
     fetchQuoteMutation,
     fetchQuoteMutationWithDelay,
     fetchQuoteMutationWithParams,
     resetQuoteMutation,
-} from './stores/quoteMutations'
-import { quoteStore } from './stores/quoteStore'
+} from './stores/quoteStore'
 import { sessionStore, parseEnvMutation } from './stores/sessionStore'
 
 const renderQuote = (quote: quoteResource): React.ReactChild => {

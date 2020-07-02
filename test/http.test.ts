@@ -1,5 +1,5 @@
 import * as t from 'io-ts'
-import { of } from 'rxjs'
+import { of, Observable } from 'rxjs'
 import { AjaxError, AjaxResponse } from 'rxjs/ajax'
 import { map } from 'rxjs/operators'
 import { TestScheduler } from 'rxjs/testing'
@@ -214,7 +214,7 @@ describe('http', () => {
         type nameResource = MH.Resource<typeof decoders>
 
         const state: { name: nameResource } = { name: MH.resourceInit }
-        const store = MS.of(() => ({ initState: state, name: 'test' }))
+        const store = MS.ctor(() => ({ initState: state, name: 'test' }))
 
         const ajax = of({
             status: 200,
@@ -223,10 +223,14 @@ describe('http', () => {
             },
         } as AjaxResponse)
 
-        const mutation = MH.resourceFetcherToMutation(
-            () => MH.ajaxToResource(ajax, decoders),
-            (o, _S: typeof state) => o.pipe(map(n => ({ name: n })))
-        )
+        const mutation = () =>
+            MS.ctorMutation(
+                'test' as const,
+                MH.resourceFetcherToMutationEffect(
+                    () => MH.ajaxToResource(ajax, decoders),
+                    (o, _S: typeof state): Observable<typeof state> => o.pipe(map(n => ({ name: n })))
+                )
+            )
 
         const task = MS.toTask(store)
 

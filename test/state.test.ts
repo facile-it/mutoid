@@ -5,7 +5,7 @@ import * as MS from '../src/state/index'
 describe('state', () => {
     test('create', () => {
         const state = { name: 'mutoid' }
-        const store = MS.of(() => ({ initState: state, name: 'test' }))
+        const store = MS.ctor(() => ({ initState: state, name: 'test' }))
 
         expect(store().initState).toStrictEqual(state)
 
@@ -16,7 +16,7 @@ describe('state', () => {
     })
 
     test('toTask', async () => {
-        const store = MS.of(() => ({ name: 'test', initState: { name: 'mutoid' } }))
+        const store = MS.ctor(() => ({ name: 'test', initState: { name: 'mutoid' } }))
 
         const task = MS.toTask(store)
 
@@ -30,15 +30,17 @@ describe('state', () => {
     })
 
     test('mutationRunner', async () => {
-        const store = MS.of(() => ({ initState: { name: 'mutoid', age: 15 }, name: 'test' }))
+        const store = MS.ctor(() => ({ initState: { name: 'mutoid', age: 15 }, name: 'test' }))
 
         const task = MS.toTask(store)
 
-        MS.mutationRunner(store, () => s =>
-            of({
-                ...s,
-                age: 16,
-            })
+        MS.mutationRunner(store, () =>
+            MS.ctorMutation('test_mutation', () => s =>
+                of({
+                    ...s,
+                    age: 16,
+                })
+            )
         )()
 
         const stateUpdatedHey = await task()
@@ -47,16 +49,18 @@ describe('state', () => {
     })
 
     test('mutationRunner with paylod', async () => {
-        const store = MS.of(() => ({ initState: { name: 'mutoid', age: 15 }, name: 'state' }))
+        const store = MS.ctor(() => ({ initState: { name: 'mutoid', age: 15 }, name: 'state' }))
 
         const task = MS.toTask(store)
 
-        const mutationRunner = MS.mutationRunner(store, (name: string, age: number) => s =>
-            of({
-                ...s,
-                name: name,
-                age: age,
-            })
+        const mutationRunner = MS.mutationRunner(store, () =>
+            MS.ctorMutation('test_mutation', (name: string, age: number) => s =>
+                of({
+                    ...s,
+                    name: name,
+                    age: age,
+                })
+            )
         )
 
         mutationRunner('hey', 15)
@@ -68,7 +72,7 @@ describe('state', () => {
     })
 
     test('mutationRunner with paylod takeuntil', () => {
-        const store = MS.of(() => ({ initState: { name: 'mutoid', age: 15 }, name: 'test' }))
+        const store = MS.ctor(() => ({ initState: { name: 'mutoid', age: 15 }, name: 'test' }))
 
         const testScheduler = new TestScheduler((actual, expected) => {
             expect(actual).toStrictEqual(expected)
@@ -77,27 +81,31 @@ describe('state', () => {
         testScheduler.run(({ cold, expectObservable }) => {
             MS.mutationRunner(
                 store,
-                (name: string, age: number) => s =>
-                    cold('-a', {
-                        a: {
-                            ...s,
-                            name: name,
-                            age: age,
-                        },
-                    }),
+                () =>
+                    MS.ctorMutation('test_mutation_1', (name: string, age: number) => s =>
+                        cold('-a', {
+                            a: {
+                                ...s,
+                                name: name,
+                                age: age,
+                            },
+                        })
+                    ),
                 cold('--a', { a: 1 })
             )('hey', 15)
 
             MS.mutationRunner(
                 store,
-                (name: string, age: number) => s =>
-                    cold('---a', {
-                        a: {
-                            ...s,
-                            name: name,
-                            age: age,
-                        },
-                    }),
+                () =>
+                    MS.ctorMutation('test_muation_2', (name: string, age: number) => s =>
+                        cold('---a', {
+                            a: {
+                                ...s,
+                                name: name,
+                                age: age,
+                            },
+                        })
+                    ),
                 cold('--a', { a: 1 })
             )('ho', 16)
 

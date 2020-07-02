@@ -2,7 +2,9 @@ import memoize from 'fast-memoize'
 import * as T from 'fp-ts/lib/Task'
 import { Lazy } from 'fp-ts/lib/function'
 import { BehaviorSubject, Observable, Subscription } from 'rxjs'
-import { switchMap, take, takeUntil } from 'rxjs/operators'
+import { switchMap, take, takeUntil, takeWhile } from 'rxjs/operators'
+
+// type
 
 export interface Store<T> {
     readonly name: string
@@ -10,13 +12,17 @@ export interface Store<T> {
     readonly initState: T
 }
 
-export type Mutation<P extends Array<unknown> = Array<unknown>, S = unknown> = (...p: P) => (state: S) => Observable<S>
-//export type ExtractParameters<M extends (...args: any) => (state: any) => Observable<any>> = Parameters<M>
-//export type ExtractState<M extends (...args: any) => (state: any) => Observable<any>> = Parameters<ReturnType<M>>[0]
+export type MutationEffect<P extends Array<unknown>, S, SS extends S> = (...p: P) => (state: SS) => Observable<S>
 
-export const test = memoize(() => 1)
+export interface Mutation<N, P extends Array<unknown>, S, SS extends S> {
+    name: N
+    effect: MutationEffect<P, S, SS>
+    predicate?: (state: S) => state is SS
+}
 
-export const of = <T>(init: Lazy<{ name: string; initState: T }>): Lazy<Store<T>> => {
+// constructor
+
+export const ctor = <T>(init: Lazy<{ name: string; initState: T }>): Lazy<Store<T>> => {
     return memoize(() => {
         const c = init()
 
@@ -28,18 +34,33 @@ export const of = <T>(init: Lazy<{ name: string; initState: T }>): Lazy<Store<T>
     })
 }
 
+export const ctorMutation = <N extends string, P extends Array<unknown>, S>(
+    name: N,
+    effect: MutationEffect<P, S, S>
+): Mutation<N, P, S, S> => ({ name, effect })
+
+export const ctorPartialMutation = <N extends string, P extends Array<unknown>, S, SS extends S>(
+    name: N,
+    effect: MutationEffect<P, S, SS>,
+    predicate: (s: S) => s is SS
+): Mutation<N, P, S, SS> => ({ name, effect, predicate })
+
+// runner
+
 export const toTask = <S>(store: Lazy<Store<S>>): T.Task<S> => () => store().state$.pipe(take(1)).toPromise()
 
-// mutator
-export const mutationRunner = <S, P extends Array<T>, T>(
+export const mutationRunner = <N, P extends Array<unknown>, S, SS extends S>(
     store: Lazy<Store<S>>,
-    mutation: Mutation<P, S>,
+    mutationL: Lazy<Mutation<N, P, S, SS>>,
     notifierTakeUntil?: Observable<unknown>
 ) => (...payload: P): Subscription => {
+    const mutation = mutationL()
+
     const sequence = store().state$.pipe(
         take(1),
+        takeWhile((s): s is SS => (mutation.predicate && mutation.predicate(s)) || true),
         switchMap(s => {
-            const pm = mutation(...payload)
+            const pm = mutation.effect(...payload)
 
             if (notifierTakeUntil) {
                 return pm(s).pipe(takeUntil(notifierTakeUntil))

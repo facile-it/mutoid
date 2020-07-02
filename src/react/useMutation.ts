@@ -1,16 +1,16 @@
 import { Lazy } from 'fp-ts/lib/function'
 import { useCallback } from 'react'
 import { Observable, Subscription } from 'rxjs'
-import * as Mutoid from '../state'
+import * as MS from '../state'
 
-export const useMutation = <S, P extends Array<unknown>>(
-    s: Lazy<Mutoid.Store<S>>,
-    mutation: Mutoid.Mutation<P, S>,
+export const useMutation = <N, P extends Array<unknown>, S, SS extends S>(
+    s: Lazy<MS.Store<S>>,
+    mutationL: Lazy<MS.Mutation<N, P, S, SS>>,
     notifierTakeUntil?: Observable<unknown>
 ): ((...payload: P) => Subscription) =>
     // can't eta reduction for warning eslint
-    useCallback((...payload: P) => Mutoid.mutationRunner(s, mutation, notifierTakeUntil)(...payload), [
+    useCallback((...payload: P) => MS.mutationRunner(s, mutationL, notifierTakeUntil)(...payload), [
         s,
-        mutation,
+        mutationL,
         notifierTakeUntil,
     ])

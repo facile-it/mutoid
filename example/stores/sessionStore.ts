@@ -38,33 +38,39 @@ export type SessionState =
           message: string
       }
 
-// cons
+// constructor
 
-export const sessionStore = MS.of<SessionState>(() => ({ name: 'session', initState: { status: 'init' } }))
+export const sessionStore = MS.ctor<SessionState>(() => ({ name: 'session', initState: { status: 'init' } }))
 
 // mutation
 
 type optional = string | undefined
+type SessionStateInit = Extract<SessionState, { status: 'init' }>
 
-export const parseEnvMutation = (confEnv: optional, confApiKey: optional, confUserName: optional) => (
-    s: SessionState
-): Observable<SessionState> => {
-    if (s.status !== 'init') {
-        return of(s)
-    }
-
-    return of(
-        pipe(
-            appEnv.decode(confEnv),
-            E.map(env => (apiKey: ApiKey) => ({ env, apiKey: apiKey })),
-            E.ap(ApiKey.decode(confApiKey)),
-            E.map(sp => (userName: string): Extract<SessionState, { status: 'done' }> => ({
-                ...sp,
-                userName,
-                status: 'done' as const,
-            })),
-            E.ap(t.string.decode(confUserName)),
-            E.getOrElseW((): Extract<SessionState, { status: 'error' }> => ({ status: 'error', message: 'env erro' }))
-        )
+export const parseEnvMutation = () =>
+    MS.ctorPartialMutation(
+        'parseEnvMutation' as const,
+        (confEnv: optional, confApiKey: optional, confUserName: optional) => (
+            s: SessionStateInit
+        ): Observable<SessionState> =>
+            of(
+                pipe(
+                    appEnv.decode(confEnv),
+                    E.map(env => (apiKey: ApiKey) => ({ ...s, env, apiKey: apiKey })),
+                    E.ap(ApiKey.decode(confApiKey)),
+                    E.map(sp => (userName: string): Extract<SessionState, { status: 'done' }> => ({
+                        ...sp,
+                        userName,
+                        status: 'done' as const,
+                    })),
+                    E.ap(t.string.decode(confUserName)),
+                    E.getOrElseW(
+                        (): Extract<SessionState, { status: 'error' }> => ({
+                            status: 'error',
+                            message: 'env error',
+                        })
+                    )
+                )
+            ),
+        (s: SessionState): s is SessionStateInit => s.status === 'init'
     )
-}

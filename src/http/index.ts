@@ -147,16 +147,16 @@ export const ajaxToResource = <DS extends ResourceDecoders, AE>(
         )
     ).pipe(take(2))
 
-export const resourceFetcherToMutation = <
+export const resourceFetcherToMutationEffect = <
     AJ extends (...args: any) => Observable<R>,
+    SS extends S,
     S,
-    O extends S,
     I extends Array<any> = Parameters<AJ>,
     R = AJ extends (...args: any) => Observable<infer R> ? R : never
 >(
     aj: AJ,
-    apOperators: (i: Observable<R>, s: S) => Observable<O>
-) => (...i: I) => (s: S): Observable<O> => aj(...i).pipe(switchMap(r => apOperators(of(r), s)))
+    apOperators: (i: Observable<R>, s: SS) => Observable<S>
+) => (...i: I) => (s: SS): Observable<S> => aj(...i).pipe(switchMap(r => apOperators(of(r), s)))
 
 export const resourceFold = <DS extends ResourceDecoders, AE>(resource: Resource<DS, AE>) => <R>(dodo: {
     onInit: () => R

@@ -1,13 +1,53 @@
-import { resourceInit } from '../../src/http'
+import { Observable, of } from 'rxjs'
+import { map } from 'rxjs/operators'
+import * as MH from '../../src/http'
 import * as MS from '../../src/state'
-import { quoteResource } from '../resources/quoteResource'
+import { fetchQuote, fetchQuoteWithDelay, fetchQuoteWithParams, quoteResource } from '../resources/quoteResource'
+
+// type
 
 export interface QuoteState {
     quote: quoteResource
 }
 
 const quoteState: QuoteState = {
-    quote: resourceInit,
+    quote: MH.resourceInit,
 }
 
-export const quoteStore = MS.of(() => ({ name: 'quote', initState: quoteState }))
+// constructor
+
+export const quoteStore = MS.ctor(() => ({ name: 'quote', initState: quoteState }))
+
+// mutation
+
+export const fetchQuoteMutation = () =>
+    MS.ctorMutation(
+        'fetchQuoteMutation' as const,
+        MH.resourceFetcherToMutationEffect(
+            fetchQuote,
+            (o, s: QuoteState): Observable<QuoteState> => o.pipe(map(c => ({ ...s, quote: c })))
+        )
+    )
+
+export const fetchQuoteMutationWithParams = () =>
+    MS.ctorMutation(
+        'fetchQuoteMutationWithParams' as const,
+        MH.resourceFetcherToMutationEffect(
+            fetchQuoteWithParams,
+            (o, s: QuoteState): Observable<QuoteState> => o.pipe(map(c => ({ ...s, quote: c })))
+        )
+    )
+
+export const fetchQuoteMutationWithDelay = () =>
+    MS.ctorMutation(
+        'fetchQuoteMutationWithDelay' as const,
+        MH.resourceFetcherToMutationEffect(
+            fetchQuoteWithDelay,
+            (o, s: QuoteState): Observable<QuoteState> => o.pipe(map(c => ({ ...s, quote: c })))
+        )
+    )
+
+export const resetQuoteMutation = () =>
+    MS.ctorMutation('resetQuoteMutation' as const, () => (s: QuoteState): Observable<QuoteState> =>
+        of({ ...s, quote: MH.resourceInit })
+    )
