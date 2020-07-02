@@ -13,7 +13,8 @@ declare const mutation: {
     400: typeof decoderDataNumber
 }
 
-// @TODO FIX ME
+// @TODO FIX ME https://github.com/microsoft/TypeScript/issues/32224
+
 // eslint-disable-next-line max-len
 // $ ExpectType Observable<ResourceSubmitted | ResourceFail<unknown> | ResourceDone<200, { data: string; }> | ResourceDone<400, { data: number; }>>
 const resourceUnknownFail = MH.ajaxToResource(ajaxFetchUnknownFail, mutation)
@@ -26,19 +27,19 @@ declare const ajaxFetchWithFail: Observable<AjaxResponse | MH.ResourceFail<strin
 const resourceWithFail = MH.ajaxToResource(ajaxFetchWithFail, mutation)
 
 // $ExpectType () => (s: { counter: number; }) => Observable<{ counter: number; }>
-const noParam = MH.resourceFetcherToMutation(
+const noParam = MH.resourceFetcherToMutationEffect(
     () => resourceWithFail,
     (i, s: { counter: number }) => i.pipe(map(_ => s))
 )
 
 // $ExpectType (id: string) => (s: { counter: number; }) => Observable<{ counter: number; }>
-const withOneParam = MH.resourceFetcherToMutation(
+const withOneParam = MH.resourceFetcherToMutationEffect(
     (id: string) => resourceUnknownFail,
     (i, s: { counter: number }) => i.pipe(map(_ => s))
 )
 
 // $ExpectType (id: string, name: string) => (s: { counter: number; }) => Observable<{ counter: number; }>
-const withTwoParam = MH.resourceFetcherToMutation(
+const withTwoParam = MH.resourceFetcherToMutationEffect(
     (id: string, name: string) => resourceUnknownFail,
     (i, s: { counter: number }) => i.pipe(map(_ => s))
 )

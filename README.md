@@ -154,7 +154,7 @@ export const fetchSomethingMutation = MS.ctorMutation(
 Perform a side effect and ignore the result
 
 ```typescript
-const o = of(1).pipe(MRX.chainFirstIO((uno: number) => IO.of(uno + 2)) // 1
+const o = of(1).pipe(MRX.chainFirstIO((uno: number) => IO.of(uno + 2))) // 1
 ```
 
 ##### chainIOK

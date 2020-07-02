@@ -1,4 +1,4 @@
-import { of } from 'rxjs'
+import { of, Observable } from 'rxjs'
 import { TestScheduler } from 'rxjs/testing'
 import * as MS from '../src/state/index'
 
@@ -46,6 +46,63 @@ describe('state', () => {
         const stateUpdatedHey = await task()
         expect(stateUpdatedHey.name).toBe('mutoid')
         expect(stateUpdatedHey.age).toBe(16)
+    })
+
+    test('mutationRunner ctorPartialMutation skipped', async () => {
+        type state = { state: 'init' } | { state: 'done'; age: number }
+        type stateDone = Extract<state, { state: 'done' }>
+        const state: state = { state: 'init' }
+        const store = MS.ctor<'test', state>(() => ({
+            initState: state,
+            name: 'test',
+        }))
+
+        const task = MS.toTask(store)
+
+        MS.mutationRunner(store, () =>
+            MS.ctorPartialMutation(
+                'test_mutation',
+                (s: state): s is stateDone => s.state === 'done',
+                () => (s: stateDone): Observable<state> =>
+                    of({
+                        ...s,
+                        age: 16,
+                    })
+            )
+        )()
+
+        const stateUpdated = await task()
+        expect(stateUpdated.state).toBe('init')
+    })
+
+    test('mutationRunner ctorPartialMutation applied', async () => {
+        type state = { state: 'init' } | { state: 'done'; age: number }
+        type stateDone = Extract<state, { state: 'done' }>
+        const state: state = { state: 'done', age: 15 }
+        const store = MS.ctor<'test', state>(() => ({
+            initState: state,
+            name: 'test',
+        }))
+
+        const task = MS.toTask(store)
+
+        MS.mutationRunner(store, () =>
+            MS.ctorPartialMutation(
+                'test_mutation',
+                (s: state): s is stateDone => s.state === 'done',
+                () => (s: stateDone): Observable<state> =>
+                    of({
+                        ...s,
+                        age: 16,
+                    })
+            )
+        )()
+
+        const stateUpdated = await task()
+        expect(stateUpdated.state).toBe('done')
+        if (stateUpdated.state === 'done') {
+            expect(stateUpdated.age).toBe(16)
+        }
     })
 
     test('mutationRunner with paylod', async () => {
