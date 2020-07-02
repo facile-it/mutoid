@@ -69,7 +69,7 @@ declare const mutation: MS.ctorMutation(
     (id: number) => (currentState: S) => Observable<S>
 )
 
-const mutationR = MS.mutationRunner(appStore, mutation)
+const mutationR = MS.mutationRunner(store, mutation)
 mutationR(id)
 ```
 
@@ -87,7 +87,7 @@ declare const mutation: MS.ctorPartialMutation(
     (id: number) => (currentState: SS) => Observable<S>
 )
 
-const mutationR = MS.mutationRunner(appStore, mutation)
+const mutationR = MS.mutationRunner(store, mutation)
 mutationR(id)
 ```
 
