@@ -6,34 +6,35 @@ import { switchMap, take, takeUntil, takeWhile, tap } from 'rxjs/operators'
 
 // type
 
-interface MutationNotify<N, S> {
+type MutationNotify<N, S> = Readonly<{
     state: S
     name: N
     mutationName: string
     payload: Array<unknown>
     date: ReturnType<Date['toISOString']>
-}
+}>
 
-type NotifySubject<N, S> =
+type NotifySubject<N, S> = Readonly<
     | { type: 'initStore'; name: N }
     | ({ type: 'mutationLoad' } & MutationNotify<N, S>)
     | ({ type: 'mutationStart' } & MutationNotify<N, S>)
     | ({ type: 'mutationEnd' } & MutationNotify<N, S>)
+>
 
-export interface Store<N extends string, S> {
-    readonly name: N
-    readonly state$: BehaviorSubject<S>
-    readonly notifier$: BehaviorSubject<NotifySubject<N, S>>
-    readonly initState: S
-}
+export type Store<N extends string, S> = Readonly<{
+    name: N
+    state$: BehaviorSubject<S>
+    notifier$: BehaviorSubject<NotifySubject<N, S>>
+    initState: S
+}>
 
 export type MutationEffect<P extends Array<unknown>, S, SS extends S> = (...p: P) => (state: SS) => Observable<S>
 
-export interface Mutation<NM, P extends Array<unknown>, S, SS extends S> {
+export type Mutation<NM, P extends Array<unknown>, S, SS extends S> = Readonly<{
     name: NM
     effect: MutationEffect<P, S, SS>
     filterPredicate?: (state: S) => state is SS
-}
+}>
 
 // constructor
 
@@ -57,9 +58,9 @@ export const ctorMutation = <NM extends string, P extends Array<unknown>, S>(
 
 export const ctorPartialMutation = <NM extends string, P extends Array<unknown>, S, SS extends S>(
     name: NM,
-    effect: MutationEffect<P, S, SS>,
-    filterPredicate: (s: S) => s is SS
-): Mutation<NM, P, S, SS> => ({ name, effect, filterPredicate })
+    filterPredicate: (s: S) => s is SS,
+    effect: MutationEffect<P, S, SS>
+): Mutation<NM, P, S, SS> => ({ name, filterPredicate, effect })
 
 // runner
 

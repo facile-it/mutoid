@@ -12,13 +12,13 @@ To install the last version
 yarn add mutoid rxjs fp-ts
 ```
 
-if you want use [`io-ts`](https://github.com/gcanti/io-ts) decoder in data fetching
+if you want to use [`io-ts`](https://github.com/gcanti/io-ts) decoder in data fetching
 
 ```sh
 yarn add io-ts
 ```
 
-if you want also use with [`react`](https://github.com/facebook/react)
+if you want also to use with [`react`](https://github.com/facebook/react)
 
 ```sh
 yarn add react-dom react
@@ -32,13 +32,15 @@ yarn add react-dom react
 
 `import * as MS from 'mutoid/lib/state'`
 
-**Create store**
+##### Create store
+
+in ctor we use `memoization`
 
 ```typescript
-const appStore = MS.of({ userName: 'Marco' })
+const appStore = MS.ctor(() => ({ name: 'appStore' as const, initState: { userName: 'Marco' } }))
 ```
 
-**Read the status from anywhere**
+##### Read the status from anywhere
 
 ```typescript
 import { pipe } from 'fp-ts/lib/pipeable'
@@ -54,15 +56,58 @@ const program = pipe(
 program()
 ```
 
-**Run mutation**
+##### Mutation -> mutationRunner
+
+###### ctorMutation
 
 ```typescript
-declare const store: Store<S>
-declare const mutation: Mutation<(id: number) => (currentState: S) => Observable<S>>
+declare const store: Lazy<Store<S>>
 declare const id: number
 
-const runMutation = MS.mutationRunner(appStore, mutation)
-runMutation(id)
+declare const mutation: MS.ctorMutation(
+    'mutation' as const,
+    (id: number) => (currentState: S) => Observable<S>
+)
+
+const mutationR = MS.mutationRunner(appStore, mutation)
+mutationR(id)
+```
+
+###### ctorPartialMutation
+
+_mutation runs only if the state matches the predicate, useful if your store is a state machine_
+
+```typescript
+declare const store: Lazy<Store<S>>
+declare const id: number
+
+declare const mutation: MS.ctorPartialMutation(
+    'partialMutation' as const,
+    (currentState: S): currentState is SS => currentState.type === 'ss',
+    (id: number) => (currentState: SS) => Observable<S>
+)
+
+const mutationR = MS.mutationRunner(appStore, mutation)
+mutationR(id)
+```
+
+if you want to kill the mutation `MS.mutationRunner` accept as third parameter `notifierTakeUntil?: Observable<unknown>`
+
+##### Store notifier
+
+emit: `initStore`, `mutationLoad`, `mutationStart`, `mutationEnd`
+
+```typescript
+declare const store: Lazy<Store<S>>
+
+store().notifier$.subscribe(e =>
+    Sentry.addBreadcrumb({
+        category: 'mutation',
+        message: action.type,
+        level: Severity.Info,
+        data: e,
+    })
+)
 ```
 
 ---
@@ -71,7 +116,7 @@ runMutation(id)
 
 `import * as MH from 'mutoid/lib/http'`
 
-**ajaxToResource**
+##### ajaxToResource
 
 ```typescript
 import * as t from 'io-ts'
@@ -87,33 +132,56 @@ export type somethingResource = MH.Resource<typeof somethingDecoders>
 export const fetchSomething = () => MH.ajaxToResource(ajax('https://api.io'), somethingDecoders)
 ```
 
-**resourceFetcherToMutation**
+##### resourceFetcherToMutationEffect
 
 ```typescript
 import { map } from 'rxjs/operators'
 
-export const fetchSomethingMutation = MH.resourceFetcherToMutation(fetchSomething, (o, s: state) =>
-    o.pipe(map(c => ({ ...s, something: c })))
+export const fetchSomethingMutation = MS.ctorMutation(
+    'fetchSomethingMutation' as const,
+    MH.resourceFetcherToMutationEffect(fetchSomething, (o, s: state) => o.pipe(map(c => ({ ...s, something: c }))))
 )
+```
+
+---
+
+### Rxjs operatos
+
+`import * as MRX from 'mutoid/lib/rsjx'`
+
+##### chainFirstIO
+
+Perform a side effect and ignore the result
+
+```typescript
+const o = of(1).pipe(MRX.chainFirstIO((uno: number) => IO.of(uno + 2)) // 1
+```
+
+##### chainIOK
+
+Perform a side effect and keep the result
+
+```typescript
+const o = of(1).pipe(MRX.chainIOK((uno: number) => IO.of(uno + 2))) // 3
 ```
 
 ---
 
 ### React hooks
 
-**useSelector**
+##### useSelector
 
 ```typescript
-const userName = useSelector(appStore, s => s.userName)
+const userName = useSelector(store, s => s.userName)
 ```
 
-**useMutation**
+##### useMutation
 
 ```typescript
-const fetchQuoteRunner = useMutation(appStore, mutation)
+const mutationR = useMutation(store, mutation)
 ```
 
-**useResourceFetcher**
+##### useResourceFetcher
 
 ```typescript
 import { ajax } from 'rxjs/ajax'
@@ -136,13 +204,13 @@ yarn dev-server
 
 ### Test
 
-**Unit, lint and cs**
+##### Unit, lint and cs
 
 ```console
 yarn test
 ```
 
-**Type level**
+##### Type level
 
 ```console
 yarn test-type

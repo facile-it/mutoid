@@ -50,6 +50,7 @@ type SessionStateInit = Extract<SessionState, { status: 'init' }>
 export const parseEnvMutation = () =>
     MS.ctorPartialMutation(
         'parseEnvMutation' as const,
+        (s: SessionState): s is SessionStateInit => s.status === 'init',
         (confEnv: optional, confApiKey: optional, confUserName: optional) => (
             s: SessionStateInit
         ): Observable<SessionState> =>
@@ -71,6 +72,5 @@ export const parseEnvMutation = () =>
                         })
                     )
                 )
-            ),
-        (s: SessionState): s is SessionStateInit => s.status === 'init'
+            )
     )
