@@ -67,42 +67,90 @@ export const ctorPartialMutation = <NM extends string, P extends Array<unknown>,
 export const toTask = <N extends string, S>(store: Lazy<Store<N, S>>): T.Task<S> => () =>
     store().state$.pipe(take(1)).toPromise()
 
-export const mutationRunner = <N extends string, NM extends string, P extends Array<unknown>, S, SS extends S>(
-    storeL: Lazy<Store<N, S>>,
-    mutationL: Lazy<Mutation<NM, P, S, SS>>,
+/** @internal */
+export interface BaseOptions {
     notifierTakeUntil?: Observable<unknown>
-) => (...payload: P): Subscription => {
-    const store = storeL()
-    const mutation = mutationL()
+}
+/** @internal */
+export interface DepsOptions<D extends Record<string, unknown>> {
+    deps: D
+}
 
-    const baseNotify = (state: S, date: Date) => ({
-        name: store.name,
-        mutationName: mutation.name,
-        state: state,
-        date: date.toISOString(),
-        payload: payload,
-    })
+export function mutationRunner<
+    N extends string,
+    NM extends string,
+    P extends Array<unknown>,
+    S,
+    SS extends S,
+    D extends Record<K, unknown>,
+    K extends string
+>(
+    storeL: Lazy<Store<N, S>>,
+    mutationL: (deps: D) => Mutation<NM, P, S, SS>,
+    options: BaseOptions & DepsOptions<D>
+    // no deps
+): (...p: P) => Subscription
+export function mutationRunner<
+    N extends string,
+    NM extends string,
+    P extends Array<unknown>,
+    S,
+    SS extends S,
+    D extends Record<never, unknown>
+    // no deps overload
+>(storeL: Lazy<Store<N, S>>, mutationL: () => Mutation<NM, P, S, SS>, options?: BaseOptions): (...p: P) => Subscription
+export function mutationRunner<
+    N extends string,
+    NM extends string,
+    P extends Array<unknown>,
+    S,
+    SS extends S,
+    D extends Record<K, unknown>,
+    K extends never
+>(
+    storeL: Lazy<Store<N, S>>,
+    mutationL: (deps?: D) => Mutation<NM, P, S, SS>,
+    options?: BaseOptions & Partial<DepsOptions<D>>
+): (...p: P) => Subscription {
+    return (...payload) => {
+        const store = storeL()
+        const mutation = mutationL(options?.deps)
 
-    const sequence = store.state$.pipe(
-        take(1),
-        tap(s => store.notifier$.next({ ...baseNotify(s, new Date()), type: 'mutationLoad' })),
-        takeWhile((s): s is SS => (mutation.filterPredicate && mutation.filterPredicate(s)) || true),
-        tap(s => store.notifier$.next({ ...baseNotify(s, new Date()), type: 'mutationStart' })),
-        switchMap(s => {
-            const pm = mutation.effect(...payload)
-
-            if (notifierTakeUntil) {
-                return pm(s).pipe(takeUntil(notifierTakeUntil))
-            }
-
-            return pm(s)
+        const baseNotify = (state: S, date: Date) => ({
+            name: store.name,
+            mutationName: mutation.name,
+            state: state,
+            date: date.toISOString(),
+            payload: payload,
         })
-    )
 
-    // can't use eta reduction
-    return sequence.subscribe({
-        next: s => store.state$.next(s),
-        complete: () =>
-            toTask(storeL)().then(s => store.notifier$.next({ ...baseNotify(s, new Date()), type: 'mutationEnd' })),
-    })
+        const sequence = store.state$.pipe(
+            take(1),
+            tap(s => store.notifier$.next({ ...baseNotify(s, new Date()), type: 'mutationLoad' })),
+            takeWhile((s): s is SS => {
+                if (mutation.filterPredicate) {
+                    return mutation.filterPredicate(s)
+                }
+
+                return true
+            }),
+            tap(s => store.notifier$.next({ ...baseNotify(s, new Date()), type: 'mutationStart' })),
+            switchMap(s => {
+                const pm = mutation.effect(...payload)
+
+                if (options?.notifierTakeUntil) {
+                    return pm(s).pipe(takeUntil(options.notifierTakeUntil))
+                }
+
+                return pm(s)
+            })
+        )
+
+        // can't use eta reduction
+        return sequence.subscribe({
+            next: s => store.state$.next(s),
+            complete: () =>
+                toTask(storeL)().then(s => store.notifier$.next({ ...baseNotify(s, new Date()), type: 'mutationEnd' })),
+        })
+    }
 }

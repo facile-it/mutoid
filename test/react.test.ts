@@ -54,7 +54,7 @@ describe('react', () => {
                 }).pipe(delay(1000))
             )
 
-        const { result } = renderHook(() => MR.useMutation(store, mutation, of(1)))
+        const { result } = renderHook(() => MR.useMutation(store, mutation, { notifierTakeUntil: of(1) }))
 
         act(() => {
             result.current()

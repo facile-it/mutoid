@@ -66,6 +66,7 @@ describe('state', () => {
                 () => (s: stateDone): Observable<state> =>
                     of({
                         ...s,
+                        state: 'done',
                         age: 16,
                     })
             )
@@ -148,7 +149,9 @@ describe('state', () => {
                             },
                         })
                     ),
-                cold('--a', { a: 1 })
+                {
+                    notifierTakeUntil: cold('--a', { a: 1 }),
+                }
             )('hey', 15)
 
             MS.mutationRunner(
@@ -163,7 +166,9 @@ describe('state', () => {
                             },
                         })
                     ),
-                cold('--a', { a: 1 })
+                {
+                    notifierTakeUntil: cold('--a', { a: 1 }),
+                }
             )('ho', 16)
 
             expectObservable(store().state$).toBe('ab------', {

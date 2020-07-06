@@ -13,6 +13,7 @@
         "noFallthroughCasesInSwitch": true,
         "pretty": true,
         "removeComments": true,
+        "stripInternal": true,
         "outDir": "lib",
         "declaration": true
     },

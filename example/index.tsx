@@ -5,9 +5,11 @@ import { pipe } from 'fp-ts/lib/pipeable'
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import { Subject } from 'rxjs'
+import { ajax } from 'rxjs/ajax'
 import { resourceFold } from '../src/http'
 import { useMutation, useResourceFetcher, useSelector } from '../src/react'
 import * as MS from '../src/state'
+import { ResourceDeps } from './resources/fetchWithAuth'
 import { fetchQuote, fetchQuoteWithDelay, fetchQuoteWithParams, quoteResource } from './resources/quoteResource'
 import {
     quoteStore,
@@ -17,6 +19,11 @@ import {
     resetQuoteMutation,
 } from './stores/quoteStore'
 import { sessionStore, parseEnvMutation } from './stores/sessionStore'
+
+const resourceDeps: ResourceDeps = {
+    ajax: ajax,
+    store: sessionStore,
+}
 
 const renderQuote = (quote: quoteResource): React.ReactChild => {
     return resourceFold(quote)({
@@ -36,7 +43,7 @@ const renderQuote = (quote: quoteResource): React.ReactChild => {
 
 const QuoteFromState: React.FC = () => {
     const quote = useSelector(quoteStore, s => s.quote)
-    const fetchQuoteRunner = useMutation(quoteStore, fetchQuoteMutation)
+    const fetchQuoteRunner = useMutation(quoteStore, fetchQuoteMutation, { deps: resourceDeps })
 
     React.useEffect(() => {
         fetchQuoteRunner()
@@ -65,7 +72,7 @@ const QuoteFromState: React.FC = () => {
 
 const QuoteFromStateWithParams: React.FC = () => {
     const quote = useSelector(quoteStore, s => s.quote)
-    const fetchQuoteRunner = useMutation(quoteStore, fetchQuoteMutationWithParams)
+    const fetchQuoteRunner = useMutation(quoteStore, fetchQuoteMutationWithParams, { deps: resourceDeps })
     const resetQuoteRunner = useMutation(quoteStore, resetQuoteMutation)
 
     React.useEffect(() => {
@@ -89,7 +96,10 @@ const QuoteFromStateWithParams: React.FC = () => {
 const QuoteFromStateWithDelay: React.FC = () => {
     const quote = useSelector(quoteStore, s => s.quote)
     const notifier = React.useRef(new Subject<number>())
-    const fetchQuoteRunner = useMutation(quoteStore, fetchQuoteMutationWithDelay, notifier.current)
+    const fetchQuoteRunner = useMutation(quoteStore, fetchQuoteMutationWithDelay, {
+        notifierTakeUntil: notifier.current,
+        deps: resourceDeps,
+    })
 
     React.useEffect(() => {
         fetchQuoteRunner()
@@ -121,7 +131,7 @@ const QuoteFromStateWithDelay: React.FC = () => {
 }
 
 const QuoteWithHook: React.FC = () => {
-    const [quote, quoteFetcher] = useResourceFetcher(fetchQuote)
+    const [quote, quoteFetcher] = useResourceFetcher(fetchQuote(resourceDeps))
 
     React.useEffect(() => {
         quoteFetcher()
@@ -141,7 +151,7 @@ const QuoteWithHook: React.FC = () => {
 }
 
 const QuoteWithHookWithParams: React.FC = () => {
-    const [quote, quoteFetcher] = useResourceFetcher(fetchQuoteWithParams)
+    const [quote, quoteFetcher] = useResourceFetcher(fetchQuoteWithParams(resourceDeps))
 
     React.useEffect(() => {
         quoteFetcher(1, 'useResourceFetcher')
@@ -162,7 +172,7 @@ const QuoteWithHookWithParams: React.FC = () => {
 
 const QuoteWithHookWithDelay: React.FC = () => {
     const notifier = React.useRef(new Subject<number>())
-    const [quote, quoteFetcher] = useResourceFetcher(fetchQuoteWithDelay, notifier.current)
+    const [quote, quoteFetcher] = useResourceFetcher(fetchQuoteWithDelay(resourceDeps), notifier.current)
 
     React.useEffect(() => {
         quoteFetcher()

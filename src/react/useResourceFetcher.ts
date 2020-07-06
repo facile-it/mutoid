@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useRef } from 'react'
 import { Observable } from 'rxjs'
 import { take, takeUntil } from 'rxjs/operators'
 import { ResourceInit, resourceInit } from '../http'
@@ -13,18 +13,19 @@ export const useResourceFetcher = <
     iniState: R | ResourceInit = resourceInit
 ): [R | ResourceInit, (...p: P) => void] => {
     const [value, setValue] = useState<R | ResourceInit>(iniState)
+    const ajaxToResourcR = useRef(ajaxToResource)
 
     return [
         value,
         useCallback(
             (...p: P) => {
-                const resource$ = ajaxToResource(...p)
+                const resource$ = ajaxToResourcR.current(...p)
 
                 const resourceTaken$ = notifierTakeUntil ? resource$.pipe(takeUntil(notifierTakeUntil)) : resource$
 
                 resourceTaken$.pipe(take(2)).subscribe(setValue)
             },
-            [ajaxToResource, notifierTakeUntil]
+            [notifierTakeUntil]
         ),
     ]
 }
