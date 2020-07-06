@@ -64,12 +64,32 @@ program()
 declare const store: Lazy<Store<S>>
 declare const id: number
 
-declare const mutation: MS.ctorMutation(
+declare const mutation: () => MS.ctorMutation(
     'mutation' as const,
     (id: number) => (currentState: S) => Observable<S>
 )
 
 const mutationR = MS.mutationRunner(store, mutation)
+mutationR(id)
+```
+
+Mutation with deps
+
+```typescript
+import { ajax, AjaxCreationMethod } from 'rxjs/ajax'
+
+declare const store: Lazy<Store<S>>
+declare const id: number
+declare const deps: {
+    ajax: AjaxCreationMethod
+}
+
+declare const mutation: (deps: typeof deps) => MS.ctorMutation(
+    'mutation' as const,
+    (id: number) => (currentState: S) => Observable<S>
+)
+
+const mutationR = MS.mutationRunner(store, mutation, {deps: {ajax: ajax}})
 mutationR(id)
 ```
 
@@ -81,7 +101,7 @@ _mutation runs only if the state matches the predicate, useful if your store is 
 declare const store: Lazy<Store<S>>
 declare const id: number
 
-declare const mutation: MS.ctorPartialMutation(
+declare const mutation: () => MS.ctorPartialMutation(
     'partialMutation' as const,
     (currentState: S): currentState is SS => currentState.type === 'ss',
     (id: number) => (currentState: SS) => Observable<S>
@@ -91,7 +111,7 @@ const mutationR = MS.mutationRunner(store, mutation)
 mutationR(id)
 ```
 
-if you want to kill the mutation `MS.mutationRunner` accept as third parameter `notifierTakeUntil?: Observable<unknown>`
+if you want to kill the mutation `MS.mutationRunner` accept as third parameter "options" with propriety `notifierTakeUntil?: Observable<unknown>`
 
 ##### Store notifier
 
@@ -145,7 +165,9 @@ export const fetchSomethingMutation = MS.ctorMutation(
 
 ---
 
-### Rxjs operatos
+### Rxjs
+
+#### Operatos
 
 `import * as MRX from 'mutoid/lib/rsjx'`
 
@@ -163,6 +185,31 @@ Perform a side effect and keep the result
 
 ```typescript
 const o = of(1).pipe(MRX.chainIOK((uno: number) => IO.of(uno + 2))) // 3
+```
+
+##### runIO
+
+```typescript
+const o = of(IO.of(1)).pipe(MRX.runIO())
+```
+
+##### extractE
+
+Squash left and right 
+
+```typescript
+type e = E.either<L, R>
+type result = L | R
+```
+
+#### Constructors
+
+##### fromIO
+
+```typescript
+const i = IO.of(1)
+
+const o = MRX.fromIO(i).pipe(...)
 ```
 
 ---
