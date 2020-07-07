@@ -67,11 +67,9 @@ export const ctorPartialMutation = <NM extends string, P extends Array<unknown>,
 export const toTask = <N extends string, S>(store: Lazy<Store<N, S>>): T.Task<S> => () =>
     store().state$.pipe(take(1)).toPromise()
 
-/** @internal */
 export interface BaseOptions {
     notifierTakeUntil?: Observable<unknown>
 }
-/** @internal */
 export interface DepsOptions<D extends Record<string, unknown>> {
     deps: D
 }
