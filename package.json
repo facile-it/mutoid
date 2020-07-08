@@ -15,7 +15,7 @@
         "prepublish": "yarn build"
     },
     "name": "mutoid",
-    "version": "0.0.8",
+    "version": "0.0.9",
     "description": "Reactive library for state management, data fetching, caching",
     "repository": {
         "type": "git",
