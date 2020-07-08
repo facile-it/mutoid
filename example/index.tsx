@@ -9,7 +9,6 @@ import { ajax } from 'rxjs/ajax'
 import { resourceFold } from '../src/http'
 import { useMutation, useResourceFetcher, useSelector } from '../src/react'
 import * as MS from '../src/state'
-import { ResourceDeps } from './resources/fetchWithAuth'
 import { fetchQuote, fetchQuoteWithDelay, fetchQuoteWithParams, quoteResource } from './resources/quoteResource'
 import {
     quoteStore,
@@ -20,7 +19,7 @@ import {
 } from './stores/quoteStore'
 import { sessionStore, parseEnvMutation } from './stores/sessionStore'
 
-const resourceDeps: ResourceDeps = {
+const resourceDeps = {
     ajax: ajax,
     store: sessionStore,
 }
@@ -72,7 +71,7 @@ const QuoteFromState: React.FC = () => {
 
 const QuoteFromStateWithParams: React.FC = () => {
     const quote = useSelector(quoteStore, s => s.quote)
-    const fetchQuoteRunner = useMutation(quoteStore, fetchQuoteMutationWithParams, { deps: resourceDeps })
+    const fetchQuoteRunner = useMutation(quoteStore, fetchQuoteMutationWithParams, { deps: { ajax: ajax } })
     const resetQuoteRunner = useMutation(quoteStore, resetQuoteMutation)
 
     React.useEffect(() => {
@@ -151,7 +150,7 @@ const QuoteWithHook: React.FC = () => {
 }
 
 const QuoteWithHookWithParams: React.FC = () => {
-    const [quote, quoteFetcher] = useResourceFetcher(fetchQuoteWithParams(resourceDeps))
+    const [quote, quoteFetcher] = useResourceFetcher(fetchQuoteWithParams({ ajax: ajax }))
 
     React.useEffect(() => {
         quoteFetcher(1, 'useResourceFetcher')

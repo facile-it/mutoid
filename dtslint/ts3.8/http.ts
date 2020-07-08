@@ -16,7 +16,7 @@ declare const mutation: {
 // @TODO FIX ME https://github.com/microsoft/TypeScript/issues/32224
 
 // eslint-disable-next-line max-len
-// $ ExpectType Observable<ResourceSubmitted | ResourceFail<unknown> | ResourceDone<200, { data: string; }> | ResourceDone<400, { data: number; }>>
+// $ ExpectType Observable<ResourceSubmitted | ResourceFail<never> | ResourceDone<200, { data: string; }> | ResourceDone<400, { data: number; }>>
 const resourceUnknownFail = MH.ajaxToResource(ajaxFetchUnknownFail, mutation)
 
 declare const ajaxFetchWithFail: Observable<AjaxResponse | MH.ResourceFail<string>>

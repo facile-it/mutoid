@@ -23,8 +23,7 @@ export interface ResourceDone<S, P> {
     payload: P
 }
 
-// T extends string, D, AE extends { type: T, detail: D } = never
-export interface ResourceFail<AE = unknown> {
+export interface ResourceFail<AE = never> {
     tag: 'fail'
     error:
         | {
@@ -43,10 +42,12 @@ export interface ResourceFail<AE = unknown> {
               type: 'unexpectedResponse'
               detail: AjaxResponse | AjaxError
           }
-        | {
-              type: 'appError'
-              detail: AE
-          }
+        | (AE extends never
+              ? never
+              : {
+                    type: 'appError'
+                    detail: AE
+                })
 }
 
 export const resourceInit: ResourceInit = { tag: 'init' }
@@ -56,12 +57,12 @@ export const resourceDone = <S, P>(status: S, payload: P): ResourceDone<S, P> =>
     status: status,
     payload: payload,
 })
-export const resourceFail = <AE = unknown>(error: ResourceFail<AE>['error']): ResourceFail<AE> => ({
+export const resourceFail = <AE = never>(error: ResourceFail<AE>['error']): ResourceFail<AE> => ({
     tag: 'fail',
     error: error,
 })
 
-export type Resource<DS extends ResourceDecoders, AE = unknown> =
+export type Resource<DS extends ResourceDecoders, AE = never> =
     | ResourceInit
     | ResourceSubmitted
     | decodersDictToResourceDone<DS>
@@ -75,8 +76,8 @@ type decodersDictToResourceDone<
 > = tagged extends undefined ? never : tagged
 type ResourceDecoders = { [k in StatusCode]?: t.Decode<unknown, unknown> }
 
-type ajaxToResourceSubject<AE = unknown> = AjaxResponse | ResourceFail<AE>
-export type ajaxSubject<AE = unknown> = Observable<ajaxToResourceSubject<AE>>
+type ajaxToResourceSubject<AE = never> = AjaxResponse | ResourceFail<AE>
+export type ajaxSubject<AE = never> = Observable<ajaxToResourceSubject<AE>>
 
 const dict: { [k in AjaxErrorNames]: true } = {
     AjaxError: true,
@@ -134,7 +135,7 @@ const applyDecoder = <DS extends ResourceDecoders>(decoders: DS) => <AE>(
 
 // combinator
 
-export const ajaxToResource = <DS extends ResourceDecoders, AE>(
+export const ajaxToResource = <DS extends ResourceDecoders, AE = never>(
     ajax$: ajaxSubject<AE>,
     decoders: DS
 ): Observable<decodersDictToResourceDone<DS> | ResourceFail<AE> | ResourceSubmitted> =>

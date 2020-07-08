@@ -64,32 +64,34 @@ program()
 declare const store: Lazy<Store<S>>
 declare const id: number
 
-declare const mutation: () => MS.ctorMutation(
+const mutation = () => MS.ctorMutation(
     'mutation' as const,
-    (id: number) => (currentState: S) => Observable<S>
+    (id: number) => (currentState: S) : Observable<S> => of(s)
 )
 
 const mutationR = MS.mutationRunner(store, mutation)
 mutationR(id)
 ```
 
-Mutation with deps
+_mutation with deps_
 
 ```typescript
-import { ajax, AjaxCreationMethod } from 'rxjs/ajax'
+import * as R from 'fp-ts/lib/Reader'
 
 declare const store: Lazy<Store<S>>
 declare const id: number
 declare const deps: {
-    ajax: AjaxCreationMethod
+    someService: someService
 }
 
-declare const mutation: (deps: typeof deps) => MS.ctorMutation(
-    'mutation' as const,
-    (id: number) => (currentState: S) => Observable<S>
+const mutation = R.asks(
+    (deps: typeof deps) => MS.ctorMutation(
+        'mutation' as const,
+        (id: number) => (currentState: S) : Observable<S> => of(s)
+    )
 )
 
-const mutationR = MS.mutationRunner(store, mutation, {deps: {ajax: ajax}})
+const mutationR = MS.mutationRunner(store, mutation, {deps: {someService}})
 mutationR(id)
 ```
 
@@ -101,10 +103,10 @@ _mutation runs only if the state matches the predicate, useful if your store is 
 declare const store: Lazy<Store<S>>
 declare const id: number
 
-declare const mutation: () => MS.ctorPartialMutation(
+const mutation = () => MS.ctorPartialMutation(
     'partialMutation' as const,
     (currentState: S): currentState is SS => currentState.type === 'ss',
-    (id: number) => (currentState: SS) => Observable<S>
+    (id: number) => (currentState: S) : Observable<S> => of(s)
 )
 
 const mutationR = MS.mutationRunner(store, mutation)
@@ -140,16 +142,19 @@ store().notifier$.subscribe(e =>
 
 ```typescript
 import * as t from 'io-ts'
-import { ajax } from 'rxjs/ajax'
+import { AjaxCreationMethod } from 'rxjs/ajax'
+import * as R from 'fp-ts/lib/Reader'
 
 export const somethingDecoders = {
     200: t.array(t.string).decode,
     400: t.string.decode,
 }
 
-export type somethingResource = MH.Resource<typeof somethingDecoders>
+type somethingResource = MH.Resource<typeof somethingDecoders>
 
-export const fetchSomething = () => MH.ajaxToResource(ajax('https://api.io'), somethingDecoders)
+const fetchSomething = R.asks((deps: { ajax: AjaxCreationMethod }) => (id: number, from: string) =>
+    MH.ajaxToResource(deps.ajax(`https://api.io?id=${id}&from=${from}`), somethingDecoders)
+)
 ```
 
 ##### resourceFetcherToMutationEffect
@@ -157,9 +162,27 @@ export const fetchSomething = () => MH.ajaxToResource(ajax('https://api.io'), so
 ```typescript
 import { map } from 'rxjs/operators'
 
-export const fetchSomethingMutation = MS.ctorMutation(
+const fetchSomethingMutation = () => MS.ctorMutation(
     'fetchSomethingMutation' as const,
     MH.resourceFetcherToMutationEffect(fetchSomething, (o, s: state) => o.pipe(map(c => ({ ...s, something: c }))))
+)
+```
+
+_if fetchSomething has dependencies, you can do something like this_
+
+```typescript
+import { map } from 'rxjs/operators'
+import { pipe } from 'fp-ts/lib/function'
+import * as R from 'fp-ts/lib/Reader'
+
+export const fetchSomethingMutation = pipe(
+    fetchSomething,
+    R.map(fetch =>
+        MS.ctorMutation(
+            'fetchSomethingMutation' as const,
+            MH.resourceFetcherToMutationEffect(fetch, (o, s: state) => o.pipe(map(c => ({ ...s, something: c }))))
+        )
+    )
 )
 ```
 

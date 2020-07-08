@@ -1,7 +1,10 @@
+import * as R from 'fp-ts/lib/Reader'
+import { pipe } from 'fp-ts/lib/function'
 import * as t from 'io-ts'
+import { AjaxCreationMethod } from 'rxjs/internal/observable/dom/AjaxObservable'
 import { delay } from 'rxjs/operators'
-import { Resource } from '../../src/http'
-import { authAppError, fetchWithAuth, ResourceDeps } from './fetchWithAuth'
+import { Resource, ajaxToResource } from '../../src/http'
+import { authAppError, fetchWithAuth } from './fetchWithAuth'
 
 export const quoteDecoders = {
     200: t.array(t.string).decode,
@@ -10,21 +13,38 @@ export const quoteDecoders = {
 
 export type quoteResource = Resource<typeof quoteDecoders, authAppError>
 
-export const fetchQuote = (deps: ResourceDeps) =>
-    fetchWithAuth(deps.store)(
-        () => token => deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?token=${token}`),
-        quoteDecoders
-    )
+// example: if you need token in some store
+// you can write a function like: fetchWithAuth
 
-export const fetchQuoteWithParams = (deps: ResourceDeps) =>
-    fetchWithAuth(deps.store)(
-        (id: number, from: string) => token =>
-            deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?id=${id}&from=${from}&token=${token}`),
-        quoteDecoders
+export const fetchQuote = pipe(
+    R.asks(fetchWithAuth),
+    R.chainW(builder =>
+        R.asks((deps: { ajax: AjaxCreationMethod }) =>
+            builder(
+                () => token => deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?token=${token}`),
+                quoteDecoders
+            )
+        )
     )
+)
 
-export const fetchQuoteWithDelay = (deps: ResourceDeps) =>
-    fetchWithAuth(deps.store)(
-        () => token => deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?token=${token}`).pipe(delay(5000)),
-        quoteDecoders
+// example: simple fetch without token but with params
+
+export const fetchQuoteWithParams = R.asks((deps: { ajax: AjaxCreationMethod }) => (id: number, from: string) =>
+    ajaxToResource(deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?id=${id}&from=${from}`), quoteDecoders)
+)
+
+// example: example with compoosition
+
+export const fetchQuoteWithDelay = pipe(
+    R.asks(fetchWithAuth),
+    R.chainW(builder =>
+        R.asks((deps: { ajax: AjaxCreationMethod }) =>
+            builder(
+                () => token =>
+                    deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?token=${token}`).pipe(delay(5000)),
+                quoteDecoders
+            )
+        )
     )
+)

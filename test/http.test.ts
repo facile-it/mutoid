@@ -180,7 +180,7 @@ describe('http', () => {
 
     test('ajaxToResource already fail', () => {
         testSchedulerBuilder().run(({ cold, expectObservable }) => {
-            const ajax = cold<MH.ResourceFail>('--a', {
+            const ajax = cold<MH.ResourceFail<string>>('--a', {
                 a: MH.resourceFail<string>({
                     type: 'appError',
                     detail: 'bhoo',
