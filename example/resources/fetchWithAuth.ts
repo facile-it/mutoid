@@ -1,11 +1,11 @@
 import * as O from 'fp-ts/lib/Option'
 import * as R from 'fp-ts/lib/Reader'
-import { Lazy } from 'fp-ts/lib/function'
+import type { Lazy } from 'fp-ts/lib/function'
 import { Observable, of } from 'rxjs'
-import { AjaxResponse } from 'rxjs/ajax'
+import type { AjaxResponse } from 'rxjs/ajax'
 import { map, switchMap } from 'rxjs/operators'
 import { ajaxSubject, ajaxToResource, resourceFail } from '../../src/http'
-import { ApiKey, SessionState } from '../stores/sessionStore'
+import type { ApiKey, SessionState } from '../stores/sessionStore'
 
 export type authAppError = string
 

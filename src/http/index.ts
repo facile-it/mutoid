@@ -1,11 +1,11 @@
 import * as E from 'fp-ts/lib/Either'
 import { pipe } from 'fp-ts/lib/pipeable'
-import * as t from 'io-ts'
+import type * as t from 'io-ts'
 import { Observable, concat, of } from 'rxjs'
-import { AjaxError, AjaxResponse } from 'rxjs/ajax'
-import { AjaxErrorNames } from 'rxjs/internal/observable/dom/AjaxObservable'
+import type { AjaxError, AjaxResponse } from 'rxjs/ajax'
+import type { AjaxErrorNames } from 'rxjs/internal/observable/dom/AjaxObservable'
 import { catchError, map, switchMap, take } from 'rxjs/operators'
-import { StatusCode } from './status'
+import type { StatusCode } from './status'
 
 // type
 

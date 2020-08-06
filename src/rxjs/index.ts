@@ -1,5 +1,5 @@
 import * as E from 'fp-ts/lib/Either'
-import { IO } from 'fp-ts/lib/IO'
+import type { IO } from 'fp-ts/lib/IO'
 import { identity } from 'fp-ts/lib/function'
 import { MonoTypeOperatorFunction, OperatorFunction, Observable, Observer } from 'rxjs'
 import { tap, map } from 'rxjs/operators'

@@ -1,6 +1,6 @@
 import * as t from 'io-ts'
 import { of, Observable } from 'rxjs'
-import { AjaxError, AjaxResponse } from 'rxjs/ajax'
+import type { AjaxError, AjaxResponse } from 'rxjs/ajax'
 import { map } from 'rxjs/operators'
 import { TestScheduler } from 'rxjs/testing'
 import * as MH from '../src/http'

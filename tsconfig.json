@@ -15,7 +15,8 @@
         "removeComments": true,
         "stripInternal": true,
         "outDir": "lib",
-        "declaration": true
+        "declaration": true,
+        "importsNotUsedAsValues": "error"
     },
     "include": ["src"]
 }

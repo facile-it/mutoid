@@ -1,7 +1,7 @@
 import * as R from 'fp-ts/lib/Reader'
 import { pipe } from 'fp-ts/lib/function'
 import * as t from 'io-ts'
-import { AjaxCreationMethod } from 'rxjs/internal/observable/dom/AjaxObservable'
+import type { AjaxCreationMethod } from 'rxjs/internal/observable/dom/AjaxObservable'
 import { delay } from 'rxjs/operators'
 import { Resource, ajaxToResource } from '../../src/http'
 import { authAppError, fetchWithAuth } from './fetchWithAuth'

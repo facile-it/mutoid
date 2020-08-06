@@ -1,7 +1,7 @@
-import { Lazy } from 'fp-ts/lib/function'
+import type { Lazy } from 'fp-ts/lib/function'
 import { useEffect, useMemo, useState } from 'react'
 import { distinctUntilChanged } from 'rxjs/operators'
-import * as Mutoid from '../state'
+import type * as Mutoid from '../state'
 
 export const useSelector = <N extends string, S, T>(store: Lazy<Mutoid.Store<N, S>>, map: (s: S) => T): T => {
     const [value, setValue] = useState<T>(() => map(store().initState))

@@ -1,5 +1,5 @@
 import { useCallback, useState, useRef } from 'react'
-import { Observable } from 'rxjs'
+import type { Observable } from 'rxjs'
 import { take, takeUntil } from 'rxjs/operators'
 import { ResourceInit, resourceInit } from '../http'
 
