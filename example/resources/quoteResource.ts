@@ -19,9 +19,9 @@ export type quoteResource = Resource<typeof quoteDecoders, authAppError>
 export const fetchQuote = pipe(
     R.asks(fetchWithAuth),
     R.chainW(builder =>
-        R.asks((deps: { ajax: AjaxCreationMethod }) =>
+        R.asks((deps: { ajax: AjaxCreationMethod }) => () =>
             builder(
-                () => token => deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?token=${token}`),
+                token => deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?token=${token}`),
                 quoteDecoders
             )
         )
@@ -39,9 +39,9 @@ export const fetchQuoteWithParams = R.asks((deps: { ajax: AjaxCreationMethod }) 
 export const fetchQuoteWithDelay = pipe(
     R.asks(fetchWithAuth),
     R.chainW(builder =>
-        R.asks((deps: { ajax: AjaxCreationMethod }) =>
+        R.asks((deps: { ajax: AjaxCreationMethod }) => () =>
             builder(
-                () => token =>
+                token =>
                     deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?token=${token}`).pipe(delay(5000)),
                 quoteDecoders
             )
