@@ -1,4 +1,4 @@
-import type { Lazy } from 'fp-ts/lib/function'
+import type { Lazy } from 'fp-ts/function'
 import { useEffect, useMemo, useState } from 'react'
 import { distinctUntilChanged } from 'rxjs/operators'
 import type * as Mutoid from '../state'

@@ -1,4 +1,4 @@
-import * as IO from 'fp-ts/lib/IO'
+import * as IO from 'fp-ts/IO'
 import { of } from 'rxjs'
 import * as MRX from '../src/rxjs'
 

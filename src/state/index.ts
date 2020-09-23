@@ -1,6 +1,6 @@
 import memoize from 'fast-memoize'
-import type * as T from 'fp-ts/lib/Task'
-import type { Lazy } from 'fp-ts/lib/function'
+import type * as T from 'fp-ts/Task'
+import type { Lazy } from 'fp-ts/function'
 import { BehaviorSubject, Observable, Subscription } from 'rxjs'
 import { switchMap, take, takeUntil, takeWhile, tap } from 'rxjs/operators'
 

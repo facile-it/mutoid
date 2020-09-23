@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Lazy } from 'fp-ts/lib/function'
+import { Lazy } from 'fp-ts/function'
 import { Observable } from 'rxjs'
 import * as MS from '../../src/state'
 

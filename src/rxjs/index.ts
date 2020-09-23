@@ -1,6 +1,6 @@
-import * as E from 'fp-ts/lib/Either'
-import type { IO } from 'fp-ts/lib/IO'
-import { identity } from 'fp-ts/lib/function'
+import * as E from 'fp-ts/Either'
+import type { IO } from 'fp-ts/IO'
+import { identity } from 'fp-ts/function'
 import { MonoTypeOperatorFunction, OperatorFunction, Observable, Observer } from 'rxjs'
 import { tap, map } from 'rxjs/operators'
 

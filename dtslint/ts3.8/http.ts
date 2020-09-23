@@ -13,17 +13,17 @@ declare const mutation: {
     400: typeof decoderDataNumber
 }
 
-// @TODO FIX ME https://github.com/microsoft/TypeScript/issues/32224
-
+// @TODO FIX ME
 // eslint-disable-next-line max-len
+// $ ExpectType Observable<ResourceSubmitted | ResourceDone<200, { data: string; }> | ResourceDone<400, { data: number; }> | ResourceFail<never>>
 // $ ExpectType Observable<ResourceSubmitted | ResourceFail<never> | ResourceDone<200, { data: string; }> | ResourceDone<400, { data: number; }>>
 const resourceUnknownFail = MH.ajaxToResource(ajaxFetchUnknownFail, mutation)
 
 declare const ajaxFetchWithFail: Observable<AjaxResponse | MH.ResourceFail<string>>
 
-// @TODO FIX ME
 // eslint-disable-next-line max-len
 // $ ExpectType Observable<ResourceSubmitted | ResourceDone<200, { data: string; }> | ResourceDone<400, { data: number; }> | ResourceFail<string>>
+// $ ExpectType Observable<ResourceSubmitted | ResourceFail<string> | ResourceDone<200, { data: string; }> | ResourceDone<400, { data: number; }>>
 const resourceWithFail = MH.ajaxToResource(ajaxFetchWithFail, mutation)
 
 // $ExpectType () => (s: { counter: number; }) => Observable<{ counter: number; }>

@@ -1,4 +1,4 @@
-import type { Lazy } from 'fp-ts/lib/function'
+import type { Lazy } from 'fp-ts/function'
 import { useCallback, useRef } from 'react'
 import type { Subscription } from 'rxjs'
 import * as MS from '../state'

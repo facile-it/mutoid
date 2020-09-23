@@ -1,5 +1,5 @@
-import * as R from 'fp-ts/lib/Reader'
-import { pipe } from 'fp-ts/lib/function'
+import * as R from 'fp-ts/Reader'
+import { pipe } from 'fp-ts/function'
 import { Observable, of } from 'rxjs'
 import { map } from 'rxjs/operators'
 import * as MH from '../../src/http'

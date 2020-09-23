@@ -43,9 +43,9 @@ const appStore = MS.ctor(() => ({ name: 'appStore' as const, initState: { userNa
 ##### Read the status from anywhere
 
 ```typescript
-import { pipe } from 'fp-ts/lib/pipeable'
-import * as T from 'fp-ts/lib/Task'
-import * as C from 'fp-ts/lib/Console'
+import { pipe } from 'fp-ts/pipeable'
+import * as T from 'fp-ts/Task'
+import * as C from 'fp-ts/Console'
 
 const program = pipe(
     MS.toTask(appStore),
@@ -64,10 +64,7 @@ program()
 declare const store: Lazy<Store<S>>
 declare const id: number
 
-const mutation = () => MS.ctorMutation(
-    'mutation' as const,
-    (id: number) => (currentState: S) : Observable<S> => of(s)
-)
+const mutation = () => MS.ctorMutation('mutation' as const, (id: number) => (currentState: S): Observable<S> => of(s))
 
 const mutationR = MS.mutationRunner(store, mutation)
 mutationR(id)
@@ -76,7 +73,7 @@ mutationR(id)
 _mutation with deps_
 
 ```typescript
-import * as R from 'fp-ts/lib/Reader'
+import * as R from 'fp-ts/Reader'
 
 declare const store: Lazy<Store<S>>
 declare const id: number
@@ -84,14 +81,11 @@ declare const deps: {
     someService: someService
 }
 
-const mutation = R.asks(
-    (deps: typeof deps) => MS.ctorMutation(
-        'mutation' as const,
-        (id: number) => (currentState: S) : Observable<S> => of(s)
-    )
+const mutation = R.asks((deps: typeof deps) =>
+    MS.ctorMutation('mutation' as const, (id: number) => (currentState: S): Observable<S> => of(s))
 )
 
-const mutationR = MS.mutationRunner(store, mutation, {deps: {someService}})
+const mutationR = MS.mutationRunner(store, mutation, { deps: { someService } })
 mutationR(id)
 ```
 
@@ -103,11 +97,12 @@ _mutation runs only if the state matches the predicate, useful if your store is 
 declare const store: Lazy<Store<S>>
 declare const id: number
 
-const mutation = () => MS.ctorPartialMutation(
-    'partialMutation' as const,
-    (currentState: S): currentState is SS => currentState.type === 'ss',
-    (id: number) => (currentState: S) : Observable<S> => of(s)
-)
+const mutation = () =>
+    MS.ctorPartialMutation(
+        'partialMutation' as const,
+        (currentState: S): currentState is SS => currentState.type === 'ss',
+        (id: number) => (currentState: S): Observable<S> => of(s)
+    )
 
 const mutationR = MS.mutationRunner(store, mutation)
 mutationR(id)
@@ -143,7 +138,7 @@ store().notifier$.subscribe(e =>
 ```typescript
 import * as t from 'io-ts'
 import { AjaxCreationMethod } from 'rxjs/ajax'
-import * as R from 'fp-ts/lib/Reader'
+import * as R from 'fp-ts/Reader'
 
 export const somethingDecoders = {
     200: t.array(t.string).decode,
@@ -162,18 +157,19 @@ const fetchSomething = R.asks((deps: { ajax: AjaxCreationMethod }) => (id: numbe
 ```typescript
 import { map } from 'rxjs/operators'
 
-const fetchSomethingMutation = () => MS.ctorMutation(
-    'fetchSomethingMutation' as const,
-    MH.resourceFetcherToMutationEffect(fetchSomething, (o, s: state) => o.pipe(map(c => ({ ...s, something: c }))))
-)
+const fetchSomethingMutation = () =>
+    MS.ctorMutation(
+        'fetchSomethingMutation' as const,
+        MH.resourceFetcherToMutationEffect(fetchSomething, (o, s: state) => o.pipe(map(c => ({ ...s, something: c }))))
+    )
 ```
 
 _if fetchSomething has dependencies, you can do something like this_
 
 ```typescript
 import { map } from 'rxjs/operators'
-import { pipe } from 'fp-ts/lib/function'
-import * as R from 'fp-ts/lib/Reader'
+import { pipe } from 'fp-ts/function'
+import * as R from 'fp-ts/Reader'
 
 export const fetchSomethingMutation = pipe(
     fetchSomething,
@@ -218,7 +214,7 @@ const o = of(IO.of(1)).pipe(MRX.runIO())
 
 ##### extractE
 
-Squash left and right 
+Squash left and right
 
 ```typescript
 type e = E.either<L, R>

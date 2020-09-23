@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react-hooks'
-import { identity } from 'fp-ts/lib/function'
+import { identity } from 'fp-ts/function'
 import * as t from 'io-ts'
 import { of } from 'rxjs'
 import type { AjaxResponse } from 'rxjs/ajax'
