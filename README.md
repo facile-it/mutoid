@@ -101,7 +101,7 @@ const mutation = () =>
     MS.ctorPartialMutation(
         'partialMutation' as const,
         (currentState: S): currentState is SS => currentState.type === 'ss',
-        (id: number) => (currentState: S): Observable<S> => of(s)
+        (id: number) => (currentState: SS): Observable<S> => of(s)
     )
 
 const mutationR = MS.mutationRunner(store, mutation)
