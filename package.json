@@ -23,7 +23,7 @@
         "postrelease": "npm run clean"
     },
     "name": "mutoid",
-    "version": "0.1.0",
+    "version": "0.2.1",
     "description": "Reactive library for state management, data fetching, caching",
     "repository": {
         "type": "git",
@@ -35,11 +35,10 @@
         "url": "https://github.com/facile-it/mutoid/issues"
     },
     "homepage": "https://github.com/facile-it/mutoid",
-    "files": [
-        "lib"
-    ],
     "main": "lib/index.js",
+    "module": "es6/index.js",
     "typings": "lib/index.d.ts",
+    "sideEffects": false,
     "dependencies": {
         "fast-memoize": "^2.5.2"
     },
