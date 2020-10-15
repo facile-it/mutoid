@@ -1,11 +1,14 @@
 {
     "compilerOptions": {
-        "target": "ES2015",
+        "noEmit": true,
+        "outDir": "./dist/lib",
+        "target": "es5",
         "module": "commonjs",
         "lib": ["DOM", "ESNext"],
         "jsx": "react",
         "strict": true,
         "esModuleInterop": true,
+        "moduleResolution": "Node",
         "forceConsistentCasingInFileNames": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
@@ -14,9 +17,14 @@
         "pretty": true,
         "removeComments": true,
         "stripInternal": true,
-        "outDir": "lib",
         "declaration": true,
-        "importsNotUsedAsValues": "error"
+        "importsNotUsedAsValues": "error",
+        "importHelpers": true
     },
-    "include": ["src"]
+    "include": [
+        "./example",
+        "./src",
+        "./test",
+        "./scripts"
+    ]
 }

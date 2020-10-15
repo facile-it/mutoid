@@ -9,10 +9,18 @@
         "test": "yarn test-unit",
         "test-unit": "jest",
         "test-type": "dtslint dtslint",
-        "prebuild": "rm -rf lib && mkdir lib",
-        "build": "tsc",
-        "postbuild": "prettier --write \"./lib/**/*.ts\"",
-        "prepublish": "yarn build"
+
+        "clean": "rm -rf dist",
+        "prebuild": "npm run clean",
+        
+        "build": "tsc -p ./tsconfig.build.json && tsc -p ./tsconfig.build-es6.json && ts-node scripts/build",
+        "postbuild": "prettier --loglevel=silent --write \"./dist/**/*.ts\"",
+        
+        "prepublishOnly": "ts-node scripts/pre-publish",
+        
+        "prerelease": "npm run build",
+        "release": "ts-node scripts/release",
+        "postrelease": "npm run clean"
     },
     "name": "mutoid",
     "version": "0.1.0",

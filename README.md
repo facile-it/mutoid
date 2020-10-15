@@ -30,7 +30,7 @@ yarn add react-dom react
 
 ### State management
 
-`import * as MS from 'mutoid/lib/state'`
+`import * as MS from 'mutoid/state'`
 
 ##### Create store
 
@@ -131,7 +131,7 @@ store().notifier$.subscribe(e =>
 
 ### Data fetching
 
-`import * as MH from 'mutoid/lib/http'`
+`import * as MH from 'mutoid/http'`
 
 ##### ajaxToResource
 
@@ -188,7 +188,7 @@ export const fetchSomethingMutation = pipe(
 
 #### Operatos
 
-`import * as MRX from 'mutoid/lib/rsjx'`
+`import * as MRX from 'mutoid/rsjx'`
 
 ##### chainFirstIO
 
@@ -251,7 +251,7 @@ const mutationR = useMutation(store, mutation)
 
 ```typescript
 import { ajax } from 'rxjs/ajax'
-import * as MH from 'mutoid/lib/http'
+import * as MH from 'mutoid/http'
 
 const somethingFetcher = () => MH.ajaxToResource(ajax('https://api.io'), decoders)
 
