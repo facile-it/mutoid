@@ -255,7 +255,7 @@ import * as MH from 'mutoid/http'
 
 const somethingFetcher = () => MH.ajaxToResource(ajax('https://api.io'), decoders)
 
-const [resource, dispatch] = useResourceFetcher(fetchSomething, iniState)
+const [resource, dispatch] = useResourceFetcher(fetchSomething)
 ```
 
 ---
