@@ -3,6 +3,7 @@ import { pipe } from 'fp-ts/pipeable'
 import type * as t from 'io-ts'
 import { Observable, concat, of } from 'rxjs'
 import type { AjaxError, AjaxResponse } from 'rxjs/ajax'
+// eslint-disable-next-line rxjs/no-internal
 import type { AjaxErrorNames } from 'rxjs/internal/observable/dom/AjaxObservable'
 import { catchError, map, switchMap, take } from 'rxjs/operators'
 import type { StatusCode } from './status'
@@ -144,7 +145,7 @@ export const ajaxToResource = <DS extends ResourceDecoders, AE = never>(
         ajax$.pipe(
             map(applyDecoder(decoders)),
             catchError(
-                (e): Observable<decodersDictToResourceDone<DS> | ResourceFail<AE>> =>
+                (e: unknown): Observable<decodersDictToResourceDone<DS> | ResourceFail<AE>> =>
                     of(isAjaxError(e) ? applyDecoder(decoders)(e) : resourceFail({ type: 'unknownError', detail: e }))
             )
         )

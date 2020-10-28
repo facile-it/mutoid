@@ -1,6 +1,6 @@
 {
     "scripts": {
-        "dev-server": "USERNAME=\"${USER}\" webpack-dev-server --mode development --open --hot",
+        "dev-server": "USERNAME=\"${USER}\" webpack-dev-server --config example/webpack.config.ts --mode development --hot",
         "lint": "eslint . --ext .ts,.tsx",
         "lint-fix": "eslint --fix",
         "prettier": "prettier --check \"{src,test,dtslint,example}/**/*.{ts,tsx}\"",
@@ -9,15 +9,11 @@
         "test": "yarn test-unit",
         "test-unit": "jest",
         "test-type": "dtslint dtslint",
-
         "clean": "rm -rf dist",
         "prebuild": "npm run clean",
-        
         "build": "tsc -p ./tsconfig.build.json && tsc -p ./tsconfig.build-es6.json && ts-node scripts/build",
         "postbuild": "prettier --loglevel=silent --write \"./dist/**/*.ts\"",
-        
         "prepublishOnly": "ts-node scripts/pre-publish",
-        
         "prerelease": "npm run build",
         "release": "ts-node scripts/release",
         "postrelease": "npm run clean"
@@ -51,7 +47,8 @@
         "@types/webpack-dev-server": "^3.11.0",
         "dtslint": "github:gcanti/dtslint",
         "eslint": "^7.0.0",
-        "eslint-config-facile": "^0.2.5",
+        "eslint-config-facile": "^0.3.0",
+        "fork-ts-checker-webpack-plugin": "^5.2.1",
         "fp-ts": "^2.8.3",
         "fp-ts-rxjs": "^0.6.9",
         "html-webpack-plugin": "^4.3.0",

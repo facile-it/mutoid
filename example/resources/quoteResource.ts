@@ -1,7 +1,7 @@
 import * as R from 'fp-ts/Reader'
 import { pipe } from 'fp-ts/function'
 import * as t from 'io-ts'
-import type { AjaxCreationMethod } from 'rxjs/internal/observable/dom/AjaxObservable'
+import type { ajax } from 'rxjs/ajax'
 import { delay } from 'rxjs/operators'
 import { Resource, ajaxToResource } from '../../src/http'
 import { authAppError, fetchWithAuth } from './fetchWithAuth'
@@ -19,7 +19,7 @@ export type quoteResource = Resource<typeof quoteDecoders, authAppError>
 export const fetchQuote = pipe(
     R.asks(fetchWithAuth),
     R.chainW(builder =>
-        R.asks((deps: { ajax: AjaxCreationMethod }) => () =>
+        R.asks((deps: { ajax: typeof ajax }) => () =>
             builder(
                 token => deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?token=${token}`),
                 quoteDecoders
@@ -30,7 +30,7 @@ export const fetchQuote = pipe(
 
 // example: simple fetch without token but with params
 
-export const fetchQuoteWithParams = R.asks((deps: { ajax: AjaxCreationMethod }) => (id: number, from: string) =>
+export const fetchQuoteWithParams = R.asks((deps: { ajax: typeof ajax }) => (id: number, from: string) =>
     ajaxToResource(deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?id=${id}&from=${from}`), quoteDecoders)
 )
 
@@ -39,7 +39,7 @@ export const fetchQuoteWithParams = R.asks((deps: { ajax: AjaxCreationMethod }) 
 export const fetchQuoteWithDelay = pipe(
     R.asks(fetchWithAuth),
     R.chainW(builder =>
-        R.asks((deps: { ajax: AjaxCreationMethod }) => () =>
+        R.asks((deps: { ajax: typeof ajax }) => () =>
             builder(
                 token =>
                     deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?token=${token}`).pipe(delay(5000)),

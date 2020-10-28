@@ -1,0 +1,10 @@
+{
+    "extends": "./tsconfig.json",
+    "include": [
+        "./example",
+        "./src",
+        "./test",
+        "./scripts",
+        "./dtslint"
+    ]
+}

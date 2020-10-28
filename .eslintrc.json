@@ -1,4 +1,7 @@
 {
     "root": true,
-    "extends": "facile/react"
+    "extends": "facile/react",
+    "parserOptions": {
+        "project": "./tsconfig.eslint.json"
+    }
 }

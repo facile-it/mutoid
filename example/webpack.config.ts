@@ -1,9 +1,11 @@
+import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin'
 import HtmlWebpackPlugin from 'html-webpack-plugin'
 import * as webpack from 'webpack'
 import * as path from 'path'
 
-const config: webpack.Configuration = {
+const config: webpack.ConfigurationFactory = (_env, argv) => ({
     entry: './example/index.tsx',
+    devtool: argv.mode === 'production' ? 'source-map' : 'inline-source-map',
     resolve: {
         extensions: ['.tsx', '.ts', '.js'],
     },
@@ -21,6 +23,9 @@ const config: webpack.Configuration = {
             {
                 test: /\.tsx?$/,
                 loader: 'ts-loader',
+                options: {
+                    transpileOnly: true,
+                },
             },
         ],
     },
@@ -30,12 +35,13 @@ const config: webpack.Configuration = {
             title: 'Mutoid',
         }),
         new webpack.SourceMapDevToolPlugin(),
+        new ForkTsCheckerWebpackPlugin(),
         new webpack.DefinePlugin({
             ENV: JSON.stringify('dev'),
             APIKEY: JSON.stringify('xxx'),
             USERNAME: JSON.stringify(process.env.USERNAME),
         }),
     ],
-}
+})
 
 export default config
