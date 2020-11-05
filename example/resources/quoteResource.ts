@@ -1,13 +1,14 @@
 import * as R from 'fp-ts/Reader'
 import { pipe } from 'fp-ts/function'
 import * as t from 'io-ts'
+import { nonEmptyArray } from 'io-ts-types/lib/nonEmptyArray'
 import type { ajax } from 'rxjs/ajax'
 import { delay } from 'rxjs/operators'
 import { Resource, ajaxToResource } from '../../src/http'
 import { authAppError, fetchWithAuth } from './fetchWithAuth'
 
 export const quoteDecoders = {
-    200: t.array(t.string).decode,
+    200: nonEmptyArray(t.string).decode,
     400: t.string.decode,
 }
 
@@ -34,7 +35,7 @@ export const fetchQuoteWithParams = R.asks((deps: { ajax: typeof ajax }) => (id:
     ajaxToResource(deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?id=${id}&from=${from}`), quoteDecoders)
 )
 
-// example: example with compoosition
+// example: with composition
 
 export const fetchQuoteWithDelay = pipe(
     R.asks(fetchWithAuth),

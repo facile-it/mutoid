@@ -53,6 +53,7 @@
         "fp-ts-rxjs": "^0.6.9",
         "html-webpack-plugin": "^4.3.0",
         "io-ts": "^2.2.10",
+        "io-ts-types": "^0.5.11",
         "jest": "^26.0.1",
         "prettier": "^2.0.5",
         "react": "^16.13.1",
