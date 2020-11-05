@@ -34,7 +34,6 @@ const config: webpack.ConfigurationFactory = (_env, argv) => ({
             template: './example/index.ejs',
             title: 'Mutoid',
         }),
-        new webpack.SourceMapDevToolPlugin(),
         new ForkTsCheckerWebpackPlugin(),
         new webpack.DefinePlugin({
             ENV: JSON.stringify('dev'),

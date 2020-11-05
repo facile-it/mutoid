@@ -99,7 +99,7 @@ describe('react', () => {
                 200: t.string.decode,
             })
 
-        const { result } = renderHook(() => MR.useResourceFetcher(resource, of(1)))
+        const { result } = renderHook(() => MR.useResourceFetcher(resource, { notifierTakeUntil: of(1) }))
 
         expect(result.current[0].tag).toBe('init')
 
@@ -108,5 +108,38 @@ describe('react', () => {
         })
 
         expect(result.current[0].tag).toBe('init')
+    })
+
+    test('useSeleuseResourceFetcherctor mapAcknowledged', () => {
+        const ajax = of({
+            status: 200,
+            response: 'hello',
+        } as AjaxResponse)
+
+        const resource = () =>
+            MH.ajaxToResource(ajax, {
+                200: t.string.decode,
+            })
+
+        const { result } = renderHook(() =>
+            MR.useResourceFetcher(resource, {
+                mapAcknowledged: s => {
+                    switch (s.tag) {
+                        case 'done':
+                            return { tag: 'success' }
+                        case 'fail':
+                            return { tag: 'error' }
+                    }
+                },
+            })
+        )
+
+        expect(result.current[0].tag).toBe('init')
+
+        act(() => {
+            result.current[1]()
+        })
+
+        expect(result.current[0].tag).toBe('success')
     })
 })

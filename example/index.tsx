@@ -62,7 +62,7 @@ const QuoteFromState: React.FC = () => {
             <em>{renderQuote(quote)}</em>
             <br />
             <br />
-            <button onClick={fetchQuoteRunner} disabled={quote.tag !== 'done'}>
+            <button type="button" onClick={fetchQuoteRunner} disabled={quote.tag !== 'done'}>
                 Fetch new quote and update state
             </button>
         </>
@@ -84,10 +84,12 @@ const QuoteFromStateWithParams: React.FC = () => {
             <em>{renderQuote(quote)}</em>
             <br />
             <br />
-            <button onClick={() => fetchQuoteRunner(1, 'useDispatch')} disabled={quote.tag !== 'done'}>
+            <button type="button" onClick={() => fetchQuoteRunner(1, 'useDispatch')} disabled={quote.tag !== 'done'}>
                 Fetch new quote and update state
             </button>{' '}
-            <button onClick={resetQuoteRunner}>Reset to init</button>
+            <button type="button" onClick={resetQuoteRunner}>
+                Reset to init
+            </button>
         </>
     )
 }
@@ -111,6 +113,7 @@ const QuoteFromStateWithDelay: React.FC = () => {
             <br />
             <br />
             <button
+                type="button"
                 onClick={() => {
                     notifier.current.next(1)
                     fetchQuoteRunner()
@@ -119,6 +122,7 @@ const QuoteFromStateWithDelay: React.FC = () => {
                 Fetch new quote and take latest
             </button>{' '}
             <button
+                type="button"
                 onClick={() => {
                     notifier.current.next(1)
                 }}
@@ -130,19 +134,46 @@ const QuoteFromStateWithDelay: React.FC = () => {
 }
 
 const QuoteWithHook: React.FC = () => {
-    const [quote, quoteFetcher] = useResourceFetcher(fetchQuote(resourceDeps))
+    const [quote, quoteFetcher] = useResourceFetcher(fetchQuote(resourceDeps), {
+        mapAcknowledged: c => {
+            switch (c.tag) {
+                case 'fail':
+                    return { tag: 'fail' as const, payload: 'error' }
+                case 'done': {
+                    switch (c.status) {
+                        case 200:
+                            return { tag: 'success' as const, payload: c.payload[0] }
+                        case 400:
+                            return { tag: 'badRequest' as const, payload: 'bad' }
+                    }
+                }
+            }
+        },
+    })
 
     React.useEffect(() => {
         quoteFetcher()
     }, [quoteFetcher])
 
+    const render = () => {
+        switch (quote.tag) {
+            case 'badRequest':
+            case 'fail':
+            case 'success':
+                return quote.payload
+            case 'submitted':
+            case 'init':
+                return 'Quote loading...'
+        }
+    }
+
     return (
         <>
             <h2>Resource with hook</h2>
-            <em>{renderQuote(quote)}</em>
+            <em>{render()}</em>
             <br />
             <br />
-            <button onClick={quoteFetcher} disabled={quote.tag !== 'done'}>
+            <button type="button" onClick={quoteFetcher}>
                 Fetch new quote
             </button>
         </>
@@ -162,7 +193,7 @@ const QuoteWithHookWithParams: React.FC = () => {
             <em>{renderQuote(quote)}</em>
             <br />
             <br />
-            <button onClick={() => quoteFetcher(1, 'useResourceFetcher')} disabled={quote.tag !== 'done'}>
+            <button type="button" onClick={() => quoteFetcher(1, 'useResourceFetcher')} disabled={quote.tag !== 'done'}>
                 Fetch new quote
             </button>
         </>
@@ -171,7 +202,9 @@ const QuoteWithHookWithParams: React.FC = () => {
 
 const QuoteWithHookWithDelay: React.FC = () => {
     const notifier = React.useRef(new Subject<number>())
-    const [quote, quoteFetcher] = useResourceFetcher(fetchQuoteWithDelay(resourceDeps), notifier.current)
+    const [quote, quoteFetcher] = useResourceFetcher(fetchQuoteWithDelay(resourceDeps), {
+        notifierTakeUntil: notifier.current,
+    })
 
     React.useEffect(() => {
         quoteFetcher()
@@ -184,6 +217,7 @@ const QuoteWithHookWithDelay: React.FC = () => {
             <br />
             <br />
             <button
+                type="button"
                 onClick={() => {
                     notifier.current.next(1)
                     quoteFetcher()
@@ -192,6 +226,7 @@ const QuoteWithHookWithDelay: React.FC = () => {
                 Fetch new quote and take latest
             </button>{' '}
             <button
+                type="button"
                 onClick={() => {
                     notifier.current.next(1)
                 }}

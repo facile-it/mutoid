@@ -1,5 +1,5 @@
 import type { Lazy } from 'fp-ts/function'
-import { useCallback, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import type { Subscription } from 'rxjs'
 import * as MS from '../state'
 
@@ -41,7 +41,12 @@ export function useMutation<
     mutationL: (deps?: D) => MS.Mutation<NM, P, S, SS>,
     options?: MS.BaseOptions & Partial<MS.DepsOptions<D>>
 ): (...payload: P) => Subscription {
-    const optionsR = useRef(options)
+    const optionsRef = useRef(options)
+
+    useEffect(() => {
+        optionsRef.current = options
+    })
+
     // can't eta reduction
-    return useCallback((...payload) => MS.mutationRunner(s, mutationL, optionsR.current)(...payload), [s, mutationL])
+    return useCallback((...payload) => MS.mutationRunner(s, mutationL, optionsRef.current)(...payload), [s, mutationL])
 }
