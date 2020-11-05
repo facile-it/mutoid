@@ -1,7 +1,7 @@
 import * as R from 'fp-ts/Reader'
 import { pipe } from 'fp-ts/function'
 import * as t from 'io-ts'
-import { nonEmptyArray } from 'io-ts-types/lib/nonEmptyArray'
+import { nonEmptyArray } from 'io-ts-types/nonEmptyArray'
 import type { ajax } from 'rxjs/ajax'
 import { delay } from 'rxjs/operators'
 import { Resource, ajaxToResource } from '../../src/http'
