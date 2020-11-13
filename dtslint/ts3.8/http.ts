@@ -8,23 +8,21 @@ import * as MH from '../../src/http'
 declare const ajaxFetchUnknownFail: Observable<AjaxResponse>
 declare const decoderDataString: t.Decode<unknown, { data: string }>
 declare const decoderDataNumber: t.Decode<unknown, { data: number }>
-declare const mutation: {
+declare const decoders: {
     200: typeof decoderDataString
     400: typeof decoderDataNumber
 }
 
 // @TODO FIX ME
 // eslint-disable-next-line max-len
-// $ ExpectType Observable<ResourceSubmitted | ResourceDone<200, { data: string; }> | ResourceDone<400, { data: number; }> | ResourceFail<never>>
-// $ ExpectType Observable<ResourceSubmitted | ResourceFail<never> | ResourceDone<200, { data: string; }> | ResourceDone<400, { data: number; }>>
-const resourceUnknownFail = MH.ajaxToResource(ajaxFetchUnknownFail, mutation)
+// $ExpectType Observable<ResourceStarted<{ 200: Decode<unknown, { data: string; }>; 400: Decode<unknown, { data: number; }>; }, never>>
+const resourceUnknownFail = MH.ajaxToResource(ajaxFetchUnknownFail, decoders)
 
-declare const ajaxFetchWithFail: Observable<AjaxResponse | MH.ResourceFail<string>>
+declare const ajaxFetchWithFail: Observable<AjaxResponse | MH.ResourceAjaxFail<string>>
 
 // eslint-disable-next-line max-len
-// $ ExpectType Observable<ResourceSubmitted | ResourceDone<200, { data: string; }> | ResourceDone<400, { data: number; }> | ResourceFail<string>>
-// $ ExpectType Observable<ResourceSubmitted | ResourceFail<string> | ResourceDone<200, { data: string; }> | ResourceDone<400, { data: number; }>>
-const resourceWithFail = MH.ajaxToResource(ajaxFetchWithFail, mutation)
+// $ExpectType Observable<ResourceStarted<{ 200: Decode<unknown, { data: string; }>; 400: Decode<unknown, { data: number; }>; }, string>>
+const resourceWithFail = MH.ajaxToResource(ajaxFetchWithFail, decoders)
 
 // $ExpectType () => (s: { counter: number; }) => Observable<{ counter: number; }>
 const noParam = MH.resourceFetcherToMutationEffect(

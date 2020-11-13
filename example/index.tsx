@@ -6,8 +6,8 @@ import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import { Subject } from 'rxjs'
 import { ajax } from 'rxjs/ajax'
-import { resourceFold } from '../src/http'
-import { useMutation, useResourceFetcher, useSelector } from '../src/react'
+import * as MH from '../src/http'
+import * as MR from '../src/react'
 import * as MS from '../src/state'
 import { fetchQuote, fetchQuoteWithDelay, fetchQuoteWithParams, quoteResource } from './resources/quoteResource'
 import {
@@ -25,7 +25,7 @@ const resourceDeps = {
 }
 
 const renderQuote = (quote: quoteResource): React.ReactChild => {
-    return resourceFold(quote)({
+    return MH.resourceFold_(quote)({
         onDone: r => {
             switch (r.status) {
                 case 200:
@@ -36,13 +36,13 @@ const renderQuote = (quote: quoteResource): React.ReactChild => {
         },
         onInit: () => 'Quote loading init...',
         onSubmitted: () => 'Quote loading submitted...',
-        onfail: e => `Error ${e.error.type}`,
+        onFail: e => `Error ${e.error.type}`,
     })
 }
 
 const QuoteFromState: React.FC = () => {
-    const quote = useSelector(quoteStore, s => s.quote)
-    const fetchQuoteRunner = useMutation(quoteStore, fetchQuoteMutation, { deps: resourceDeps })
+    const quote = MR.useSelector(quoteStore, s => s.quote)
+    const fetchQuoteRunner = MR.useMutation(quoteStore, fetchQuoteMutation, { deps: resourceDeps })
 
     React.useEffect(() => {
         fetchQuoteRunner()
@@ -70,9 +70,9 @@ const QuoteFromState: React.FC = () => {
 }
 
 const QuoteFromStateWithParams: React.FC = () => {
-    const quote = useSelector(quoteStore, s => s.quote)
-    const fetchQuoteRunner = useMutation(quoteStore, fetchQuoteMutationWithParams, { deps: { ajax: ajax } })
-    const resetQuoteRunner = useMutation(quoteStore, resetQuoteMutation)
+    const quote = MR.useSelector(quoteStore, s => s.quote)
+    const fetchQuoteRunner = MR.useMutation(quoteStore, fetchQuoteMutationWithParams, { deps: { ajax: ajax } })
+    const resetQuoteRunner = MR.useMutation(quoteStore, resetQuoteMutation)
 
     React.useEffect(() => {
         fetchQuoteRunner(1, 'useDispatch')
@@ -95,9 +95,9 @@ const QuoteFromStateWithParams: React.FC = () => {
 }
 
 const QuoteFromStateWithDelay: React.FC = () => {
-    const quote = useSelector(quoteStore, s => s.quote)
+    const quote = MR.useSelector(quoteStore, s => s.quote)
     const notifier = React.useRef(new Subject<number>())
-    const fetchQuoteRunner = useMutation(quoteStore, fetchQuoteMutationWithDelay, {
+    const fetchQuoteRunner = MR.useMutation(quoteStore, fetchQuoteMutationWithDelay, {
         notifierTakeUntil: notifier.current,
         deps: resourceDeps,
     })
@@ -134,7 +134,7 @@ const QuoteFromStateWithDelay: React.FC = () => {
 }
 
 const QuoteWithHook: React.FC = () => {
-    const [quote, quoteFetcher] = useResourceFetcher(fetchQuote(resourceDeps), {
+    const [quote, quoteFetcher] = MR.useResourceFetcher(fetchQuote(resourceDeps), {
         mapAcknowledged: c => {
             switch (c.tag) {
                 case 'fail':
@@ -181,7 +181,7 @@ const QuoteWithHook: React.FC = () => {
 }
 
 const QuoteWithHookWithParams: React.FC = () => {
-    const [quote, quoteFetcher] = useResourceFetcher(fetchQuoteWithParams({ ajax: ajax }))
+    const [quote, quoteFetcher] = MR.useResourceFetcher(fetchQuoteWithParams({ ajax: ajax }))
 
     React.useEffect(() => {
         quoteFetcher(1, 'useResourceFetcher')
@@ -190,7 +190,24 @@ const QuoteWithHookWithParams: React.FC = () => {
     return (
         <>
             <h2>Resource with hook with params</h2>
-            <em>{renderQuote(quote)}</em>
+            <em>
+                {pipe(
+                    quote,
+                    MH.resourceFold({
+                        onDone: r => {
+                            switch (r.status) {
+                                case 200:
+                                    return r.payload[0]
+                                case 400:
+                                    return `Client error ${r.payload}`
+                            }
+                        },
+                        onInit: () => 'Quote loading init...',
+                        onSubmitted: () => 'Quote loading submitted...',
+                        onFail: e => `Error ${e.error.type}`,
+                    })
+                )}
+            </em>
             <br />
             <br />
             <button type="button" onClick={() => quoteFetcher(1, 'useResourceFetcher')} disabled={quote.tag !== 'done'}>
@@ -202,7 +219,8 @@ const QuoteWithHookWithParams: React.FC = () => {
 
 const QuoteWithHookWithDelay: React.FC = () => {
     const notifier = React.useRef(new Subject<number>())
-    const [quote, quoteFetcher] = useResourceFetcher(fetchQuoteWithDelay(resourceDeps), {
+
+    const [quote, quoteFetcher] = MR.useResourceFetcher(fetchQuoteWithDelay(resourceDeps), {
         notifierTakeUntil: notifier.current,
     })
 
@@ -275,8 +293,8 @@ declare const APIKEY: string | undefined
 declare const USERNAME: string | undefined
 
 const AppInitializer: React.FC = () => {
-    const sessionState = useSelector(sessionStore, identity)
-    const parseEnv = useMutation(sessionStore, parseEnvMutation)
+    const sessionState = MR.useSelector(sessionStore, identity)
+    const parseEnv = MR.useMutation(sessionStore, parseEnvMutation)
 
     React.useEffect(() => {
         parseEnv(ENV, APIKEY, USERNAME)
