@@ -1,3 +1,5 @@
+import * as E from 'fp-ts/Either'
+import { pipe } from 'fp-ts/function'
 import * as t from 'io-ts'
 import { of, Observable } from 'rxjs'
 import type { AjaxError, AjaxResponse } from 'rxjs/ajax'
@@ -153,9 +155,11 @@ describe('http', () => {
             })
 
             const resource = MH.ajaxToResource(ajax, {
-                200: t.type({
-                    data: t.number,
-                }).decode,
+                200: (i: unknown) =>
+                    pipe(
+                        t.type({ data: t.number }).decode(i),
+                        E.mapLeft(() => 'error')
+                    ),
             })
 
             expectObservable(resource).toBe('a-(b|)', {
@@ -164,14 +168,7 @@ describe('http', () => {
                     tag: 'fail',
                     error: {
                         type: 'decodeError',
-                        detail: [
-                            {
-                                key: '',
-                                actual: { data: 'hello' },
-                                requestType: '{ data: number }',
-                            },
-                            { key: 'data', actual: 'hello', requestType: 'number' },
-                        ],
+                        detail: 'error',
                     },
                 },
             })
@@ -180,8 +177,8 @@ describe('http', () => {
 
     test('ajaxToResource already fail', () => {
         testSchedulerBuilder().run(({ cold, expectObservable }) => {
-            const ajax = cold<MH.ResourceFail<string>>('--a', {
-                a: MH.resourceFail<string>({
+            const ajax = cold<MH.ResourceAjaxFail<string>>('--a', {
+                a: MH.resourceAjaxFail<string>({
                     type: 'appError',
                     detail: 'bhoo',
                 }),
@@ -249,7 +246,7 @@ describe('http', () => {
             onInit: onInit,
             onDone: onDone,
             onSubmitted: onSubmitted,
-            onfail: onfail,
+            onFail: onfail,
         }
 
         const ts: [MH.Resource<any>, jest.Mock<any, any>][] = [

@@ -220,7 +220,9 @@ const QuoteWithHookWithParams: React.FC = () => {
 const QuoteWithHookWithDelay: React.FC = () => {
     const notifier = React.useRef(new Subject<number>())
 
-    const [quote, quoteFetcher] = MR.useResourceFetcher(fetchQuoteWithDelay(resourceDeps))
+    const [quote, quoteFetcher] = MR.useResourceFetcher(fetchQuoteWithDelay(resourceDeps), {
+        notifierTakeUntil: notifier.current,
+    })
 
     React.useEffect(() => {
         quoteFetcher()
