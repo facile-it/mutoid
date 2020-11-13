@@ -75,9 +75,9 @@ export const resourceAjaxFail = <AE = never>(error: ResourceAjaxFail<AE>['error'
 export type AjaxSubject<AE = never> = Observable<AjaxResponse | ResourceAjaxFail<AE>>
 
 export type ResourceDecoders = { [k in StatusCode]?: (i: unknown) => E.Either<unknown, unknown> }
-export type Resource<DS extends ResourceDecoders, AE = never> = ResourceInit | ResourceRunned<DS, AE>
-export type ResourceRunned<DS extends ResourceDecoders, AE = never> = ResourceSubmitted | ResourceAcked<DS, AE>
-export type ResourceAcked<DS extends ResourceDecoders, AE = never> =
+export type Resource<DS extends ResourceDecoders, AE = never> = ResourceInit | ResourceStarted<DS, AE>
+export type ResourceStarted<DS extends ResourceDecoders, AE = never> = ResourceSubmitted | ResourceAcknowledged<DS, AE>
+export type ResourceAcknowledged<DS extends ResourceDecoders, AE = never> =
     | DecodersDictToResourceDone<DS>
     | DecodersToResourceFail<DS, AE>
 
@@ -108,7 +108,7 @@ const isAjaxError = (e: any): e is AjaxError => Object.prototype.hasOwnProperty.
 
 const applyDecoder = <DS extends ResourceDecoders>(decoders: DS) => <AE>(
     response: AjaxResponse | AjaxError | ResourceAjaxFail<AE>
-): ResourceAcked<DS, AE> => {
+): ResourceAcknowledged<DS, AE> => {
     if (isResourceAjaxFail(response)) {
         return response as DecodersToResourceFail<DS, AE>
     }
@@ -138,13 +138,13 @@ const applyDecoder = <DS extends ResourceDecoders>(decoders: DS) => <AE>(
 export const ajaxToResource = <DS extends ResourceDecoders, AE = never>(
     ajax$: AjaxSubject<AE>,
     decoders: DS
-): Observable<ResourceRunned<DS, AE>> =>
+): Observable<ResourceStarted<DS, AE>> =>
     concat(
         of(resourceSubmitted),
         ajax$.pipe(
             map(applyDecoder(decoders)),
             catchError(
-                (e: unknown): Observable<ResourceAcked<DS, AE>> =>
+                (e: unknown): Observable<ResourceAcknowledged<DS, AE>> =>
                     of(
                         isAjaxError(e)
                             ? applyDecoder(decoders)(e)
