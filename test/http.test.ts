@@ -249,10 +249,10 @@ describe('http', () => {
             onFail: onfail,
         }
 
-        const ts: [MH.Resource<any>, jest.Mock<any, any>][] = [
+        const ts: [MH.Resource<{ 200: any }>, jest.Mock<any, any>][] = [
             [MH.resourceInit, onInit],
             [MH.resourceSubmitted, onSubmitted],
-            [MH.resourceDone(200, 'hello') as any, onDone],
+            [MH.resourceDone(200, 'hello'), onDone],
             [MH.resourceFail({ type: 'unknownError', detail: 'boom' }), onfail],
         ]
 
@@ -261,5 +261,41 @@ describe('http', () => {
             expect(m.mock.calls.length).toBe(1)
             jest.resetAllMocks()
         })
+    })
+
+    test('guards', () => {
+        interface decoders {
+            200: () => E.Either<string, string>
+        }
+
+        const init = MH.resourceInit
+        const submitted = MH.resourceSubmitted
+        const done = MH.resourceDone<200, string>(200, 'hello')
+        const fail = MH.resourceFail({ type: 'unknownError', detail: 'boom' })
+
+        expect(MH.isResourceInit(init)).toBe(true)
+        expect(MH.isResourcePending(init)).toBe(true)
+        expect(MH.isResourceStarted(init)).toBe(false)
+        expect(MH.isResourceAcknowledged(init)).toBe(false)
+
+        expect(MH.isResourceSubmitted(submitted)).toBe(true)
+        expect(MH.isResourcePending(submitted)).toBe(true)
+        expect(MH.isResourceStarted(submitted)).toBe(true)
+        expect(MH.isResourceAcknowledged(submitted)).toBe(false)
+
+        expect(MH.isResourceDone<decoders>(done)).toBe(true)
+        expect(MH.isResourcePending<decoders>(done)).toBe(false)
+        expect(MH.isResourceStarted<decoders>(done)).toBe(true)
+        expect(MH.isResourceAcknowledged<decoders>(done)).toBe(true)
+
+        expect(MH.isResourceFail(fail)).toBe(true)
+        expect(MH.isResourcePending(fail)).toBe(false)
+        expect(MH.isResourceStarted(fail)).toBe(true)
+        expect(MH.isResourceAcknowledged(fail)).toBe(true)
+
+        expect(MH.isResourceInit(submitted)).toBe(false)
+        expect(MH.isResourceSubmitted(init)).toBe(false)
+        expect(MH.isResourceDone(init)).toBe(false)
+        expect(MH.isResourceFail(init)).toBe(false)
     })
 })

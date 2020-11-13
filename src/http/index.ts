@@ -56,22 +56,6 @@ export interface ResourceAjaxFail<AE = never> {
                 })
 }
 
-export const resourceInit: ResourceInit = { tag: 'init' }
-export const resourceSubmitted: ResourceSubmitted = { tag: 'submitted' }
-export const resourceDone = <S, P>(status: S, payload: P): ResourceDone<S, P> => ({
-    tag: 'done',
-    status: status,
-    payload: payload,
-})
-export const resourceFail = <DE, AE = never>(error: ResourceFail<DE, AE>['error']): ResourceFail<DE, AE> => ({
-    tag: 'fail',
-    error: error,
-})
-export const resourceAjaxFail = <AE = never>(error: ResourceAjaxFail<AE>['error']): ResourceAjaxFail<AE> => ({
-    tag: 'fail',
-    error: error,
-})
-
 export type AjaxSubject<AE = never> = Observable<AjaxResponse | ResourceAjaxFail<AE>>
 
 export type ResourceDecoders = { [k in StatusCode]?: (i: unknown) => E.Either<unknown, unknown> }
@@ -100,7 +84,9 @@ const dict: { [k in AjaxErrorNames]: true } = {
     AjaxTimeoutError: true,
 }
 
+// -------------------------------------------------------------------------------------
 // utility
+// -------------------------------------------------------------------------------------
 
 const isResourceAjaxFail = <AE>(r: any | ResourceAjaxFail<AE>): r is ResourceAjaxFail<AE> => r.tag === 'fail'
 
@@ -133,7 +119,62 @@ const applyDecoder = <DS extends ResourceDecoders>(decoders: DS) => <AE>(
     return resourceFail<DecodersToDE<DS>, AE>({ type: 'unexpectedResponse', detail: response })
 }
 
-// combinator
+// -------------------------------------------------------------------------------------
+// Guards
+// -------------------------------------------------------------------------------------
+
+export const isResourceInit = <DS extends ResourceDecoders, AE = never>(
+    r: Resource<DS, AE>
+): r is Extract<typeof r, { tag: 'init' }> => r.tag === 'init'
+
+export const isResourceSubmitted = <DS extends ResourceDecoders, AE = never>(
+    r: Resource<DS, AE>
+): r is Extract<typeof r, { tag: 'submitted' }> => r.tag === 'submitted'
+
+export const isResourceDone = <DS extends ResourceDecoders, AE = never>(
+    r: Resource<DS, AE>
+): r is Extract<typeof r, { tag: 'done' }> => r.tag === 'done'
+
+export const isResourceFail = <DS extends ResourceDecoders, AE = never>(
+    r: Resource<DS, AE>
+): r is Extract<typeof r, { tag: 'fail' }> => r.tag === 'fail'
+
+export const isResourcePending = <DS extends ResourceDecoders, AE = never>(
+    r: Resource<DS, AE>
+): r is Extract<typeof r, { tag: 'init' | 'submitted' }> => isResourceInit(r) || isResourceSubmitted(r)
+
+export const isResourceStarted = <DS extends ResourceDecoders, AE = never>(
+    r: Resource<DS, AE>
+): r is Extract<typeof r, { tag: 'submitted' | 'fail' | 'done' }> =>
+    isResourceSubmitted(r) || isResourceFail(r) || isResourceDone(r)
+
+export const isResourceAcknowledged = <DS extends ResourceDecoders, AE = never>(
+    r: Resource<DS, AE>
+): r is Extract<typeof r, { tag: 'fail' | 'done' }> => isResourceFail(r) || isResourceDone(r)
+
+// -------------------------------------------------------------------------------------
+// Constructors
+// -------------------------------------------------------------------------------------
+
+export const resourceInit: ResourceInit = { tag: 'init' }
+export const resourceSubmitted: ResourceSubmitted = { tag: 'submitted' }
+export const resourceDone = <S, P>(status: S, payload: P): ResourceDone<S, P> => ({
+    tag: 'done',
+    status: status,
+    payload: payload,
+})
+export const resourceFail = <DE, AE = never>(error: ResourceFail<DE, AE>['error']): ResourceFail<DE, AE> => ({
+    tag: 'fail',
+    error: error,
+})
+export const resourceAjaxFail = <AE = never>(error: ResourceAjaxFail<AE>['error']): ResourceAjaxFail<AE> => ({
+    tag: 'fail',
+    error: error,
+})
+
+// -------------------------------------------------------------------------------------
+// combinators
+// -------------------------------------------------------------------------------------
 
 export const ajaxToResource = <DS extends ResourceDecoders, AE = never>(
     ajax$: AjaxSubject<AE>,
@@ -165,7 +206,9 @@ export const resourceFetcherToMutationEffect = <
     apOperators: (i: Observable<R>, s: SS) => Observable<S>
 ) => (...i: I) => (s: SS): Observable<S> => aj(...i).pipe(switchMap(r => apOperators(of(r), s)))
 
-// destructors
+// -------------------------------------------------------------------------------------
+// Destructors
+// -------------------------------------------------------------------------------------
 
 export const resourceFold = <DS extends ResourceDecoders, AE, R>(dodo: {
     onInit: () => R
