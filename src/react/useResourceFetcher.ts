@@ -1,45 +1,56 @@
 import { useCallback, useState, useRef, useEffect } from 'react'
 import type { Observable, Subscription } from 'rxjs'
 import { map, take, takeUntil } from 'rxjs/operators'
-import { ResourceInit, resourceInit, Resource, ResourceSubmitted } from '../http'
+import {
+    ResourceInit,
+    resourceInit,
+    ResourceSubmitted,
+    ResourceDecoders,
+    ResourceRunned,
+    ResourceAcked,
+    Resource,
+} from '../http'
 
 export function useResourceFetcher<
-    AR extends (...p: any) => Observable<any>,
+    AR extends (...p: any) => Observable<ResourceRunned<DS, EA>>,
     MR extends { tag: unknown },
-    R = ReturnType<AR> extends Observable<infer S> ? S : never,
+    DS extends ResourceDecoders = ReturnType<AR> extends Observable<ResourceRunned<infer S, any>> ? S : never,
+    EA = ReturnType<AR> extends Observable<ResourceRunned<DS, infer S>> ? S : never,
     P extends Array<unknown> = Parameters<AR>
 >(
     ajaxToResource: AR,
     options: {
         notifierTakeUntil?: Observable<unknown>
-        iniState?: R | ResourceInit
-        mapAcknowledged: (r: Extract<R, { tag: 'fail' | 'done' }>) => MR
+        iniState?: Resource<DS, EA>
+        mapAcknowledged: (r: ResourceAcked<DS, EA>) => MR
     }
 ): [MR | ResourceInit | ResourceSubmitted, (...p: P) => void]
 export function useResourceFetcher<
-    AR extends (...p: any) => Observable<any>,
+    AR extends (...p: any) => Observable<ResourceRunned<DS, EA>>,
     MR extends { tag: unknown },
-    R = ReturnType<AR> extends Observable<infer S> ? S : never,
+    DS extends ResourceDecoders = ReturnType<AR> extends Observable<ResourceRunned<infer S, any>> ? S : never,
+    EA = ReturnType<AR> extends Observable<ResourceRunned<DS, infer S>> ? S : never,
     P extends Array<unknown> = Parameters<AR>
 >(
     ajaxToResource: AR,
     options?: {
         notifierTakeUntil?: Observable<unknown>
-        iniState?: R | ResourceInit
-        mapAcknowledged?: (r: Extract<R, { tag: 'fail' | 'done' }>) => MR
+        iniState?: Resource<DS, EA>
+        mapAcknowledged?: (r: ResourceAcked<DS, EA>) => MR
     }
-): [R | ResourceInit, (...p: P) => void]
+): [Resource<DS, EA>, (...p: P) => void]
 export function useResourceFetcher<
-    AR extends (...p: any) => Observable<Resource<any, any>>,
+    AR extends (...p: any) => Observable<ResourceRunned<DS, EA>>,
     MR extends { tag: unknown },
-    R = ReturnType<AR> extends Observable<infer S> ? S : never,
+    DS extends ResourceDecoders = ReturnType<AR> extends Observable<ResourceRunned<infer S, any>> ? S : never,
+    EA = ReturnType<AR> extends Observable<ResourceRunned<DS, infer S>> ? S : never,
     P extends Array<unknown> = Parameters<AR>
 >(
     ajaxToResource: AR,
     options?: {
         notifierTakeUntil?: Observable<unknown>
-        iniState?: R | ResourceInit
-        mapAcknowledged?: (r: unknown) => MR
+        iniState?: Resource<DS, EA>
+        mapAcknowledged?: (r: ResourceAcked<DS, EA>) => MR
     }
 ): [unknown, (...p: P) => void] {
     const [value, setValue] = useState<unknown>(options?.iniState || resourceInit)

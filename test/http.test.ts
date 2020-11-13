@@ -260,7 +260,7 @@ describe('http', () => {
         ]
 
         ts.forEach(([r, m]) => {
-            MH.resourceFold(r)(c)
+            MH.resourceFold_(r)(c)
             expect(m.mock.calls.length).toBe(1)
             jest.resetAllMocks()
         })
