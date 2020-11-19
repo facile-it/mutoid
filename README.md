@@ -269,7 +269,7 @@ const App = () => {
 
     React.useEffect(() => {
         dispatch()
-    }, [])
+    }, [dispatch])
 
     return (
         <>
