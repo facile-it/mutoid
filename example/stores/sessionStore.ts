@@ -51,9 +51,7 @@ export const parseEnvMutation = () =>
     MS.ctorPartialMutation(
         'parseEnv' as const,
         (s: SessionState): s is SessionStateInit => s.status === 'init',
-        (confEnv: optional, confApiKey: optional, confUserName: optional) => (
-            s: SessionStateInit
-        ): Observable<SessionState> =>
+        (confEnv: optional, confApiKey: optional, confUserName: optional) => (s): Observable<SessionState> =>
             of(
                 pipe(
                     appEnv.decode(confEnv),

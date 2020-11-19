@@ -18,37 +18,28 @@ export type quoteResource = MH.Resource<typeof quoteDecoders, authAppError>
 // you can write a function like: fetchWithAuth
 
 export const fetchQuote = pipe(
-    R.asks(fetchWithAuth),
-    R.chainW(fetch =>
-        R.asks((deps: { ajax: typeof ajax }) => () =>
-            fetch(
-                token => deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?token=${token}`),
-                quoteDecoders
-            )
-        )
+    fetchWithAuth,
+    R.chainW(builder => (deps: { ajax: typeof ajax }) => () =>
+        builder(token => deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?token=${token}`), quoteDecoders)
     )
 )
 
 // example: simple fetch without token but with params
 
-export const fetchQuoteWithParams = R.asks((deps: { ajax: typeof ajax }) => (id: number, from: string) =>
+export const fetchQuoteWithParams = (deps: { ajax: typeof ajax }) => (id: number, from: string) =>
     MH.ajaxToResource(
         deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?id=${id}&from=${from}`),
         quoteDecoders
     )
-)
 
 // example: with composition
 
 export const fetchQuoteWithDelay = pipe(
-    R.asks(fetchWithAuth),
-    R.chainW(builder =>
-        R.asks((deps: { ajax: typeof ajax }) => () =>
-            builder(
-                token =>
-                    deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?token=${token}`).pipe(delay(5000)),
-                quoteDecoders
-            )
+    fetchWithAuth,
+    R.chainW(builder => (deps: { ajax: typeof ajax }) => () =>
+        builder(
+            token => deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?token=${token}`).pipe(delay(5000)),
+            quoteDecoders
         )
     )
 )
