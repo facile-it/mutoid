@@ -264,11 +264,11 @@ export const userDecoders = {
 
 const userFetcher = (id: number) => MH.ajaxToResource(ajax(`https://api.io/user/${id}`), userDecoders)
 
-const App = () => {
+const App: React.FC<{id: number}> = ({id}) => {
     const [userResource, dispatch] = useResourceFetcher(userFetcher)
 
     React.useEffect(() => {
-        dispatch()
+        dispatch(id)
     }, [dispatch])
 
     return (
@@ -285,7 +285,7 @@ const App = () => {
                     })
                 )}
             </p>
-            <button onClick={dispatch} type="button">
+            <button onClick={() => dispatch(id)} type="button">
                 Refetch
             </button>
         </>
