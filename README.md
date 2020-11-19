@@ -249,13 +249,48 @@ const mutationR = useMutation(store, mutation)
 
 ##### useResourceFetcher
 
-```typescript
+```jsx
+import * as React from 'react'
 import { ajax } from 'rxjs/ajax'
 import * as MH from 'mutoid/http'
+import { pipe } from 'fp-ts/function'
+import * as t from 'io-ts'
 
-const somethingFetcher = () => MH.ajaxToResource(ajax('https://api.io'), decoders)
+export const userDecoders = {
+    200: t.type({
+        name: t.string,
+    }).decode,
+}
 
-const [resource, dispatch] = useResourceFetcher(fetchSomething)
+const userFetcher = (id: number) => MH.ajaxToResource(ajax(`https://api.io/user/${id}`), userDecoders)
+
+const App = () => {
+    const [userResource, dispatch] = useResourceFetcher(userFetcher)
+
+    React.useEffect(() => {
+        dispatch()
+    }, [])
+
+    return (
+        <>
+            <h1>Hello</h1>
+            <p>
+                {pipe(
+                    userResource,
+                    MH.resourceFold({
+                        onInit: () => 'loading...',
+                        onSubmitted: () => 'loading...',
+                        onDone: r => r.payload.name,
+                        onFail: e => e.error.type,
+                    })
+                )}
+            </p>
+            <button onClick={dispatch} type="button">
+                Refetch
+            </button>
+        </>
+    )
+}
 ```
 
 ---
