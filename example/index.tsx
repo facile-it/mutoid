@@ -127,7 +127,7 @@ const QuoteFromStateWithDelay: React.FC = () => {
                     notifier.current.next(1)
                 }}
             >
-                Froce stop {'->'} still submitted
+                Force stop {'->'} still submitted
             </button>
         </>
     )
@@ -249,7 +249,7 @@ const QuoteWithHookWithDelay: React.FC = () => {
                     notifier.current.next(1)
                 }}
             >
-                Froce stop {'->'} still submitted
+                Force stop {'->'} still submitted
             </button>
         </>
     )
