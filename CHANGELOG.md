@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1 (2020-11-10)
+
+-   fix `useResourceFetcher` init value inference
+
 ## 0.3.0 (2020-11-10)
 
 -   added `ResourceAjaxFail` type
