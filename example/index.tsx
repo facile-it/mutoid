@@ -1,7 +1,9 @@
 import * as C from 'fp-ts/Console'
+import * as E from 'fp-ts/Either'
 import * as T from 'fp-ts/Task'
 import { identity } from 'fp-ts/function'
 import { pipe } from 'fp-ts/pipeable'
+import { PathReporter } from 'io-ts/PathReporter'
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import { Subject } from 'rxjs'
@@ -36,7 +38,21 @@ const renderQuote = (quote: quoteResource): React.ReactChild => {
         },
         onInit: () => 'Quote loading init...',
         onSubmitted: () => 'Quote loading submitted...',
-        onFail: e => `Error ${e.error.type}`,
+        onFail: e => {
+            switch (e.error.type) {
+                case 'decodeError': {
+                    return `Error ${e.error.type} - ${PathReporter.report(E.left(e.error.detail)).join(', ')}`
+                }
+                case 'appError':
+                    return `Error ${e.error.type} - ${e.error.detail}`
+                case 'networkError':
+                    return `Error ${e.error.type} - ${e.error.detail.message}`
+                case 'unexpectedResponse':
+                    return `Error ${e.error.type} - ${e.error.detail.status}`
+                case 'unknownError':
+                    return `Error ${e.error.type}`
+            }
+        },
     })
 }
 
@@ -220,7 +236,9 @@ const QuoteWithHookWithParams: React.FC = () => {
 const QuoteWithHookWithDelay: React.FC = () => {
     const notifier = React.useRef(new Subject<number>())
 
-    const [quote, quoteFetcher] = MR.useResourceFetcher(fetchQuoteWithDelay(resourceDeps), {
+    const fetch = fetchQuoteWithDelay(resourceDeps)
+
+    const [quote, quoteFetcher] = MR.useResourceFetcher(fetch, {
         notifierTakeUntil: notifier.current,
     })
 

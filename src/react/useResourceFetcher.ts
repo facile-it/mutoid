@@ -14,6 +14,7 @@ import {
 export function useResourceFetcher<
     AR extends (...p: any) => Observable<ResourceStarted<DS, EA>>,
     MR extends { tag: unknown },
+    IS extends Resource<DS, EA>,
     DS extends ResourceDecoders = ReturnType<AR> extends Observable<ResourceStarted<infer S, any>> ? S : never,
     EA = ReturnType<AR> extends Observable<ResourceStarted<DS, infer S>> ? S : never,
     P extends Array<unknown> = Parameters<AR>
@@ -21,13 +22,14 @@ export function useResourceFetcher<
     ajaxToResource: AR,
     options: {
         notifierTakeUntil?: Observable<unknown>
-        iniState?: Resource<DS, EA>
+        iniState?: IS
         mapAcknowledged: (r: ResourceAcknowledged<DS, EA>) => MR
     }
 ): [MR | ResourceInit | ResourceSubmitted, (...p: P) => void]
 export function useResourceFetcher<
     AR extends (...p: any) => Observable<ResourceStarted<DS, EA>>,
     MR extends { tag: unknown },
+    IS extends Resource<DS, EA>,
     DS extends ResourceDecoders = ReturnType<AR> extends Observable<ResourceStarted<infer S, any>> ? S : never,
     EA = ReturnType<AR> extends Observable<ResourceStarted<DS, infer S>> ? S : never,
     P extends Array<unknown> = Parameters<AR>
@@ -35,13 +37,14 @@ export function useResourceFetcher<
     ajaxToResource: AR,
     options?: {
         notifierTakeUntil?: Observable<unknown>
-        iniState?: Resource<DS, EA>
+        iniState?: IS
         mapAcknowledged?: (r: ResourceAcknowledged<DS, EA>) => MR
     }
 ): [Resource<DS, EA>, (...p: P) => void]
 export function useResourceFetcher<
     AR extends (...p: any) => Observable<ResourceStarted<DS, EA>>,
     MR extends { tag: unknown },
+    IS extends Resource<DS, EA>,
     DS extends ResourceDecoders = ReturnType<AR> extends Observable<ResourceStarted<infer S, any>> ? S : never,
     EA = ReturnType<AR> extends Observable<ResourceStarted<DS, infer S>> ? S : never,
     P extends Array<unknown> = Parameters<AR>
@@ -49,7 +52,7 @@ export function useResourceFetcher<
     ajaxToResource: AR,
     options?: {
         notifierTakeUntil?: Observable<unknown>
-        iniState?: Resource<DS, EA>
+        iniState?: IS
         mapAcknowledged?: (r: ResourceAcknowledged<DS, EA>) => MR
     }
 ): [unknown, (...p: P) => void] {

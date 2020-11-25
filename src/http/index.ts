@@ -10,49 +10,49 @@ import type { StatusCode } from './status'
 // type
 
 export interface ResourceInit {
-    tag: 'init'
+    readonly tag: 'init'
 }
 
 export interface ResourceSubmitted {
-    tag: 'submitted'
+    readonly tag: 'submitted'
 }
 
 export interface ResourceDone<S, P> {
-    tag: 'done'
-    status: S
-    payload: P
+    readonly tag: 'done'
+    readonly status: S
+    readonly payload: P
 }
 
 export interface ResourceFail<DE, AE = never> {
-    tag: 'fail'
-    error:
+    readonly tag: 'fail'
+    readonly error:
         | {
-              type: 'decodeError'
-              detail: DE
+              readonly type: 'decodeError'
+              readonly detail: DE
           }
         | {
-              type: 'networkError'
-              detail: AjaxError
+              readonly type: 'networkError'
+              readonly detail: AjaxError
           }
         | {
-              type: 'unexpectedResponse'
-              detail: AjaxResponse | AjaxError
+              readonly type: 'unexpectedResponse'
+              readonly detail: AjaxResponse | AjaxError
           }
         | ResourceAjaxFail<AE>['error']
 }
 
 export interface ResourceAjaxFail<AE = never> {
-    tag: 'fail'
-    error:
+    readonly tag: 'fail'
+    readonly error:
         | {
-              type: 'unknownError'
-              detail: unknown
+              readonly type: 'unknownError'
+              readonly detail: unknown
           }
         | (AE extends never
               ? never
               : {
-                    type: 'appError'
-                    detail: AE
+                    readonly type: 'appError'
+                    readonly detail: AE
                 })
 }
 
