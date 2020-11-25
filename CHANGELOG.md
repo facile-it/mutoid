@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.1 (2020-11-10)
+## 0.3.1 (2020-11-25)
 
 -   fix `useResourceFetcher` init value inference
 
