@@ -67,6 +67,8 @@ declare const id: number
 const mutation = () => MS.ctorMutation('mutation' as const, (id: number) => (currentState: S): Observable<S> => of(s))
 
 const mutationR = MS.mutationRunner(store, mutation)
+
+// run
 mutationR(id)
 ```
 
