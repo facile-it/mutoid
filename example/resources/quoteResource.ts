@@ -32,7 +32,7 @@ export const fetchQuoteWithParams = (deps: { ajax: typeof ajax }) => (id: number
         quoteDecoders
     )
 
-// example: with composition
+// example: with auth
 
 export const fetchQuoteWithDelay = pipe(
     fetchWithAuth,
