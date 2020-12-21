@@ -106,6 +106,8 @@ const mutation = () =>
     )
 
 const mutationR = MS.mutationRunner(store, mutation)
+
+// run
 mutationR(id)
 ```
 
