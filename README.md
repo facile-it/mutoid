@@ -79,9 +79,8 @@ declare const deps: {
     someService: someService
 }
 
-const mutation = R.asks((deps: typeof deps) =>
+const mutation = (deps: typeof deps) =>
     MS.ctorMutation('mutation' as const, (id: number) => (currentState: S): Observable<S> => of(s))
-)
 
 const mutationR = MS.mutationRunner(store, mutation, { deps: { someService } })
 
