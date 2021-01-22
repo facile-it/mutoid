@@ -2,10 +2,11 @@ import type { Lazy } from 'fp-ts/function'
 import { useCallback, useEffect, useRef } from 'react'
 import type { Subscription } from 'rxjs'
 import * as MS from '../state'
+import type { mutationName, storeName } from '../state/stores'
 
 export function useMutation<
-    N extends string,
-    NM extends string,
+    N extends storeName,
+    NM extends mutationName<N>,
     P extends Array<unknown>,
     S,
     SS extends S,
@@ -17,8 +18,8 @@ export function useMutation<
     options: MS.BaseOptions & MS.DepsOptions<D>
 ): (...payload: P) => Subscription
 export function useMutation<
-    N extends string,
-    NM extends string,
+    N extends storeName,
+    NM extends mutationName<N>,
     P extends Array<unknown>,
     S,
     SS extends S,
@@ -29,8 +30,8 @@ export function useMutation<
     options?: MS.BaseOptions
 ): (...payload: P) => Subscription
 export function useMutation<
-    N extends string,
-    NM extends string,
+    N extends storeName,
+    NM extends mutationName<N>,
     P extends Array<unknown>,
     S,
     SS extends S,

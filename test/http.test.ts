@@ -8,6 +8,12 @@ import { TestScheduler } from 'rxjs/testing'
 import * as MH from '../src/http'
 import * as MS from '../src/state/index'
 
+declare module '../src/state/stores' {
+    interface Stores {
+        http_test: 'test'
+    }
+}
+
 describe('http', () => {
     const testSchedulerBuilder = () =>
         new TestScheduler((actual, expected) => {
@@ -211,7 +217,7 @@ describe('http', () => {
         type nameResource = MH.Resource<typeof decoders>
 
         const state: { name: nameResource } = { name: MH.resourceInit }
-        const store = MS.ctor(() => ({ initState: state, name: 'test' }))
+        const store = MS.ctor(() => ({ initState: state, name: 'http_test' }))
 
         const ajax = of({
             status: 200,

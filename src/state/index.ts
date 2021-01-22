@@ -3,25 +3,26 @@ import type * as T from 'fp-ts/Task'
 import type { Lazy } from 'fp-ts/function'
 import { BehaviorSubject, Observable, Subscription } from 'rxjs'
 import { switchMap, take, takeUntil, takeWhile, tap } from 'rxjs/operators'
+import type { allMutationName, mutationName, storeName } from './stores'
 
 // type
 
-type MutationNotify<N, S> = Readonly<{
+type MutationNotify<N extends storeName, S> = Readonly<{
     state: S
     name: N
-    mutationName: string
+    mutationName: mutationName<N>
     payload: Array<unknown>
     date: ReturnType<Date['toISOString']>
 }>
 
-type NotifySubject<N, S> = Readonly<
+type NotifySubject<N extends storeName, S> = Readonly<
     | { type: 'initStore'; name: N }
     | ({ type: 'mutationLoad' } & MutationNotify<N, S>)
     | ({ type: 'mutationStart' } & MutationNotify<N, S>)
     | ({ type: 'mutationEnd' } & MutationNotify<N, S>)
 >
 
-export type Store<N extends string, S> = Readonly<{
+export type Store<N extends storeName, S> = Readonly<{
     name: N
     state$: BehaviorSubject<S>
     notifier$: BehaviorSubject<NotifySubject<N, S>>
@@ -38,7 +39,7 @@ export type Mutation<NM, P extends Array<unknown>, S, SS extends S> = Readonly<{
 
 // constructor
 
-export const ctor = <N extends string, T>(init: Lazy<{ name: N; initState: T }>): Lazy<Store<N, T>> => {
+export const ctor = <N extends storeName, T>(init: Lazy<{ name: N; initState: T }>): Lazy<Store<N, T>> => {
     return memoize(() => {
         const c = init()
 
@@ -51,12 +52,12 @@ export const ctor = <N extends string, T>(init: Lazy<{ name: N; initState: T }>)
     })
 }
 
-export const ctorMutation = <NM extends string, P extends Array<unknown>, S>(
+export const ctorMutation = <NM extends allMutationName, P extends Array<unknown>, S>(
     name: NM,
     effect: MutationEffect<P, S, S>
 ): Mutation<NM, P, S, S> => ({ name, effect })
 
-export const ctorPartialMutation = <NM extends string, P extends Array<unknown>, S, SS extends S>(
+export const ctorPartialMutation = <NM extends allMutationName, P extends Array<unknown>, S, SS extends S>(
     name: NM,
     filterPredicate: (s: S) => s is SS,
     effect: MutationEffect<P, S, SS>
@@ -64,7 +65,7 @@ export const ctorPartialMutation = <NM extends string, P extends Array<unknown>,
 
 // runner
 
-export const toTask = <N extends string, S>(store: Lazy<Store<N, S>>): T.Task<S> => () =>
+export const toTask = <N extends storeName, S>(store: Lazy<Store<N, S>>): T.Task<S> => () =>
     store().state$.pipe(take(1)).toPromise()
 
 export interface BaseOptions {
@@ -75,8 +76,8 @@ export interface DepsOptions<D extends Record<string, unknown>> {
 }
 
 export function mutationRunner<
-    N extends string,
-    NM extends string,
+    N extends storeName,
+    NM extends mutationName<N>,
     P extends Array<unknown>,
     S,
     SS extends S,
@@ -89,8 +90,8 @@ export function mutationRunner<
     // no deps
 ): (...p: P) => Subscription
 export function mutationRunner<
-    N extends string,
-    NM extends string,
+    N extends storeName,
+    NM extends mutationName<N>,
     P extends Array<unknown>,
     S,
     SS extends S,
@@ -98,8 +99,8 @@ export function mutationRunner<
     // no deps overload
 >(storeL: Lazy<Store<N, S>>, mutationL: () => Mutation<NM, P, S, SS>, options?: BaseOptions): (...p: P) => Subscription
 export function mutationRunner<
-    N extends string,
-    NM extends string,
+    N extends storeName,
+    NM extends mutationName<N>,
     P extends Array<unknown>,
     S,
     SS extends S,

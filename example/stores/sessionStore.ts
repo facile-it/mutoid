@@ -4,6 +4,12 @@ import * as t from 'io-ts'
 import { Observable, of } from 'rxjs'
 import * as MS from '../../src/state'
 
+declare module '../../src/state/stores' {
+    interface Stores {
+        session: 'parseEnv'
+    }
+}
+
 // type
 
 interface ApiKeyBrand {
