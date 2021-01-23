@@ -79,13 +79,13 @@ describe('react', () => {
 
         const { result } = renderHook(() => MR.useResourceFetcher(resource))
 
-        expect(result.current[0].tag).toBe('init')
+        expect(result.current[0]._tag).toBe('init')
 
         act(() => {
             result.current[1]()
         })
 
-        expect(result.current[0].tag).toBe('done')
+        expect(result.current[0]._tag).toBe('done')
     })
 
     test('useSeleuseResourceFetcherctor killed', () => {
@@ -101,13 +101,13 @@ describe('react', () => {
 
         const { result } = renderHook(() => MR.useResourceFetcher(resource, { notifierTakeUntil: of(1) }))
 
-        expect(result.current[0].tag).toBe('init')
+        expect(result.current[0]._tag).toBe('init')
 
         act(() => {
             result.current[1]()
         })
 
-        expect(result.current[0].tag).toBe('init')
+        expect(result.current[0]._tag).toBe('init')
     })
 
     test('useSeleuseResourceFetcherctor mapAcknowledged', () => {
@@ -124,22 +124,22 @@ describe('react', () => {
         const { result } = renderHook(() =>
             MR.useResourceFetcher(resource, {
                 mapAcknowledged: s => {
-                    switch (s.tag) {
+                    switch (s._tag) {
                         case 'done':
-                            return { tag: 'success' }
+                            return { _tag: 'success' }
                         case 'fail':
-                            return { tag: 'error' }
+                            return { _tag: 'error' }
                     }
                 },
             })
         )
 
-        expect(result.current[0].tag).toBe('init')
+        expect(result.current[0]._tag).toBe('init')
 
         act(() => {
             result.current[1]()
         })
 
-        expect(result.current[0].tag).toBe('success')
+        expect(result.current[0]._tag).toBe('success')
     })
 })

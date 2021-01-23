@@ -39,18 +39,18 @@ const renderQuote = (quote: quoteResource): React.ReactChild => {
         onInit: () => 'Quote loading init...',
         onSubmitted: () => 'Quote loading submitted...',
         onFail: e => {
-            switch (e.error.type) {
+            switch (e.type) {
                 case 'decodeError': {
-                    return `Error ${e.error.type} - ${PathReporter.report(E.left(e.error.detail)).join(', ')}`
+                    return `Error ${e.type} - ${PathReporter.report(E.left(e.detail)).join(', ')}`
                 }
                 case 'appError':
-                    return `Error ${e.error.type} - ${e.error.detail}`
+                    return `Error ${e.type} - ${e.detail}`
                 case 'networkError':
-                    return `Error ${e.error.type} - ${e.error.detail.message}`
+                    return `Error ${e.type} - ${e.detail.message}`
                 case 'unexpectedResponse':
-                    return `Error ${e.error.type} - ${e.error.detail.status}`
+                    return `Error ${e.type} - ${e.detail.status}`
                 case 'unknownError':
-                    return `Error ${e.error.type}`
+                    return `Error ${e.type}`
             }
         },
     })
@@ -67,7 +67,7 @@ const QuoteFromState: React.FC = () => {
     React.useEffect(() => {
         pipe(
             MS.toTask(quoteStore),
-            T.map(qs => `App loaded. Lo stato delle quote in questo momento è: ${qs.quote.tag}`),
+            T.map(qs => `App loaded. Lo stato delle quote in questo momento è: ${qs.quote._tag}`),
             T.chainIOK(C.log)
         )()
     }, [])
@@ -78,7 +78,7 @@ const QuoteFromState: React.FC = () => {
             <em>{renderQuote(quote)}</em>
             <br />
             <br />
-            <button type="button" onClick={fetchQuoteRunner} disabled={quote.tag !== 'done'}>
+            <button type="button" onClick={fetchQuoteRunner} disabled={quote._tag !== 'done'}>
                 Fetch new quote and update state
             </button>
         </>
@@ -100,7 +100,7 @@ const QuoteFromStateWithParams: React.FC = () => {
             <em>{renderQuote(quote)}</em>
             <br />
             <br />
-            <button type="button" onClick={() => fetchQuoteRunner(1, 'useDispatch')} disabled={quote.tag !== 'done'}>
+            <button type="button" onClick={() => fetchQuoteRunner(1, 'useDispatch')} disabled={quote._tag !== 'done'}>
                 Fetch new quote and update state
             </button>{' '}
             <button type="button" onClick={resetQuoteRunner}>
@@ -152,15 +152,15 @@ const QuoteFromStateWithDelay: React.FC = () => {
 const QuoteWithHook: React.FC = () => {
     const [quote, quoteFetcher] = MR.useResourceFetcher(fetchQuote(resourceDeps), {
         mapAcknowledged: c => {
-            switch (c.tag) {
+            switch (c._tag) {
                 case 'fail':
-                    return { tag: 'fail' as const, payload: 'error' }
+                    return { _tag: 'fail' as const, payload: 'error' }
                 case 'done': {
-                    switch (c.status) {
+                    switch (c.data.status) {
                         case 200:
-                            return { tag: 'success' as const, payload: c.payload[0] }
+                            return { _tag: 'success' as const, payload: c.data.payload[0] }
                         case 400:
-                            return { tag: 'badRequest' as const, payload: 'bad' }
+                            return { _tag: 'badRequest' as const, payload: 'bad' }
                     }
                 }
             }
@@ -172,7 +172,7 @@ const QuoteWithHook: React.FC = () => {
     }, [quoteFetcher])
 
     const render = () => {
-        switch (quote.tag) {
+        switch (quote._tag) {
             case 'badRequest':
             case 'fail':
             case 'success':
@@ -220,13 +220,17 @@ const QuoteWithHookWithParams: React.FC = () => {
                         },
                         onInit: () => 'Quote loading init...',
                         onSubmitted: () => 'Quote loading submitted...',
-                        onFail: e => `Error ${e.error.type}`,
+                        onFail: e => `Error ${e.type}`,
                     })
                 )}
             </em>
             <br />
             <br />
-            <button type="button" onClick={() => quoteFetcher(1, 'useResourceFetcher')} disabled={quote.tag !== 'done'}>
+            <button
+                type="button"
+                onClick={() => quoteFetcher(1, 'useResourceFetcher')}
+                disabled={quote._tag !== 'done'}
+            >
                 Fetch new quote
             </button>
         </>

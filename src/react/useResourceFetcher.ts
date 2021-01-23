@@ -6,54 +6,54 @@ import {
     resourceInit,
     ResourceSubmitted,
     ResourceDecoders,
-    ResourceStarted,
-    ResourceAcknowledged,
-    Resource,
+    ResourceTypeOfStarted,
+    ResourceTypeOfAcknowledged,
+    ResourceTypeOf,
 } from '../http'
 
 export function useResourceFetcher<
-    AR extends (...p: any) => Observable<ResourceStarted<DS, EA>>,
-    MR extends { tag: unknown },
-    IS extends Resource<DS, EA>,
-    DS extends ResourceDecoders = ReturnType<AR> extends Observable<ResourceStarted<infer S, any>> ? S : never,
-    EA = ReturnType<AR> extends Observable<ResourceStarted<DS, infer S>> ? S : never,
+    AR extends (...p: any) => Observable<ResourceTypeOfStarted<DS, EA>>,
+    MR extends { _tag: unknown },
+    IS extends ResourceTypeOf<DS, EA>,
+    DS extends ResourceDecoders = ReturnType<AR> extends Observable<ResourceTypeOfStarted<infer S, any>> ? S : never,
+    EA = ReturnType<AR> extends Observable<ResourceTypeOfStarted<DS, infer S>> ? S : never,
     P extends Array<unknown> = Parameters<AR>
 >(
     ajaxToResource: AR,
     options: {
         notifierTakeUntil?: Observable<unknown>
         iniState?: IS
-        mapAcknowledged: (r: ResourceAcknowledged<DS, EA>) => MR
+        mapAcknowledged: (r: ResourceTypeOfAcknowledged<DS, EA>) => MR
     }
 ): [MR | ResourceInit | ResourceSubmitted, (...p: P) => void]
 export function useResourceFetcher<
-    AR extends (...p: any) => Observable<ResourceStarted<DS, EA>>,
-    MR extends { tag: unknown },
-    IS extends Resource<DS, EA>,
-    DS extends ResourceDecoders = ReturnType<AR> extends Observable<ResourceStarted<infer S, any>> ? S : never,
-    EA = ReturnType<AR> extends Observable<ResourceStarted<DS, infer S>> ? S : never,
+    AR extends (...p: any) => Observable<ResourceTypeOfStarted<DS, EA>>,
+    MR extends { _tag: unknown },
+    IS extends ResourceTypeOf<DS, EA>,
+    DS extends ResourceDecoders = ReturnType<AR> extends Observable<ResourceTypeOfStarted<infer S, any>> ? S : never,
+    EA = ReturnType<AR> extends Observable<ResourceTypeOfStarted<DS, infer S>> ? S : never,
     P extends Array<unknown> = Parameters<AR>
 >(
     ajaxToResource: AR,
     options?: {
         notifierTakeUntil?: Observable<unknown>
         iniState?: IS
-        mapAcknowledged?: (r: ResourceAcknowledged<DS, EA>) => MR
+        mapAcknowledged?: (r: ResourceTypeOfAcknowledged<DS, EA>) => MR
     }
-): [Resource<DS, EA>, (...p: P) => void]
+): [ResourceTypeOf<DS, EA>, (...p: P) => void]
 export function useResourceFetcher<
-    AR extends (...p: any) => Observable<ResourceStarted<DS, EA>>,
-    MR extends { tag: unknown },
-    IS extends Resource<DS, EA>,
-    DS extends ResourceDecoders = ReturnType<AR> extends Observable<ResourceStarted<infer S, any>> ? S : never,
-    EA = ReturnType<AR> extends Observable<ResourceStarted<DS, infer S>> ? S : never,
+    AR extends (...p: any) => Observable<ResourceTypeOfStarted<DS, EA>>,
+    MR extends { _tag: unknown },
+    IS extends ResourceTypeOf<DS, EA>,
+    DS extends ResourceDecoders = ReturnType<AR> extends Observable<ResourceTypeOfStarted<infer S, any>> ? S : never,
+    EA = ReturnType<AR> extends Observable<ResourceTypeOfStarted<DS, infer S>> ? S : never,
     P extends Array<unknown> = Parameters<AR>
 >(
     ajaxToResource: AR,
     options?: {
         notifierTakeUntil?: Observable<unknown>
         iniState?: IS
-        mapAcknowledged?: (r: ResourceAcknowledged<DS, EA>) => MR
+        mapAcknowledged?: (r: ResourceTypeOfAcknowledged<DS, EA>) => MR
     }
 ): [unknown, (...p: P) => void] {
     const [value, setValue] = useState<unknown>(options?.iniState || resourceInit)
@@ -86,7 +86,7 @@ export function useResourceFetcher<
                 .pipe(
                     take(2),
                     map(s => {
-                        return mapAcknowledgedRef.current && (s.tag === 'done' || s.tag === 'fail')
+                        return mapAcknowledgedRef.current && (s._tag === 'done' || s._tag === 'fail')
                             ? mapAcknowledgedRef.current(s)
                             : s
                     })

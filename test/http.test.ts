@@ -34,8 +34,8 @@ describe('http', () => {
             })
 
             expectObservable(resource).toBe('a-(b|)', {
-                a: { tag: 'submitted' },
-                b: { tag: 'done', status: 200, payload: 'hello' },
+                a: { _tag: 'submitted' },
+                b: { _tag: 'done', data: { status: 200, payload: 'hello' } },
             })
         })
     })
@@ -54,9 +54,9 @@ describe('http', () => {
             })
 
             expectObservable(resource).toBe('a-(b|)', {
-                a: { tag: 'submitted' },
+                a: { _tag: 'submitted' },
                 b: {
-                    tag: 'fail',
+                    _tag: 'fail',
                     error: {
                         type: 'unexpectedResponse',
                         detail: {
@@ -84,9 +84,9 @@ describe('http', () => {
             })
 
             expectObservable(resource).toBe('a-(b|)', {
-                a: { tag: 'submitted' },
+                a: { _tag: 'submitted' },
                 b: {
-                    tag: 'fail',
+                    _tag: 'fail',
                     error: {
                         type: 'unexpectedResponse',
                         detail: { status: 500, response: 'hello', name: 'AjaxError' },
@@ -96,7 +96,7 @@ describe('http', () => {
         })
     })
 
-    test('ajaxToResource done 500', () => {
+    test('ajaxToResource done 500done 500', () => {
         testSchedulerBuilder().run(({ cold, expectObservable }) => {
             const ajaxError = {
                 status: 500,
@@ -112,11 +112,13 @@ describe('http', () => {
             })
 
             expectObservable(resource).toBe('a-(b|)', {
-                a: { tag: 'submitted' },
+                a: { _tag: 'submitted' },
                 b: {
-                    tag: 'done',
-                    status: 500,
-                    payload: 2,
+                    _tag: 'done',
+                    data: {
+                        status: 500,
+                        payload: 2,
+                    },
                 },
             })
         })
@@ -137,9 +139,9 @@ describe('http', () => {
             })
 
             expectObservable(resource).toBe('a-(b|)', {
-                a: { tag: 'submitted' },
+                a: { _tag: 'submitted' },
                 b: {
-                    tag: 'fail',
+                    _tag: 'fail',
                     error: {
                         type: 'unknownError',
                         detail: { status: 500, response: 'hello', name: 'AjaxErrorWrong' },
@@ -169,9 +171,9 @@ describe('http', () => {
             })
 
             expectObservable(resource).toBe('a-(b|)', {
-                a: { tag: 'submitted' },
+                a: { _tag: 'submitted' },
                 b: {
-                    tag: 'fail',
+                    _tag: 'fail',
                     error: {
                         type: 'decodeError',
                         detail: 'error',
@@ -195,9 +197,9 @@ describe('http', () => {
             })
 
             expectObservable(resource).toBe('a-(b|)', {
-                a: { tag: 'submitted' },
+                a: { _tag: 'submitted' },
                 b: {
-                    tag: 'fail',
+                    _tag: 'fail',
                     error: {
                         type: 'appError',
                         detail: 'bhoo',
@@ -214,7 +216,7 @@ describe('http', () => {
             }).decode,
         }
 
-        type nameResource = MH.Resource<typeof decoders>
+        type nameResource = MH.ResourceTypeOf<typeof decoders>
 
         const state: { name: nameResource } = { name: MH.resourceInit }
         const store = MS.ctor(() => ({ initState: state, name: 'http_test' }))
@@ -237,9 +239,9 @@ describe('http', () => {
 
         const task = MS.toTask(store)
 
-        expect((await task()).name.tag).toBe('init')
+        expect((await task()).name._tag).toBe('init')
         MS.mutationRunner(store, mutation)()
-        expect((await task()).name.tag).toBe('done')
+        expect((await task()).name._tag).toBe('done')
     })
 
     test('resourceFold', () => {
@@ -255,10 +257,10 @@ describe('http', () => {
             onFail: onfail,
         }
 
-        const ts: [MH.Resource<{ 200: any }>, jest.Mock<any, any>][] = [
+        const ts: [MH.ResourceTypeOf<{ 200: any }>, jest.Mock<any, any>][] = [
             [MH.resourceInit, onInit],
             [MH.resourceSubmitted, onSubmitted],
-            [MH.resourceDone(200, 'hello'), onDone],
+            [MH.resourceDone({ status: 200, payload: 'hello' }), onDone],
             [MH.resourceFail({ type: 'unknownError', detail: 'boom' }), onfail],
         ]
 
@@ -270,13 +272,9 @@ describe('http', () => {
     })
 
     test('guards', () => {
-        interface decoders {
-            200: () => E.Either<string, string>
-        }
-
         const init = MH.resourceInit
         const submitted = MH.resourceSubmitted
-        const done = MH.resourceDone<200, string>(200, 'hello')
+        const done = MH.resourceDone<MH.ResourceData<200, string>>({ status: 200, payload: 'hello' })
         const fail = MH.resourceFail({ type: 'unknownError', detail: 'boom' })
 
         expect(MH.isResourceInit(init)).toBe(true)
@@ -289,10 +287,10 @@ describe('http', () => {
         expect(MH.isResourceStarted(submitted)).toBe(true)
         expect(MH.isResourceAcknowledged(submitted)).toBe(false)
 
-        expect(MH.isResourceDone<decoders>(done)).toBe(true)
-        expect(MH.isResourcePending<decoders>(done)).toBe(false)
-        expect(MH.isResourceStarted<decoders>(done)).toBe(true)
-        expect(MH.isResourceAcknowledged<decoders>(done)).toBe(true)
+        expect(MH.isResourceDone(done)).toBe(true)
+        expect(MH.isResourcePending(done)).toBe(false)
+        expect(MH.isResourceStarted(done)).toBe(true)
+        expect(MH.isResourceAcknowledged(done)).toBe(true)
 
         expect(MH.isResourceFail(fail)).toBe(true)
         expect(MH.isResourcePending(fail)).toBe(false)

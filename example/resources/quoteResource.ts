@@ -12,7 +12,7 @@ export const quoteDecoders = {
     400: t.string.decode,
 }
 
-export type quoteResource = MH.Resource<typeof quoteDecoders, authAppError>
+export type quoteResource = MH.ResourceTypeOf<typeof quoteDecoders, authAppError>
 
 // example: if you need token in some store
 // you can write a function like: fetchWithAuth

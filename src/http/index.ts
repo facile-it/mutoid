@@ -10,74 +10,88 @@ import type { StatusCode } from './status'
 // type
 
 export interface ResourceInit {
-    readonly tag: 'init'
+    readonly _tag: 'init'
 }
 
 export interface ResourceSubmitted {
-    readonly tag: 'submitted'
+    readonly _tag: 'submitted'
 }
 
-export interface ResourceDone<S, P> {
-    readonly tag: 'done'
+export interface ResourceData<S, P> {
     readonly status: S
     readonly payload: P
 }
 
-export interface ResourceFail<DE, AE = never> {
-    readonly tag: 'fail'
-    readonly error:
-        | {
-              readonly type: 'decodeError'
-              readonly detail: DE
-          }
-        | {
-              readonly type: 'networkError'
-              readonly detail: AjaxError
-          }
-        | {
-              readonly type: 'unexpectedResponse'
-              readonly detail: AjaxResponse | AjaxError
-          }
-        | ResourceAjaxFail<AE>['error']
+export interface ResourceDone<D> {
+    readonly _tag: 'done'
+    readonly data: D
 }
+
+export type ResourceDataError<DE, AE = never> =
+    | {
+          readonly type: 'decodeError'
+          readonly detail: DE
+      }
+    | {
+          readonly type: 'networkError'
+          readonly detail: AjaxError
+      }
+    | {
+          readonly type: 'unexpectedResponse'
+          readonly detail: AjaxResponse | AjaxError
+      }
+    | ResourceAjaxDataError<AE>
+
+export interface ResourceFail<E> {
+    readonly _tag: 'fail'
+    readonly error: E
+}
+
+type ResourceAjaxDataError<AE = never> =
+    | {
+          readonly type: 'unknownError'
+          readonly detail: unknown
+      }
+    | (AE extends never
+          ? never
+          : {
+                readonly type: 'appError'
+                readonly detail: AE
+            })
 
 export interface ResourceAjaxFail<AE = never> {
-    readonly tag: 'fail'
-    readonly error:
-        | {
-              readonly type: 'unknownError'
-              readonly detail: unknown
-          }
-        | (AE extends never
-              ? never
-              : {
-                    readonly type: 'appError'
-                    readonly detail: AE
-                })
+    readonly _tag: 'fail'
+    readonly error: ResourceAjaxDataError<AE>
 }
 
-export type AjaxSubject<AE = never> = Observable<AjaxResponse | ResourceAjaxFail<AE>>
+export type Resource<E, D> = ResourceInit | ResourceSubmitted | ResourceDone<D> | ResourceFail<E>
 
+export type AjaxSubject<AE = never> = Observable<AjaxResponse | ResourceAjaxFail<AE>>
 export type ResourceDecoders = { [k in StatusCode]?: (i: unknown) => E.Either<unknown, unknown> }
-export type Resource<DS extends ResourceDecoders, AE = never> = ResourceInit | ResourceStarted<DS, AE>
-export type ResourceStarted<DS extends ResourceDecoders, AE = never> = ResourceSubmitted | ResourceAcknowledged<DS, AE>
-export type ResourceAcknowledged<DS extends ResourceDecoders, AE = never> =
-    | DecodersDictToResourceDone<DS>
-    | DecodersToResourceFail<DS, AE>
+
+export type ResourceTypeOf<DS extends ResourceDecoders, AE = never> = ResourceInit | ResourceTypeOfStarted<DS, AE>
+
+export type ResourceTypeOfStarted<DS extends ResourceDecoders, AE = never> =
+    | ResourceSubmitted
+    | ResourceTypeOfAcknowledged<DS, AE>
+
+export type ResourceTypeOfAcknowledged<DS extends ResourceDecoders, AE = never> =
+    | ResourceTypeOfDone<DS>
+    | ResourceTypeOfFail<DS, AE>
+
+export type ResourceTypeOfDone<DS extends ResourceDecoders> = ResourceDone<DecodersToResourceData<DS>>
+
+export type ResourceTypeOfFail<DS extends ResourceDecoders, AE = never> = ResourceFail<
+    DecodersToResourceDataError<DS, AE>
+>
 
 type ExtractRight<C> = C extends (i: unknown) => E.Either<any, infer A> ? A : never
-type DecodersToResourceDone<DS> = { [S in keyof DS]: ResourceDone<S, ExtractRight<DS[S]>> }[keyof DS]
-type DecodersDictToResourceDone<DS extends ResourceDecoders, RD = DecodersToResourceDone<DS>> = RD extends undefined
-    ? never
-    : RD
+
+type DecodersToResourceData<DS> = { [S in keyof DS]: ResourceData<S, ExtractRight<DS[S]>> }[keyof DS]
 
 type ExtractLeft<C> = C extends (i: unknown) => E.Either<infer A, any> ? A : never
 type DecodersToDE<DS> = { [S in keyof DS]: ExtractLeft<DS[S]> }[keyof DS]
-type DecodersToResourceFail<
-    DS extends ResourceDecoders,
-    AE,
-    RF = ResourceFail<DecodersToDE<DS>, AE>
-> = RF extends undefined ? never : RF
+type DecodersToResourceDataError<DS extends ResourceDecoders, AE> = ResourceDataError<DecodersToDE<DS>, AE>
 
 const dict: { [k in AjaxErrorNames]: true } = {
     AjaxError: true,
@@ -85,18 +99,32 @@ const dict: { [k in AjaxErrorNames]: true } = {
 }
 
 // -------------------------------------------------------------------------------------
+// instances
+// -------------------------------------------------------------------------------------
+
+export const URI = 'Resource'
+
+export type URI = typeof URI
+
+declare module 'fp-ts/HKT' {
+    interface URItoKind2<E, A> {
+        readonly [URI]: Resource<E, A>
+    }
+}
+
+// -------------------------------------------------------------------------------------
 // utility
 // -------------------------------------------------------------------------------------
 
-const isResourceAjaxFail = <AE>(r: any | ResourceAjaxFail<AE>): r is ResourceAjaxFail<AE> => r.tag === 'fail'
+const isResourceAjaxFail = <AE>(r: any | ResourceAjaxFail<AE>): r is ResourceAjaxFail<AE> => r._tag === 'fail'
 
 const isAjaxError = (e: any): e is AjaxError => Object.prototype.hasOwnProperty.call(dict, e.name)
 
 const applyDecoder = <DS extends ResourceDecoders>(decoders: DS) => <AE>(
     response: AjaxResponse | AjaxError | ResourceAjaxFail<AE>
-): ResourceAcknowledged<DS, AE> => {
+): ResourceTypeOfAcknowledged<DS, AE> => {
     if (isResourceAjaxFail(response)) {
-        return response as DecodersToResourceFail<DS, AE>
+        return response as ResourceTypeOfFail<DS, AE>
     }
 
     const status = response.status as StatusCode
@@ -105,70 +133,59 @@ const applyDecoder = <DS extends ResourceDecoders>(decoders: DS) => <AE>(
     if (decoder) {
         return pipe(
             decoder(response.response),
-            E.map(decoded => resourceDone(status, decoded) as DecodersDictToResourceDone<DS>),
+            E.map(payload => resourceDone({ status, payload }) as ResourceTypeOfDone<DS>),
             E.getOrElseW(
                 e =>
                     resourceFail({
                         type: 'decodeError',
                         detail: e,
-                    }) as DecodersToResourceFail<DS, AE>
+                    }) as ResourceTypeOfFail<DS, AE>
             )
         )
     }
 
-    return resourceFail<DecodersToDE<DS>, AE>({ type: 'unexpectedResponse', detail: response })
+    return resourceFail<DecodersToResourceDataError<DS, AE>>({ type: 'unexpectedResponse', detail: response })
 }
 
 // -------------------------------------------------------------------------------------
 // Guards
 // -------------------------------------------------------------------------------------
 
-export const isResourceInit = <DS extends ResourceDecoders, AE = never>(
-    r: Resource<DS, AE>
-): r is Extract<typeof r, { tag: 'init' }> => r.tag === 'init'
+export const isResourceInit = <E, D>(r: Resource<E, D>): r is ResourceInit => r._tag === 'init'
 
-export const isResourceSubmitted = <DS extends ResourceDecoders, AE = never>(
-    r: Resource<DS, AE>
-): r is Extract<typeof r, { tag: 'submitted' }> => r.tag === 'submitted'
+export const isResourceSubmitted = <E, D>(r: Resource<E, D>): r is ResourceSubmitted => r._tag === 'submitted'
 
-export const isResourceDone = <DS extends ResourceDecoders, AE = never>(
-    r: Resource<DS, AE>
-): r is Extract<typeof r, { tag: 'done' }> => r.tag === 'done'
+export const isResourceDone = <E, D>(r: Resource<E, D>): r is ResourceDone<D> => r._tag === 'done'
 
-export const isResourceFail = <DS extends ResourceDecoders, AE = never>(
-    r: Resource<DS, AE>
-): r is Extract<typeof r, { tag: 'fail' }> => r.tag === 'fail'
+export const isResourceFail = <E, D>(r: Resource<E, D>): r is ResourceFail<E> => r._tag === 'fail'
 
-export const isResourcePending = <DS extends ResourceDecoders, AE = never>(
-    r: Resource<DS, AE>
-): r is Extract<typeof r, { tag: 'init' | 'submitted' }> => isResourceInit(r) || isResourceSubmitted(r)
+export const isResourcePending = <E, D>(r: Resource<E, D>): r is ResourceInit | ResourceSubmitted =>
+    isResourceInit(r) || isResourceSubmitted(r)
 
-export const isResourceStarted = <DS extends ResourceDecoders, AE = never>(
-    r: Resource<DS, AE>
-): r is Extract<typeof r, { tag: 'submitted' | 'fail' | 'done' }> =>
+export const isResourceStarted = <E, D>(
+    r: Resource<E, D>
+): r is ResourceSubmitted | ResourceFail<E> | ResourceDone<D> =>
     isResourceSubmitted(r) || isResourceFail(r) || isResourceDone(r)
 
-export const isResourceAcknowledged = <DS extends ResourceDecoders, AE = never>(
-    r: Resource<DS, AE>
-): r is Extract<typeof r, { tag: 'fail' | 'done' }> => isResourceFail(r) || isResourceDone(r)
+export const isResourceAcknowledged = <E, D>(r: Resource<E, D>): r is ResourceFail<E> | ResourceDone<D> =>
+    isResourceFail(r) || isResourceDone(r)
 
 // -------------------------------------------------------------------------------------
 // Constructors
 // -------------------------------------------------------------------------------------
 
-export const resourceInit: ResourceInit = { tag: 'init' }
-export const resourceSubmitted: ResourceSubmitted = { tag: 'submitted' }
-export const resourceDone = <S, P>(status: S, payload: P): ResourceDone<S, P> => ({
-    tag: 'done',
-    status: status,
-    payload: payload,
+export const resourceInit: ResourceInit = { _tag: 'init' }
+export const resourceSubmitted: ResourceSubmitted = { _tag: 'submitted' }
+export const resourceDone = <D>(d: D): ResourceDone<D> => ({
+    _tag: 'done',
+    data: d,
 })
-export const resourceFail = <DE, AE = never>(error: ResourceFail<DE, AE>['error']): ResourceFail<DE, AE> => ({
-    tag: 'fail',
+export const resourceFail = <E>(error: E): ResourceFail<E> => ({
+    _tag: 'fail',
     error: error,
 })
-export const resourceAjaxFail = <AE = never>(error: ResourceAjaxFail<AE>['error']): ResourceAjaxFail<AE> => ({
-    tag: 'fail',
+export const resourceAjaxFail = <AE = never>(error: ResourceAjaxDataError<AE>): ResourceAjaxFail<AE> => ({
+    _tag: 'fail',
     error: error,
 })
 
@@ -179,17 +196,17 @@ export const resourceAjaxFail = <AE = never>(error: ResourceAjaxFail<AE>['error'
 export const ajaxToResource = <DS extends ResourceDecoders, AE = never>(
     ajax$: AjaxSubject<AE>,
     decoders: DS
-): Observable<ResourceStarted<DS, AE>> =>
+): Observable<ResourceTypeOfStarted<DS, AE>> =>
     concat(
         of(resourceSubmitted),
         ajax$.pipe(
             map(applyDecoder(decoders)),
             catchError(
-                (e: unknown): Observable<ResourceAcknowledged<DS, AE>> =>
+                (e: unknown): Observable<ResourceTypeOfAcknowledged<DS, AE>> =>
                     of(
                         isAjaxError(e)
                             ? applyDecoder(decoders)(e)
-                            : resourceFail<DecodersToDE<DS>, AE>({ type: 'unknownError', detail: e })
+                            : resourceFail<DecodersToResourceDataError<DS, AE>>({ type: 'unknownError', detail: e })
                     )
             )
         )
@@ -210,27 +227,27 @@ export const resourceFetcherToMutationEffect = <
 // Destructors
 // -------------------------------------------------------------------------------------
 
-export const resourceFold = <DS extends ResourceDecoders, AE, R>(dodo: {
+export const resourceFold = <E, D, R>(dodo: {
     onInit: () => R
     onSubmitted: () => R
-    onDone: (r: Extract<Resource<DS, AE>, { tag: 'done' }>) => R
-    onFail: (r: Extract<Resource<DS, AE>, { tag: 'fail' }>) => R
-}) => (resource: Resource<DS, AE>) => {
-    switch (resource.tag) {
+    onDone: (r: ResourceDone<D>['data']) => R
+    onFail: (r: ResourceFail<E>['error']) => R
+}) => (resource: Resource<E, D>) => {
+    switch (resource._tag) {
         case 'init':
             return dodo.onInit()
         case 'submitted':
             return dodo.onSubmitted()
         case 'done':
-            return dodo.onDone(resource)
+            return dodo.onDone(resource.data)
         case 'fail':
-            return dodo.onFail(resource)
+            return dodo.onFail(resource.error)
     }
 }
 
-export const resourceFold_ = <DS extends ResourceDecoders, AE>(resource: Resource<DS, AE>) => <R>(dodo: {
+export const resourceFold_ = <E, D>(resource: Resource<E, D>) => <R>(dodo: {
     onInit: () => R
     onSubmitted: () => R
-    onDone: (r: Extract<Resource<DS, AE>, { tag: 'done' }>) => R
-    onFail: (r: Extract<Resource<DS, AE>, { tag: 'fail' }>) => R
+    onDone: (r: ResourceDone<D>['data']) => R
+    onFail: (r: ResourceFail<E>['error']) => R
 }): R => pipe(resource, resourceFold(dodo))
