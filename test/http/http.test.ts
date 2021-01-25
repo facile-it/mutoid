@@ -5,10 +5,10 @@ import { of, Observable } from 'rxjs'
 import type { AjaxError, AjaxResponse } from 'rxjs/ajax'
 import { map } from 'rxjs/operators'
 import { TestScheduler } from 'rxjs/testing'
-import * as MH from '../src/http'
-import * as MS from '../src/state/index'
+import * as MH from '../../src/http'
+import * as MS from '../../src/state/index'
 
-declare module '../src/state/stores' {
+declare module '../../src/state/stores' {
     interface Stores {
         http_test: 'test'
     }

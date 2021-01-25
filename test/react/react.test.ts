@@ -4,9 +4,9 @@ import * as t from 'io-ts'
 import { of } from 'rxjs'
 import type { AjaxResponse } from 'rxjs/ajax'
 import { delay } from 'rxjs/operators'
-import * as MH from '../src/http'
-import * as MR from '../src/react'
-import * as MS from '../src/state'
+import * as MH from '../../src/http'
+import * as MR from '../../src/react'
+import * as MS from '../../src/state'
 
 describe('react', () => {
     test('useSelector', () => {

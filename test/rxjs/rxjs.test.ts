@@ -1,6 +1,6 @@
 import * as IO from 'fp-ts/IO'
 import { of } from 'rxjs'
-import * as MRX from '../src/rxjs'
+import * as MRX from '../../src/rxjs'
 
 describe('rxjs', () => {
     test('chainFirstIO', () => {
