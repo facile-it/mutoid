@@ -7,7 +7,7 @@ import type { Show } from 'fp-ts/lib/Show'
 import { constFalse } from 'fp-ts/lib/function'
 import { pipe } from 'fp-ts/pipeable'
 import type { AjaxError, AjaxResponse } from 'rxjs/ajax'
-import type { StatusCode } from './status'
+import type { StatusCode } from './statusCode'
 
 // -------------------------------------------------------------------------------------
 // model
@@ -69,6 +69,8 @@ export interface ResourceAjaxFail<AE = never> {
 }
 
 export type Resource<E, D> = ResourceInit | ResourceSubmitted | ResourceDone<D> | ResourceFail<E>
+
+export type ResourceAcknowledged<E, D> = ResourceDone<D> | ResourceFail<E>
 
 export type ResourceDecoders = { [k in StatusCode]?: (i: unknown) => E.Either<unknown, unknown> }
 

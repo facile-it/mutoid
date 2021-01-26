@@ -1,82 +1,46 @@
 import { useCallback, useState, useRef, useEffect } from 'react'
 import type { Observable, Subscription } from 'rxjs'
 import { map, take, takeUntil } from 'rxjs/operators'
-import * as RES from '../http/Resource'
+import type * as MOR from '../http/ObservableResource'
+import * as MRE from '../http/Resource'
 
 export function useResourceFetcher<
-    AR extends (...p: any) => Observable<RES.ResourceTypeOfStarted<DS, EA>>,
-    MR extends { _tag: unknown },
-    IS extends RES.ResourceTypeOf<DS, EA>,
-    DS extends RES.ResourceDecoders = ReturnType<AR> extends Observable<RES.ResourceTypeOfStarted<infer S, any>>
-        ? S
-        : never,
-    EA = ReturnType<AR> extends Observable<RES.ResourceTypeOfStarted<DS, infer S>> ? S : never,
-    P extends Array<unknown> = Parameters<AR>
+    F extends (...p: any) => MOR.ObservableResource<E, A>,
+    RE extends MRE.Resource<E, A>,
+    MA extends ((r: MRE.ResourceAcknowledged<E, A>) => MR) | undefined,
+    MR extends { _tag: unknown } = MA extends (...c: any) => any ? ReturnType<MA> : never,
+    E = F extends (...p: any) => MOR.ObservableResource<infer T, any> ? T : never,
+    A = F extends (...p: any) => MOR.ObservableResource<any, infer T> ? T : never,
+    P extends Array<unknown> = Parameters<F>
 >(
-    ajaxToResource: AR,
-    options: {
-        notifierTakeUntil?: Observable<unknown>
-        iniState?: IS
-        mapAcknowledged: (r: RES.ResourceTypeOfAcknowledged<DS, EA>) => MR
-    }
-): [MR | RES.ResourceInit | RES.ResourceSubmitted, (...p: P) => void]
-
-export function useResourceFetcher<
-    AR extends (...p: any) => Observable<RES.ResourceTypeOfStarted<DS, EA>>,
-    MR extends { _tag: unknown },
-    IS extends RES.ResourceTypeOf<DS, EA>,
-    DS extends RES.ResourceDecoders = ReturnType<AR> extends Observable<RES.ResourceTypeOfStarted<infer S, any>>
-        ? S
-        : never,
-    EA = ReturnType<AR> extends Observable<RES.ResourceTypeOfStarted<DS, infer S>> ? S : never,
-    P extends Array<unknown> = Parameters<AR>
->(
-    ajaxToResource: AR,
+    fetch: F,
     options?: {
         notifierTakeUntil?: Observable<unknown>
-        iniState?: IS
-        mapAcknowledged?: (r: RES.ResourceTypeOfAcknowledged<DS, EA>) => MR
+        iniState?: RE
+        mapAcknowledged?: MA
     }
-): [RES.ResourceTypeOf<DS, EA>, (...p: P) => void]
-
-export function useResourceFetcher<
-    AR extends (...p: any) => Observable<RES.ResourceTypeOfStarted<DS, EA>>,
-    MR extends { _tag: unknown },
-    IS extends RES.ResourceTypeOf<DS, EA>,
-    DS extends RES.ResourceDecoders = ReturnType<AR> extends Observable<RES.ResourceTypeOfStarted<infer S, any>>
-        ? S
-        : never,
-    EA = ReturnType<AR> extends Observable<RES.ResourceTypeOfStarted<DS, infer S>> ? S : never,
-    P extends Array<unknown> = Parameters<AR>
->(
-    ajaxToResource: AR,
-    options?: {
-        notifierTakeUntil?: Observable<unknown>
-        iniState?: IS
-        mapAcknowledged?: (r: RES.ResourceTypeOfAcknowledged<DS, EA>) => MR
-    }
-): [unknown, (...p: P) => void] {
-    const [value, setValue] = useState<unknown>(options?.iniState || RES.init)
+): [MA extends undefined ? MRE.Resource<E, A> : MR | MRE.ResourceInit | MRE.ResourceSubmitted, (...p: P) => void] {
+    const [value, setValue] = useState<unknown>(options?.iniState || MRE.init)
 
     const subscriptionRef = useRef<Subscription | null>(null)
-    const ajaxToResourceRef = useRef(ajaxToResource)
+    const fetchRef = useRef(fetch)
     const notifierTakeUntilRef = useRef(options?.notifierTakeUntil)
     const mapAcknowledgedRef = useRef(options?.mapAcknowledged)
 
     useEffect(() => {
-        ajaxToResourceRef.current = ajaxToResource
+        fetchRef.current = fetch
         notifierTakeUntilRef.current = options?.notifierTakeUntil
         mapAcknowledgedRef.current = options?.mapAcknowledged
     })
 
     return [
-        value,
+        value as any,
         useCallback((...p: P) => {
             if (subscriptionRef.current && subscriptionRef.current.closed !== true) {
                 subscriptionRef.current.unsubscribe()
             }
 
-            const resource$ = ajaxToResourceRef.current(...p)
+            const resource$ = fetchRef.current(...p)
 
             const resourceTaken$ = notifierTakeUntilRef.current
                 ? resource$.pipe(takeUntil(notifierTakeUntilRef.current))

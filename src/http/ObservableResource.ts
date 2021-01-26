@@ -8,7 +8,7 @@ import type { AjaxError, AjaxResponse } from 'rxjs/ajax'
 import type { AjaxErrorNames } from 'rxjs/internal/observable/dom/AjaxObservable'
 import { catchError, map, switchMap, take } from 'rxjs/operators'
 import * as RES from './Resource'
-import type { StatusCode } from './status'
+import type { StatusCode } from './statusCode'
 
 // -------------------------------------------------------------------------------------
 // model

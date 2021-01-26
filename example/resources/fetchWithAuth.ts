@@ -6,7 +6,7 @@ import type { Observable } from 'rxjs'
 import type { AjaxResponse } from 'rxjs/ajax'
 import { map, switchMap, take } from 'rxjs/operators'
 import * as RR from '../../src/http/ObservableResource'
-import type { StatusCode } from '../../src/http/status'
+import type { StatusCode } from '../../src/http/statusCode'
 import type { ApiKey, SessionState } from '../stores/sessionStore'
 
 export type authAppError = string
