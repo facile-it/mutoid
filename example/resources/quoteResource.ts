@@ -4,7 +4,8 @@ import * as t from 'io-ts'
 import { nonEmptyArray } from 'io-ts-types/nonEmptyArray'
 import type { ajax } from 'rxjs/ajax'
 import { delay } from 'rxjs/operators'
-import * as MH from '../../src/http'
+import * as RR from '../../src/http/ObservableResource'
+import type * as RES from '../../src/http/Resource'
 import { authAppError, fetchWithAuth } from './fetchWithAuth'
 
 export const quoteDecoders = {
@@ -12,7 +13,7 @@ export const quoteDecoders = {
     400: t.string.decode,
 }
 
-export type quoteResource = MH.ResourceTypeOf<typeof quoteDecoders, authAppError>
+export type quoteResource = RES.ResourceTypeOf<typeof quoteDecoders, authAppError>
 
 // example: if you need token in some store
 // you can write a function like: fetchWithAuth
@@ -27,10 +28,7 @@ export const fetchQuote = pipe(
 // example: simple fetch without token but with params
 
 export const fetchQuoteWithParams = (deps: { ajax: typeof ajax }) => (id: number, from: string) =>
-    MH.ajaxToResource(
-        deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?id=${id}&from=${from}`),
-        quoteDecoders
-    )
+    RR.fromAjax(deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?id=${id}&from=${from}`), quoteDecoders)
 
 // example: with auth
 

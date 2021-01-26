@@ -40,6 +40,65 @@ describe('resource', () => {
             laws.monad(_.resource)(Eqa => _.getEq(Eq.eqString, Eqa))
         })
     })
+
+    test('guards', () => {
+        const init = _.init
+        const submitted = _.submitted
+        const done = _.done<never, _.ResourceData<200, string>>({ status: 200, payload: 'hello' })
+        const fail = _.fail({ type: 'unknownError', detail: 'boom' })
+
+        expect(_.isInit(init)).toBe(true)
+        expect(_.isPending(init)).toBe(true)
+        expect(_.isStarted(init)).toBe(false)
+        expect(_.isAcknowledged(init)).toBe(false)
+
+        expect(_.isSubmitted(submitted)).toBe(true)
+        expect(_.isPending(submitted)).toBe(true)
+        expect(_.isStarted(submitted)).toBe(true)
+        expect(_.isAcknowledged(submitted)).toBe(false)
+
+        expect(_.isDone(done)).toBe(true)
+        expect(_.isPending(done)).toBe(false)
+        expect(_.isStarted(done)).toBe(true)
+        expect(_.isAcknowledged(done)).toBe(true)
+
+        expect(_.isFail(fail)).toBe(true)
+        expect(_.isPending(fail)).toBe(false)
+        expect(_.isStarted(fail)).toBe(true)
+        expect(_.isAcknowledged(fail)).toBe(true)
+
+        expect(_.isInit(submitted)).toBe(false)
+        expect(_.isSubmitted(init)).toBe(false)
+        expect(_.isDone(init)).toBe(false)
+        expect(_.isFail(init)).toBe(false)
+    })
+
+    test('resourceFold', () => {
+        const onInit = jest.fn()
+        const onDone = jest.fn()
+        const onSubmitted = jest.fn()
+        const onfail = jest.fn()
+
+        const c = {
+            onInit: onInit,
+            onDone: onDone,
+            onSubmitted: onSubmitted,
+            onFail: onfail,
+        }
+
+        const ts: [_.ResourceTypeOf<{ 200: any }>, jest.Mock<any, any>][] = [
+            [_.init, onInit],
+            [_.submitted, onSubmitted],
+            [_.done({ status: 200, payload: 'hello' }), onDone],
+            [_.fail({ type: 'unknownError', detail: 'boom' }), onfail],
+        ]
+
+        ts.forEach(([r, m]) => {
+            pipe(r, _.resourceFold(c))
+            expect(m.mock.calls.length).toBe(1)
+            jest.resetAllMocks()
+        })
+    })
 })
 
 function getInit<L, A>(arb: fc.Arbitrary<unknown>): fc.Arbitrary<_.Resource<L, A>> {

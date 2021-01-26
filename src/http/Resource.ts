@@ -158,6 +158,13 @@ export const fold = <E, D, R>(
     }
 }
 
+export const resourceFold = <E, D, R>(dodo: {
+    onInit: () => R
+    onSubmitted: () => R
+    onDone: (r: ResourceDone<D>['data']) => R
+    onFail: (r: ResourceFail<E>['error']) => R
+}) => fold(dodo.onInit, dodo.onSubmitted, dodo.onDone, dodo.onFail)
+
 export const fold_ = <E, D>(r: Resource<E, D>) => <R>(
     onInit: () => R,
     onSubmitted: () => R,
@@ -166,7 +173,7 @@ export const fold_ = <E, D>(r: Resource<E, D>) => <R>(
 ): R => pipe(r, fold(onInit, onSubmitted, onDone, onFail))
 
 // -------------------------------------------------------------------------------------
-// pipeables
+// type class members
 // -------------------------------------------------------------------------------------
 
 export const map: <A, B>(f: (a: A) => B) => <E>(fa: Resource<E, A>) => Resource<E, B> = f => fa =>
@@ -191,16 +198,12 @@ export const chainW = <D, A, B>(f: (a: A) => Resource<D, B>) => <E>(ma: Resource
 export const chain: <E, A, B>(f: (a: A) => Resource<E, B>) => (ma: Resource<E, A>) => Resource<E, B> = chainW
 
 // -------------------------------------------------------------------------------------
-// non-pipeables
+// instances
 // -------------------------------------------------------------------------------------
 
 const map_: Monad2<URI>['map'] = (fa, f) => pipe(fa, map(f))
 const ap_: Monad2<URI>['ap'] = (fa, f) => pipe(fa, ap(f))
 const chain_: Monad2<URI>['chain'] = (fa, f) => pipe(fa, chain(f))
-
-// -------------------------------------------------------------------------------------
-// instances
-// -------------------------------------------------------------------------------------
 
 export const URI = 'Resource'
 

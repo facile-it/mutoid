@@ -1,7 +1,8 @@
 import { flow } from 'fp-ts/function'
 import { Observable, of } from 'rxjs'
 import { map } from 'rxjs/operators'
-import * as MH from '../../src/http'
+import * as RR from '../../src/http/ObservableResource'
+import * as RES from '../../src/http/Resource'
 import * as MS from '../../src/state'
 import { fetchQuote, fetchQuoteWithDelay, fetchQuoteWithParams, quoteResource } from '../resources/quoteResource'
 
@@ -22,7 +23,7 @@ export interface QuoteState {
 }
 
 const quoteState: QuoteState = {
-    quote: MH.resourceInit,
+    quote: RES.init,
 }
 
 // constructor
@@ -34,34 +35,25 @@ export const quoteStore = MS.ctor(() => ({ name: 'quote', initState: quoteState 
 export const fetchQuoteMutation = flow(fetchQuote, fetch =>
     MS.ctorMutation(
         'fetchQuoteMutation',
-        MH.resourceFetcherToMutationEffect(
-            fetch,
-            (o, s: QuoteState): Observable<QuoteState> => o.pipe(map(c => ({ ...s, quote: c })))
-        )
+        RR.toMutationEffect(fetch, (o, s: QuoteState): Observable<QuoteState> => o.pipe(map(c => ({ ...s, quote: c }))))
     )
 )
 
 export const fetchQuoteMutationWithParams = flow(fetchQuoteWithParams, fetch =>
     MS.ctorMutation(
         'fetchQuoteMutationWithParams',
-        MH.resourceFetcherToMutationEffect(
-            fetch,
-            (o, s: QuoteState): Observable<QuoteState> => o.pipe(map(c => ({ ...s, quote: c })))
-        )
+        RR.toMutationEffect(fetch, (o, s: QuoteState): Observable<QuoteState> => o.pipe(map(c => ({ ...s, quote: c }))))
     )
 )
 
 export const fetchQuoteMutationWithDelay = flow(fetchQuoteWithDelay, fetch =>
     MS.ctorMutation(
         'fetchQuoteMutationWithDelay',
-        MH.resourceFetcherToMutationEffect(
-            fetch,
-            (o, s: QuoteState): Observable<QuoteState> => o.pipe(map(c => ({ ...s, quote: c })))
-        )
+        RR.toMutationEffect(fetch, (o, s: QuoteState): Observable<QuoteState> => o.pipe(map(c => ({ ...s, quote: c }))))
     )
 )
 
 export const resetQuoteMutation = () =>
     MS.ctorMutation('resetQuoteMutation', () => (s: QuoteState): Observable<QuoteState> =>
-        of({ ...s, quote: MH.resourceInit })
+        of({ ...s, quote: RES.init })
     )

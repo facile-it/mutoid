@@ -1,62 +1,62 @@
 import { useCallback, useState, useRef, useEffect } from 'react'
 import type { Observable, Subscription } from 'rxjs'
 import { map, take, takeUntil } from 'rxjs/operators'
-import {
-    ResourceInit,
-    resourceInit,
-    ResourceSubmitted,
-    ResourceDecoders,
-    ResourceTypeOfStarted,
-    ResourceTypeOfAcknowledged,
-    ResourceTypeOf,
-} from '../http'
+import * as RES from '../http/Resource'
 
 export function useResourceFetcher<
-    AR extends (...p: any) => Observable<ResourceTypeOfStarted<DS, EA>>,
+    AR extends (...p: any) => Observable<RES.ResourceTypeOfStarted<DS, EA>>,
     MR extends { _tag: unknown },
-    IS extends ResourceTypeOf<DS, EA>,
-    DS extends ResourceDecoders = ReturnType<AR> extends Observable<ResourceTypeOfStarted<infer S, any>> ? S : never,
-    EA = ReturnType<AR> extends Observable<ResourceTypeOfStarted<DS, infer S>> ? S : never,
+    IS extends RES.ResourceTypeOf<DS, EA>,
+    DS extends RES.ResourceDecoders = ReturnType<AR> extends Observable<RES.ResourceTypeOfStarted<infer S, any>>
+        ? S
+        : never,
+    EA = ReturnType<AR> extends Observable<RES.ResourceTypeOfStarted<DS, infer S>> ? S : never,
     P extends Array<unknown> = Parameters<AR>
 >(
     ajaxToResource: AR,
     options: {
         notifierTakeUntil?: Observable<unknown>
         iniState?: IS
-        mapAcknowledged: (r: ResourceTypeOfAcknowledged<DS, EA>) => MR
+        mapAcknowledged: (r: RES.ResourceTypeOfAcknowledged<DS, EA>) => MR
     }
-): [MR | ResourceInit | ResourceSubmitted, (...p: P) => void]
+): [MR | RES.ResourceInit | RES.ResourceSubmitted, (...p: P) => void]
+
 export function useResourceFetcher<
-    AR extends (...p: any) => Observable<ResourceTypeOfStarted<DS, EA>>,
+    AR extends (...p: any) => Observable<RES.ResourceTypeOfStarted<DS, EA>>,
     MR extends { _tag: unknown },
-    IS extends ResourceTypeOf<DS, EA>,
-    DS extends ResourceDecoders = ReturnType<AR> extends Observable<ResourceTypeOfStarted<infer S, any>> ? S : never,
-    EA = ReturnType<AR> extends Observable<ResourceTypeOfStarted<DS, infer S>> ? S : never,
+    IS extends RES.ResourceTypeOf<DS, EA>,
+    DS extends RES.ResourceDecoders = ReturnType<AR> extends Observable<RES.ResourceTypeOfStarted<infer S, any>>
+        ? S
+        : never,
+    EA = ReturnType<AR> extends Observable<RES.ResourceTypeOfStarted<DS, infer S>> ? S : never,
     P extends Array<unknown> = Parameters<AR>
 >(
     ajaxToResource: AR,
     options?: {
         notifierTakeUntil?: Observable<unknown>
         iniState?: IS
-        mapAcknowledged?: (r: ResourceTypeOfAcknowledged<DS, EA>) => MR
+        mapAcknowledged?: (r: RES.ResourceTypeOfAcknowledged<DS, EA>) => MR
     }
-): [ResourceTypeOf<DS, EA>, (...p: P) => void]
+): [RES.ResourceTypeOf<DS, EA>, (...p: P) => void]
+
 export function useResourceFetcher<
-    AR extends (...p: any) => Observable<ResourceTypeOfStarted<DS, EA>>,
+    AR extends (...p: any) => Observable<RES.ResourceTypeOfStarted<DS, EA>>,
     MR extends { _tag: unknown },
-    IS extends ResourceTypeOf<DS, EA>,
-    DS extends ResourceDecoders = ReturnType<AR> extends Observable<ResourceTypeOfStarted<infer S, any>> ? S : never,
-    EA = ReturnType<AR> extends Observable<ResourceTypeOfStarted<DS, infer S>> ? S : never,
+    IS extends RES.ResourceTypeOf<DS, EA>,
+    DS extends RES.ResourceDecoders = ReturnType<AR> extends Observable<RES.ResourceTypeOfStarted<infer S, any>>
+        ? S
+        : never,
+    EA = ReturnType<AR> extends Observable<RES.ResourceTypeOfStarted<DS, infer S>> ? S : never,
     P extends Array<unknown> = Parameters<AR>
 >(
     ajaxToResource: AR,
     options?: {
         notifierTakeUntil?: Observable<unknown>
         iniState?: IS
-        mapAcknowledged?: (r: ResourceTypeOfAcknowledged<DS, EA>) => MR
+        mapAcknowledged?: (r: RES.ResourceTypeOfAcknowledged<DS, EA>) => MR
     }
 ): [unknown, (...p: P) => void] {
-    const [value, setValue] = useState<unknown>(options?.iniState || resourceInit)
+    const [value, setValue] = useState<unknown>(options?.iniState || RES.init)
 
     const subscriptionRef = useRef<Subscription | null>(null)
     const ajaxToResourceRef = useRef(ajaxToResource)

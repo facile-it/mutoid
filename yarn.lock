@@ -3509,10 +3509,10 @@ fp-ts-laws@^0.3.0:
   resolved "https://registry.yarnpkg.com/fp-ts-laws/-/fp-ts-laws-0.3.0.tgz#428639e087081317cdbf96fc7958449fb8c42602"
   integrity sha512-uCLBnZq429UDYIx7TDsKmIOXQvgVfEFJMDBbJ2OljpW19cCEF+UgwoGnTfq6AYkHofFlkd6t0p3a9HB1OXTiaA==
 
-fp-ts-rxjs@^0.6.9:
-  version "0.6.9"
-  resolved "https://registry.yarnpkg.com/fp-ts-rxjs/-/fp-ts-rxjs-0.6.9.tgz#e85d34df61cd1828aac6938700d87a07fb668e5f"
-  integrity sha512-LCxTCtk8MYWgHknZ9paEU+aEjrCbn7S5acec0ibzv2u9Quf5jmKHFiTByNX/UEBnIGsRvZTvO6edrSuuMO83gg==
+fp-ts-rxjs@^0.6.13:
+  version "0.6.13"
+  resolved "https://registry.yarnpkg.com/fp-ts-rxjs/-/fp-ts-rxjs-0.6.13.tgz#640848ce3eb752b4006e3d9407e377f447361ef9"
+  integrity sha512-h5IH0BvkxEkEpZLJo3MMKVJvYAFgftaO39xLq67FOJh1Kwb3jPgiYiJGaSvKomP0ykHF3aJA0iFm7abXPBFIgQ==
 
 fp-ts@^2.9.3:
   version "2.9.3"

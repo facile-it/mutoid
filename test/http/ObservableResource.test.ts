@@ -5,7 +5,8 @@ import { of, Observable } from 'rxjs'
 import type { AjaxError, AjaxResponse } from 'rxjs/ajax'
 import { map } from 'rxjs/operators'
 import { TestScheduler } from 'rxjs/testing'
-import * as MH from '../../src/http'
+import * as _ from '../../src/http/ObservableResource'
+import * as RES from '../../src/http/Resource'
 import * as MS from '../../src/state/index'
 
 declare module '../../src/state/stores' {
@@ -14,13 +15,13 @@ declare module '../../src/state/stores' {
     }
 }
 
-describe('http', () => {
+describe('ObservableResource', () => {
     const testSchedulerBuilder = () =>
         new TestScheduler((actual, expected) => {
             expect(actual).toStrictEqual(expected)
         })
 
-    test('ajaxToResource done 200', () => {
+    test('fromAjax done 200', () => {
         testSchedulerBuilder().run(({ cold, expectObservable }) => {
             const ajax = cold<AjaxResponse>('--a', {
                 a: {
@@ -29,7 +30,7 @@ describe('http', () => {
                 } as AjaxResponse,
             })
 
-            const resource = MH.ajaxToResource(ajax, {
+            const resource = _.fromAjax(ajax, {
                 200: t.string.decode,
             })
 
@@ -40,7 +41,7 @@ describe('http', () => {
         })
     })
 
-    test('ajaxToResource done notExpected response', () => {
+    test('fromAjax done notExpected response', () => {
         testSchedulerBuilder().run(({ cold, expectObservable }) => {
             const ajax = cold<AjaxResponse>('--a', {
                 a: {
@@ -49,7 +50,7 @@ describe('http', () => {
                 } as AjaxResponse,
             })
 
-            const resource = MH.ajaxToResource(ajax, {
+            const resource = _.fromAjax(ajax, {
                 200: t.string.decode,
             })
 
@@ -69,7 +70,7 @@ describe('http', () => {
         })
     })
 
-    test('ajaxToResource fail unexpectedResponse', () => {
+    test('fromAjax fail unexpectedResponse', () => {
         testSchedulerBuilder().run(({ cold, expectObservable }) => {
             const ajaxError = {
                 status: 500,
@@ -79,7 +80,7 @@ describe('http', () => {
 
             const ajax = cold<AjaxResponse>('--#', undefined, ajaxError)
 
-            const resource = MH.ajaxToResource(ajax, {
+            const resource = _.fromAjax(ajax, {
                 200: t.string.decode,
             })
 
@@ -96,7 +97,7 @@ describe('http', () => {
         })
     })
 
-    test('ajaxToResource done 500done 500', () => {
+    test('fromAjax done 500done 500', () => {
         testSchedulerBuilder().run(({ cold, expectObservable }) => {
             const ajaxError = {
                 status: 500,
@@ -106,7 +107,7 @@ describe('http', () => {
 
             const ajax = cold<AjaxResponse>('--#', undefined, ajaxError)
 
-            const resource = MH.ajaxToResource(ajax, {
+            const resource = _.fromAjax(ajax, {
                 200: t.string.decode,
                 500: t.number.decode,
             })
@@ -124,7 +125,7 @@ describe('http', () => {
         })
     })
 
-    test('ajaxToResource fail unknownError', () => {
+    test('fromAjax fail unknownError', () => {
         testSchedulerBuilder().run(({ cold, expectObservable }) => {
             const ajaxError = {
                 status: 500,
@@ -134,7 +135,7 @@ describe('http', () => {
 
             const ajax = cold<AjaxResponse>('--#', undefined, ajaxError)
 
-            const resource = MH.ajaxToResource(ajax, {
+            const resource = _.fromAjax(ajax, {
                 200: t.string.decode,
             })
 
@@ -151,7 +152,7 @@ describe('http', () => {
         })
     })
 
-    test('ajaxToResource fail decodeError', () => {
+    test('fromAjax fail decodeError', () => {
         testSchedulerBuilder().run(({ cold, expectObservable }) => {
             const ajax = cold<AjaxResponse>('--a', {
                 a: {
@@ -162,7 +163,7 @@ describe('http', () => {
                 } as AjaxResponse,
             })
 
-            const resource = MH.ajaxToResource(ajax, {
+            const resource = _.fromAjax(ajax, {
                 200: (i: unknown) =>
                     pipe(
                         t.type({ data: t.number }).decode(i),
@@ -183,16 +184,16 @@ describe('http', () => {
         })
     })
 
-    test('ajaxToResource already fail', () => {
+    test('fromAjax already fail', () => {
         testSchedulerBuilder().run(({ cold, expectObservable }) => {
-            const ajax = cold<MH.ResourceAjaxFail<string>>('--a', {
-                a: MH.resourceAjaxFail<string>({
+            const ajax = cold<RES.ResourceAjaxFail<string>>('--a', {
+                a: RES.ajaxFail<string>({
                     type: 'appError',
                     detail: 'bhoo',
                 }),
             })
 
-            const resource = MH.ajaxToResource(ajax, {
+            const resource = _.fromAjax(ajax, {
                 200: t.string.decode,
             })
 
@@ -209,16 +210,16 @@ describe('http', () => {
         })
     })
 
-    test('resourceFetcherToMutation done 200', async () => {
+    test('toMutationEffect done 200', async () => {
         const decoders = {
             200: t.type({
                 name: t.string,
             }).decode,
         }
 
-        type nameResource = MH.ResourceTypeOf<typeof decoders>
+        type nameResource = RES.ResourceTypeOf<typeof decoders>
 
-        const state: { name: nameResource } = { name: MH.resourceInit }
+        const state: { name: nameResource } = { name: RES.init }
         const store = MS.ctor(() => ({ initState: state, name: 'http_test' }))
 
         const ajax = of({
@@ -231,8 +232,8 @@ describe('http', () => {
         const mutation = () =>
             MS.ctorMutation(
                 'test' as const,
-                MH.resourceFetcherToMutationEffect(
-                    () => MH.ajaxToResource(ajax, decoders),
+                _.toMutationEffect(
+                    () => _.fromAjax(ajax, decoders),
                     (o, _S: typeof state): Observable<typeof state> => o.pipe(map(n => ({ name: n })))
                 )
             )
@@ -242,64 +243,5 @@ describe('http', () => {
         expect((await task()).name._tag).toBe('init')
         MS.mutationRunner(store, mutation)()
         expect((await task()).name._tag).toBe('done')
-    })
-
-    test('resourceFold', () => {
-        const onInit = jest.fn()
-        const onDone = jest.fn()
-        const onSubmitted = jest.fn()
-        const onfail = jest.fn()
-
-        const c = {
-            onInit: onInit,
-            onDone: onDone,
-            onSubmitted: onSubmitted,
-            onFail: onfail,
-        }
-
-        const ts: [MH.ResourceTypeOf<{ 200: any }>, jest.Mock<any, any>][] = [
-            [MH.resourceInit, onInit],
-            [MH.resourceSubmitted, onSubmitted],
-            [MH.resourceDone({ status: 200, payload: 'hello' }), onDone],
-            [MH.resourceFail({ type: 'unknownError', detail: 'boom' }), onfail],
-        ]
-
-        ts.forEach(([r, m]) => {
-            MH.resourceFold_(r)(c)
-            expect(m.mock.calls.length).toBe(1)
-            jest.resetAllMocks()
-        })
-    })
-
-    test('guards', () => {
-        const init = MH.resourceInit
-        const submitted = MH.resourceSubmitted
-        const done = MH.resourceDone<MH.ResourceData<200, string>>({ status: 200, payload: 'hello' })
-        const fail = MH.resourceFail({ type: 'unknownError', detail: 'boom' })
-
-        expect(MH.isResourceInit(init)).toBe(true)
-        expect(MH.isResourcePending(init)).toBe(true)
-        expect(MH.isResourceStarted(init)).toBe(false)
-        expect(MH.isResourceAcknowledged(init)).toBe(false)
-
-        expect(MH.isResourceSubmitted(submitted)).toBe(true)
-        expect(MH.isResourcePending(submitted)).toBe(true)
-        expect(MH.isResourceStarted(submitted)).toBe(true)
-        expect(MH.isResourceAcknowledged(submitted)).toBe(false)
-
-        expect(MH.isResourceDone(done)).toBe(true)
-        expect(MH.isResourcePending(done)).toBe(false)
-        expect(MH.isResourceStarted(done)).toBe(true)
-        expect(MH.isResourceAcknowledged(done)).toBe(true)
-
-        expect(MH.isResourceFail(fail)).toBe(true)
-        expect(MH.isResourcePending(fail)).toBe(false)
-        expect(MH.isResourceStarted(fail)).toBe(true)
-        expect(MH.isResourceAcknowledged(fail)).toBe(true)
-
-        expect(MH.isResourceInit(submitted)).toBe(false)
-        expect(MH.isResourceSubmitted(init)).toBe(false)
-        expect(MH.isResourceDone(init)).toBe(false)
-        expect(MH.isResourceFail(init)).toBe(false)
     })
 })

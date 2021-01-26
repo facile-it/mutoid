@@ -4,7 +4,7 @@ import * as t from 'io-ts'
 import { of } from 'rxjs'
 import type { AjaxResponse } from 'rxjs/ajax'
 import { delay } from 'rxjs/operators'
-import * as MH from '../../src/http'
+import * as RR from '../../src/http/ObservableResource'
 import * as MR from '../../src/react'
 import * as MS from '../../src/state'
 
@@ -73,7 +73,7 @@ describe('react', () => {
         } as AjaxResponse)
 
         const resource = () =>
-            MH.ajaxToResource(ajax, {
+            RR.fromAjax(ajax, {
                 200: t.string.decode,
             })
 
@@ -95,7 +95,7 @@ describe('react', () => {
         } as AjaxResponse)
 
         const resource = () =>
-            MH.ajaxToResource(ajax.pipe(delay(1000)), {
+            RR.fromAjax(ajax.pipe(delay(1000)), {
                 200: t.string.decode,
             })
 
@@ -117,7 +117,7 @@ describe('react', () => {
         } as AjaxResponse)
 
         const resource = () =>
-            MH.ajaxToResource(ajax, {
+            RR.fromAjax(ajax, {
                 200: t.string.decode,
             })
 

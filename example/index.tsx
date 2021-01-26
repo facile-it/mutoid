@@ -8,7 +8,7 @@ import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import { Subject } from 'rxjs'
 import { ajax } from 'rxjs/ajax'
-import * as MH from '../src/http'
+import * as RES from '../src/http/Resource'
 import * as MR from '../src/react'
 import * as MS from '../src/state'
 import { fetchQuote, fetchQuoteWithDelay, fetchQuoteWithParams, quoteResource } from './resources/quoteResource'
@@ -27,33 +27,36 @@ const resourceDeps = {
 }
 
 const renderQuote = (quote: quoteResource): React.ReactChild => {
-    return MH.resourceFold_(quote)({
-        onDone: r => {
-            switch (r.status) {
-                case 200:
-                    return r.payload[0]
-                case 400:
-                    return `Client error ${r.payload}`
-            }
-        },
-        onInit: () => 'Quote loading init...',
-        onSubmitted: () => 'Quote loading submitted...',
-        onFail: e => {
-            switch (e.type) {
-                case 'decodeError': {
-                    return `Error ${e.type} - ${PathReporter.report(E.left(e.detail)).join(', ')}`
+    return pipe(
+        quote,
+        RES.resourceFold({
+            onDone: r => {
+                switch (r.status) {
+                    case 200:
+                        return r.payload[0]
+                    case 400:
+                        return `Client error ${r.payload}`
                 }
-                case 'appError':
-                    return `Error ${e.type} - ${e.detail}`
-                case 'networkError':
-                    return `Error ${e.type} - ${e.detail.message}`
-                case 'unexpectedResponse':
-                    return `Error ${e.type} - ${e.detail.status}`
-                case 'unknownError':
-                    return `Error ${e.type}`
-            }
-        },
-    })
+            },
+            onInit: () => 'Quote loading init...',
+            onSubmitted: () => 'Quote loading submitted...',
+            onFail: e => {
+                switch (e.type) {
+                    case 'decodeError': {
+                        return `Error ${e.type} - ${PathReporter.report(E.left(e.detail)).join(', ')}`
+                    }
+                    case 'appError':
+                        return `Error ${e.type} - ${e.detail}`
+                    case 'networkError':
+                        return `Error ${e.type} - ${e.detail.message}`
+                    case 'unexpectedResponse':
+                        return `Error ${e.type} - ${e.detail.status}`
+                    case 'unknownError':
+                        return `Error ${e.type}`
+                }
+            },
+        })
+    )
 }
 
 const QuoteFromState: React.FC = () => {
@@ -209,7 +212,7 @@ const QuoteWithHookWithParams: React.FC = () => {
             <em>
                 {pipe(
                     quote,
-                    MH.resourceFold({
+                    RES.resourceFold({
                         onDone: r => {
                             switch (r.status) {
                                 case 200:
