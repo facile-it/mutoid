@@ -27,7 +27,7 @@ export const fetchWithAuth = (deps: { store: Lazy<{ state$: Observable<SessionSt
             map(ss => (ss.status === 'done' ? O.some(ss.apiKey) : O.none)),
             switchMap(
                 O.fold(
-                    (): RR.AjaxSubject<authAppError> =>
+                    (): RR.ObservableAjax<authAppError> =>
                         RR.ajaxFail({
                             type: 'appError',
                             detail: 'apiKey not found',

@@ -1,11 +1,11 @@
 import type { Applicative2 } from 'fp-ts/Applicative'
 import type * as E from 'fp-ts/Either'
+import { constFalse, flow, pipe } from 'fp-ts/function'
+import type { Bifunctor2 } from 'fp-ts/lib/Bifunctor'
 import * as Eq from 'fp-ts/lib/Eq'
 import type { Functor2 } from 'fp-ts/lib/Functor'
 import type { Monad2 } from 'fp-ts/lib/Monad'
 import type { Show } from 'fp-ts/lib/Show'
-import { constFalse } from 'fp-ts/lib/function'
-import { pipe } from 'fp-ts/pipeable'
 import type { AjaxError, AjaxResponse } from 'rxjs/ajax'
 import type { StatusCode } from './statusCode'
 
@@ -142,12 +142,9 @@ export const ajaxFail = <AE = never>(error: ResourceAjaxDataError<AE>): Resource
 // Destructors
 // -------------------------------------------------------------------------------------
 
-export const fold = <E, D, R>(
-    onInit: () => R,
-    onSubmitted: () => R,
-    onDone: (r: ResourceDone<D>['data']) => R,
-    onFail: (r: ResourceFail<E>['error']) => R
-) => (r: Resource<E, D>) => {
+export const fold = <E, D, R>(onInit: () => R, onSubmitted: () => R, onDone: (r: D) => R, onFail: (r: E) => R) => (
+    r: Resource<E, D>
+) => {
     switch (r._tag) {
         case 'init':
             return onInit()
@@ -160,18 +157,32 @@ export const fold = <E, D, R>(
     }
 }
 
-export const resourceFold = <E, D, R>(dodo: {
-    onInit: () => R
-    onSubmitted: () => R
-    onDone: (r: ResourceDone<D>['data']) => R
-    onFail: (r: ResourceFail<E>['error']) => R
-}) => fold(dodo.onInit, dodo.onSubmitted, dodo.onDone, dodo.onFail)
+export const resourceFold = <E, D, R>(
+    dodo:
+        | {
+              onInit: () => R
+              onSubmitted: () => R
+              onDone: (r: D) => R
+              onFail: (r: E) => R
+          }
+        | {
+              onPending: () => R
+              onDone: (r: D) => R
+              onFail: (r: E) => R
+          }
+) =>
+    fold(
+        (dodo as any).onInit || (dodo as any).onPending,
+        (dodo as any).onSubmitted || (dodo as any).onPending,
+        dodo.onDone,
+        dodo.onFail
+    )
 
 export const fold_ = <E, D>(r: Resource<E, D>) => <R>(
     onInit: () => R,
     onSubmitted: () => R,
-    onDone: (r: ResourceDone<D>['data']) => R,
-    onFail: (r: ResourceFail<E>['error']) => R
+    onDone: (r: D) => R,
+    onFail: (r: E) => R
 ): R => pipe(r, fold(onInit, onSubmitted, onDone, onFail))
 
 // -------------------------------------------------------------------------------------
@@ -181,7 +192,18 @@ export const fold_ = <E, D>(r: Resource<E, D>) => <R>(
 export const map: <A, B>(f: (a: A) => B) => <E>(fa: Resource<E, A>) => Resource<E, B> = f => fa =>
     isDone(fa) ? done(f(fa.data)) : fa
 
-export const mapFail: <E, G>(f: (e: E) => G) => <A>(fa: Resource<E, A>) => Resource<G, A> = f => fa =>
+export const bimap = <E, G, A, B>(f: (e: E) => G, g: (a: A) => B) => (fa: Resource<E, A>): Resource<G, B> =>
+    pipe(
+        fa,
+        fold(
+            (): Resource<G, B> => init,
+            (): Resource<G, B> => submitted,
+            flow(g, done),
+            flow(f, fail)
+        )
+    )
+
+export const mapLeft: <E, G>(f: (e: E) => G) => <A>(fa: Resource<E, A>) => Resource<G, A> = f => fa =>
     isFail(fa) ? fail(f(fa.error)) : fa
 
 export const apW: <D, A>(
@@ -203,8 +225,15 @@ export const chain: <E, A, B>(f: (a: A) => Resource<E, B>) => (ma: Resource<E, A
 // instances
 // -------------------------------------------------------------------------------------
 
+/* istanbul ignore next */
 const map_: Monad2<URI>['map'] = (fa, f) => pipe(fa, map(f))
+/* istanbul ignore next */
+const bimap_: Bifunctor2<URI>['bimap'] = (fa, f, g) => pipe(fa, bimap(f, g))
+/* istanbul ignore next */
+const mapLeft_: Bifunctor2<URI>['mapLeft'] = (fa, f) => pipe(fa, mapLeft(f))
+/* istanbul ignore next */
 const ap_: Monad2<URI>['ap'] = (fa, f) => pipe(fa, ap(f))
+/* istanbul ignore next */
 const chain_: Monad2<URI>['chain'] = (fa, f) => pipe(fa, chain(f))
 
 export const URI = 'Resource'
@@ -261,6 +290,12 @@ export const Functor: Functor2<URI> = {
     map: map_,
 }
 
+export const Bifunctor: Bifunctor2<URI> = {
+    URI,
+    bimap: bimap_,
+    mapLeft: mapLeft_,
+}
+
 export const Applicative: Applicative2<URI> = {
     URI,
     map: map_,
@@ -276,9 +311,11 @@ export const Monad: Monad2<URI> = {
     chain: chain_,
 }
 
-export const resource: Monad2<URI> = {
+export const resource: Monad2<URI> & Bifunctor2<URI> = {
     URI,
     map: map_,
+    bimap: bimap_,
+    mapLeft: mapLeft_,
     of,
     ap: ap_,
     chain: chain_,

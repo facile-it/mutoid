@@ -1,12 +1,22 @@
 import * as R from 'fp-ts-rxjs/Observable'
+import type { MonadObservable2 } from 'fp-ts-rxjs/lib/MonadObservable'
 import * as E from 'fp-ts/Either'
-import { flow } from 'fp-ts/lib/function'
+import type * as T from 'fp-ts/Task'
+import type { Applicative2 } from 'fp-ts/lib/Applicative'
+import type { Apply2 } from 'fp-ts/lib/Apply'
+import type { Bifunctor2 } from 'fp-ts/lib/Bifunctor'
+import type { Functor2 } from 'fp-ts/lib/Functor'
+import type { IO } from 'fp-ts/lib/IO'
+import type { Monad2 } from 'fp-ts/lib/Monad'
+import type { MonadIO2 } from 'fp-ts/lib/MonadIO'
+import type { MonadTask2 } from 'fp-ts/lib/MonadTask'
+import { flow, identity } from 'fp-ts/lib/function'
 import { pipe } from 'fp-ts/pipeable'
-import { Observable, concat, of } from 'rxjs'
+import { Observable, concat } from 'rxjs'
 import type { AjaxError, AjaxResponse } from 'rxjs/ajax'
 // eslint-disable-next-line rxjs/no-internal
 import type { AjaxErrorNames } from 'rxjs/internal/observable/dom/AjaxObservable'
-import { catchError, map, switchMap, take } from 'rxjs/operators'
+import * as RXoP from 'rxjs/operators'
 import * as RES from './Resource'
 import type { StatusCode } from './statusCode'
 
@@ -22,36 +32,64 @@ export type ObservableResource<E, A> = Observable<RES.Resource<E, A>>
 
 export const init: ObservableResource<never, never> = R.of(RES.init)
 export const submitted: ObservableResource<never, never> = R.of(RES.submitted)
-export const done: <E = never, A = never>(d: A) => ObservableResource<E, A> = flow(RES.done, R.of)
-export const fail: <E = never, A = never>(error: E) => ObservableResource<E, A> = flow(RES.fail, R.of)
-export const ajaxFail: <AE = never>(
-    error: RES.ResourceAjaxDataError<AE>
-) => Observable<RES.ResourceAjaxFail<AE>> = flow(RES.ajaxFail, R.of)
 
-export type AjaxSubject<AE = never> = Observable<AjaxResponse | RES.ResourceAjaxFail<AE>>
+export const done: <E = never, A = never>(d: A) => ObservableResource<E, A> = flow(RES.done, R.of)
+export const doneObservable: <E = never, A = never>(oa: Observable<A>) => ObservableResource<E, A> = R.map(RES.done)
+
+export const fail: <E = never, A = never>(e: E) => ObservableResource<E, A> = flow(RES.fail, R.of)
+export const failObservable: <E = never, A = never>(oe: Observable<E>) => ObservableResource<E, A> = R.map(RES.fail)
+
+export const ajaxFail: <AE = never>(e: RES.ResourceAjaxDataError<AE>) => Observable<RES.ResourceAjaxFail<AE>> = flow(
+    RES.ajaxFail,
+    R.of
+)
+export const ajaxFailObservable: <AE = never>(
+    e: Observable<RES.ResourceAjaxDataError<AE>>
+) => Observable<RES.ResourceAjaxFail<AE>> = R.map(RES.ajaxFail)
+
+export type ObservableAjax<AE = never> = Observable<AjaxResponse | RES.ResourceAjaxFail<AE>>
 
 export const fromAjax = <DS extends RES.ResourceDecoders, AE = never>(
-    ajax$: AjaxSubject<AE>,
+    ajax$: ObservableAjax<AE>,
     decoders: DS
 ): Observable<RES.ResourceTypeOfStarted<DS, AE>> =>
     concat(
         submitted as Observable<RES.ResourceSubmitted>,
         ajax$.pipe(
-            map(decodeResponse(decoders)),
-            catchError(
+            RXoP.map(decodeResponse(decoders)),
+            RXoP.catchError(
                 (e: unknown): Observable<RES.ResourceTypeOfAcknowledged<DS, AE>> =>
-                    of(
+                    R.of(
                         isAjaxError(e)
                             ? decodeResponse(decoders)(e)
                             : (RES.fail({ type: 'unknownError', detail: e }) as RES.ResourceTypeOfFail<DS, AE>)
                     )
             )
         )
-    ).pipe(take(2))
+    ).pipe(RXoP.take(2))
+
+// aggiungere submitted ?
+export const fromTaskResource: <E, A>(t: T.Task<RES.Resource<E, A>>) => ObservableResource<E, A> = R.fromTask
+
+// aggiungere submitted ?
+export const fromTask: MonadTask2<URI>['fromTask'] = flow(R.fromTask, doneObservable)
+
+export const rightIO: <E = never, A = never>(ma: IO<A>) => ObservableResource<E, A> = flow(R.fromIO, doneObservable)
+
+export const fromIO: MonadIO2<URI>['fromIO'] = rightIO
+
+export const fromObservable: MonadObservable2<URI>['fromObservable'] = doneObservable
 
 // -------------------------------------------------------------------------------------
 // destructors
 // -------------------------------------------------------------------------------------
+
+export const fold: <E, A, R>(
+    onInit: () => Observable<R>,
+    onSubmitted: () => Observable<R>,
+    onDone: (r: A) => Observable<R>,
+    onFail: (r: E) => Observable<R>
+) => (ma: ObservableResource<E, A>) => Observable<R> = flow(RES.fold, R.chain)
 
 export const toMutationEffect = <
     AJ extends (...args: any) => Observable<R>,
@@ -62,11 +100,70 @@ export const toMutationEffect = <
 >(
     aj: AJ,
     apOperators: (i: Observable<R>, s: SS) => Observable<S>
-) => (...i: I) => (s: SS): Observable<S> => aj(...i).pipe(switchMap(r => apOperators(of(r), s)))
+) => (...i: I) => (s: SS): Observable<S> => aj(...i).pipe(RXoP.switchMap(r => apOperators(R.of(r), s)))
+
+// -------------------------------------------------------------------------------------
+// type class members
+// -------------------------------------------------------------------------------------
+
+export const map: <A, B>(f: (a: A) => B) => <E>(fa: ObservableResource<E, A>) => ObservableResource<E, B> = f =>
+    R.map(RES.map(f))
+
+export const bimap: <E, G, A, B>(
+    f: (e: E) => G,
+    g: (a: A) => B
+) => (fa: ObservableResource<E, A>) => ObservableResource<G, B> = flow(RES.bimap, R.map)
+
+export const mapLeft: <E, G>(f: (e: E) => G) => <A>(fa: ObservableResource<E, A>) => ObservableResource<G, A> = f =>
+    R.map(RES.mapLeft(f))
+
+export const ap = <E, A>(
+    fa: ObservableResource<E, A>
+): (<B>(fab: ObservableResource<E, (a: A) => B>) => ObservableResource<E, B>) =>
+    flow(
+        R.map(gab => (ga: RES.Resource<E, A>) => RES.ap(ga)(gab)),
+        R.ap(fa)
+    )
+
+export const chainW = <A, E2, B>(f: (a: A) => ObservableResource<E2, B>) => <E1>(
+    ma: ObservableResource<E1, A>
+): ObservableResource<E1 | E2, B> =>
+    pipe(
+        ma,
+        R.chain(
+            RES.fold(
+                () => init,
+                () => submitted,
+                f,
+                e => fail<E1 | E2, B>(e)
+            )
+        )
+    )
+
+export const chain: <A, E, B>(
+    f: (a: A) => ObservableResource<E, B>
+) => (ma: ObservableResource<E, A>) => ObservableResource<E, B> = chainW
+
+export const flatten: <E, A>(mma: ObservableResource<E, ObservableResource<E, A>>) => ObservableResource<E, A> = chain(
+    identity
+)
+
+export const of: Applicative2<URI>['of'] = done
 
 // -------------------------------------------------------------------------------------
 // instances
 // -------------------------------------------------------------------------------------
+
+/* istanbul ignore next */
+const map_: Functor2<URI>['map'] = (fa, f) => pipe(fa, map(f))
+/* istanbul ignore next */
+const bimap_: Bifunctor2<URI>['bimap'] = (fea, f, g) => pipe(fea, bimap(f, g))
+/* istanbul ignore next */
+const mapLeft_: Bifunctor2<URI>['mapLeft'] = (fea, f) => pipe(fea, mapLeft(f))
+/* istanbul ignore next */
+const ap_: Apply2<URI>['ap'] = (fab, fa) => pipe(fab, ap(fa))
+/* istanbul ignore next */
+const chain_: Monad2<URI>['chain'] = (ma, f) => pipe(ma, chain(f))
 
 export const URI = 'ObservableResource'
 
@@ -76,6 +173,56 @@ declare module 'fp-ts/HKT' {
     interface URItoKind2<E, A> {
         readonly [URI]: ObservableResource<E, A>
     }
+}
+
+export const Functor: Functor2<URI> = {
+    URI,
+    map: map_,
+}
+
+export const Apply: Apply2<URI> = {
+    URI,
+    map: map_,
+    ap: ap_,
+}
+
+export const Applicative: Applicative2<URI> = {
+    URI,
+    map: map_,
+    ap: ap_,
+    of,
+}
+
+export const Monad: Monad2<URI> = {
+    URI,
+    map: map_,
+    ap: ap_,
+    of,
+    chain: chain_,
+}
+
+export const MonadObservable: MonadObservable2<URI> = {
+    URI,
+    map: map_,
+    ap: ap_,
+    of,
+    chain: chain_,
+    fromIO,
+    fromTask,
+    fromObservable,
+}
+
+export const observableResource: Monad2<URI> & Bifunctor2<URI> & MonadObservable2<URI> = {
+    URI,
+    map: map_,
+    of,
+    ap: ap_,
+    chain: chain_,
+    bimap: bimap_,
+    mapLeft: mapLeft_,
+    fromIO: rightIO,
+    fromTask,
+    fromObservable,
 }
 
 // -------------------------------------------------------------------------------------
