@@ -1,6 +1,6 @@
 # Mutoid - Data fetching
 
-In this section are exposed two modules: `ObservableResource` and `Resource`. Two data structures that implements an instance of `Functor`, `Apply`, `Bifunctor`, `Applicative`, `Monad` (and `MonadObservable` for `ObservableResource`)
+In this section are exported two modules: `ObservableResource` and `Resource`. Two data structures that implement an instance of `Functor`, `Apply`, `Bifunctor`, `Applicative`, `Monad` (and `MonadObservable` for `ObservableResource`)
 
 ## fromAjax
 

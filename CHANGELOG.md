@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.0
+
+-   deprecated module `rxjs` use `fp-ts-rxjs`
+-   added `ObservableResource` and `Resource` (see upgrade-to-0.4 guide)
+-   added `mutoid/state/stores` (see upgrade-to-0.4 guide)
+
 ## 0.3.1 (2020-11-25)
 
 -   fix `useResourceFetcher` init value inference
