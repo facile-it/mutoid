@@ -2,9 +2,7 @@
 
 Reactive library for state management, data fetching, caching (wip) with some utilities to use with _React_
 
----
-
-### Installation
+## Installation
 
 To install the last version
 
@@ -21,14 +19,12 @@ yarn add io-ts
 if you want also to use with [`react`](https://github.com/facebook/react)
 
 ```sh
-yarn add react-dom react
+yarn add react
 ```
 
 **Note** [`rxjs`](https://github.com/ReactiveX/rxjs), [`fp-ts`](https://github.com/gcanti/fp-ts), [`io-ts`](https://github.com/gcanti/io-ts), [`react`](https://github.com/facebook/react) are a peer dependency for `mutoid`
 
----
-
-### Modules
+## Modules
 
 | Module           |                                                                                                |
 | ---------------- | ---------------------------------------------------------------------------------------------- |
@@ -37,25 +33,21 @@ yarn add react-dom react
 | React bindings   | [README](https://github.com/facile-it/mutoid/tree/master/src/react)                            |
 | RxJs             | Deprecated [README](https://github.com/facile-it/mutoid/tree/master/src/rxjs) |
 
----
-
-### Run example
+## Run example
 
 ```console
 yarn dev-server
 ```
 
----
+## Test
 
-### Test
-
-##### Unit, lint and cs
+### Unit, lint and cs
 
 ```console
 yarn test
 ```
 
-##### Type level
+### Type level
 
 ```console
 yarn test-type
