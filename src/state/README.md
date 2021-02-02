@@ -4,8 +4,6 @@
 
 ## Create store
 
-in ctor we use `memoization`
-
 ```typescript
 declare module 'mutoid/state/stores' {
     interface Stores {
@@ -32,7 +30,7 @@ const program = pipe(
 program()
 ```
 
-## Mutation -> mutationRunner
+## Mutation
 
 ### ctorMutation
 

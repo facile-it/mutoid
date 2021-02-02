@@ -1,11 +1,12 @@
 import type { Applicative2 } from 'fp-ts/Applicative'
+import type { Apply2 } from 'fp-ts/Apply'
+import type { Bifunctor2 } from 'fp-ts/Bifunctor'
 import type * as E from 'fp-ts/Either'
+import * as Eq from 'fp-ts/Eq'
+import type { Functor2 } from 'fp-ts/Functor'
+import type { Monad2 } from 'fp-ts/Monad'
+import type { Show } from 'fp-ts/Show'
 import { constFalse, flow, pipe } from 'fp-ts/function'
-import type { Bifunctor2 } from 'fp-ts/lib/Bifunctor'
-import * as Eq from 'fp-ts/lib/Eq'
-import type { Functor2 } from 'fp-ts/lib/Functor'
-import type { Monad2 } from 'fp-ts/lib/Monad'
-import type { Show } from 'fp-ts/lib/Show'
 import type { AjaxError, AjaxResponse } from 'rxjs/ajax'
 import type { StatusCode } from './statusCode'
 
@@ -288,6 +289,12 @@ export function getEq<E, A>(EL: Eq.Eq<E>, EA: Eq.Eq<A>): Eq.Eq<Resource<E, A>> {
 export const Functor: Functor2<URI> = {
     URI,
     map: map_,
+}
+
+export const Apply: Apply2<URI> = {
+    URI,
+    map: map_,
+    ap: ap_,
 }
 
 export const Bifunctor: Bifunctor2<URI> = {

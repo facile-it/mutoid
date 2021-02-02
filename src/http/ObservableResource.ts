@@ -1,16 +1,16 @@
+import type { MonadObservable2 } from 'fp-ts-rxjs/MonadObservable'
 import * as R from 'fp-ts-rxjs/Observable'
-import type { MonadObservable2 } from 'fp-ts-rxjs/lib/MonadObservable'
+import type { Applicative2 } from 'fp-ts/Applicative'
+import type { Apply2 } from 'fp-ts/Apply'
+import type { Bifunctor2 } from 'fp-ts/Bifunctor'
 import * as E from 'fp-ts/Either'
+import type { Functor2 } from 'fp-ts/Functor'
+import type { IO } from 'fp-ts/IO'
+import type { Monad2 } from 'fp-ts/Monad'
+import type { MonadIO2 } from 'fp-ts/MonadIO'
+import type { MonadTask2 } from 'fp-ts/MonadTask'
 import type * as T from 'fp-ts/Task'
-import type { Applicative2 } from 'fp-ts/lib/Applicative'
-import type { Apply2 } from 'fp-ts/lib/Apply'
-import type { Bifunctor2 } from 'fp-ts/lib/Bifunctor'
-import type { Functor2 } from 'fp-ts/lib/Functor'
-import type { IO } from 'fp-ts/lib/IO'
-import type { Monad2 } from 'fp-ts/lib/Monad'
-import type { MonadIO2 } from 'fp-ts/lib/MonadIO'
-import type { MonadTask2 } from 'fp-ts/lib/MonadTask'
-import { flow, identity } from 'fp-ts/lib/function'
+import { flow, identity } from 'fp-ts/function'
 import { pipe } from 'fp-ts/pipeable'
 import { Observable, concat } from 'rxjs'
 import type { AjaxError, AjaxResponse } from 'rxjs/ajax'
@@ -184,6 +184,12 @@ export const Apply: Apply2<URI> = {
     URI,
     map: map_,
     ap: ap_,
+}
+
+export const Bifunctor: Bifunctor2<URI> = {
+    URI,
+    bimap: bimap_,
+    mapLeft: mapLeft_,
 }
 
 export const Applicative: Applicative2<URI> = {
