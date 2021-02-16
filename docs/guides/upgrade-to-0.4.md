@@ -1,5 +1,13 @@
 # Upgrade to version 0.4
 
+## New peer dependency
+
+Now `fp-ts-rxjs` is a peer dependency
+
+```sh
+yarn add fp-ts-rxjs
+```
+
 ## State management
 
 We added `mutoid/state/stores` to populate the stores and mutations names using the module augmentation feature

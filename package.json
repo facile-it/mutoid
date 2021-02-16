@@ -73,9 +73,9 @@
     },
     "peerDependencies": {
         "fp-ts": "^2.8",
+        "fp-ts-rxjs": "^0.6",
         "io-ts": "^2.2",
         "react": "^16.13.1",
-        "react-dom": "^16.13.1",
         "rxjs": "^6.5.5"
     },
     "tags": [
@@ -85,6 +85,7 @@
         "reactivex",
         "rxjs",
         "fp-ts",
+        "fp-ts-rxjs",
         "io-ts",
         "react"
     ],
@@ -95,6 +96,7 @@
         "reactivex",
         "rxjs",
         "fp-ts",
+        "fp-ts-rxjs",
         "io-ts",
         "react"
     ]
