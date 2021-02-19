@@ -28,17 +28,17 @@ const resourceWithFail = OR.fromAjax(ajaxFetchWithFail, decoders)
 // $ExpectType () => (s: { counter: number; }) => Observable<{ counter: number; }>
 const noParam = pipe(
     () => resourceWithFail,
-    OR.toMutationEffect((s: { counter: number }) => _i => s)
+    OR.fetchToMutationEffect((s: { counter: number }) => _i => s)
 )
 
 // $ExpectType (id: string) => (s: { counter: number; }) => Observable<{ counter: number; }>
 const withOneParam = pipe(
     (id: string) => resourceUnknownFail,
-    OR.toMutationEffect((s: { counter: number }) => _i => s)
+    OR.fetchToMutationEffect((s: { counter: number }) => _i => s)
 )
 
 // $ExpectType (id: string, name: string) => (s: { counter: number; }) => Observable<{ counter: number; }>
 const withTwoParam = pipe(
     (id: string, name: string) => resourceUnknownFail,
-    OR.toMutationEffect((s: { counter: number }) => _i => s)
+    OR.fetchToMutationEffect((s: { counter: number }) => _i => s)
 )

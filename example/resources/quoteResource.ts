@@ -1,7 +1,7 @@
 import { pipe } from 'fp-ts/function'
 import * as t from 'io-ts'
 import { nonEmptyArray } from 'io-ts-types/nonEmptyArray'
-import type { ajax } from 'rxjs/ajax'
+import { ajax } from 'rxjs/ajax'
 import { delay } from 'rxjs/operators'
 import * as OR from '../../src/http/ObservableResource'
 import * as ROR from '../../src/http/ReaderObservableResource'
@@ -22,8 +22,7 @@ export const fetchQuote = () =>
         fetchWithAuth,
         ROR.chainW(token => (deps: { ajax: typeof ajax }) =>
             OR.fromAjax(deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?token=${token}`), quoteDecoders)
-        ),
-        ROR.mapLeft(c => c)
+        )
     )
 
 // example: fetch with token and params
@@ -74,3 +73,8 @@ export const fetchQuoteWithDelay = () =>
             )
         )
     )
+
+//  example: fetch with no deps
+
+export const fetchQuoteWithNoDeps = () =>
+    OR.fromAjax(ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes`), quoteDecoders)

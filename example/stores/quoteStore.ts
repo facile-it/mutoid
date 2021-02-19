@@ -30,23 +30,27 @@ const quoteState: QuoteState = {
 
 export const quoteStore = MS.ctor(() => ({ name: 'quote', initState: quoteState }))
 
-// mutation
+// mutationR
+
+/**
+ * mutationR is a function with this type: (deps?: R) => Mutation<NM, P, S, SS>
+ */
 
 export const fetchQuoteMutation = pipe(
     fetchQuote,
-    ROR.toMutationEffectR((s: QuoteState) => (quote): QuoteState => ({ ...s, quote })),
+    ROR.fetchToMutationEffectR((s: QuoteState) => (quote): QuoteState => ({ ...s, quote })),
     MS.ctorMutationCR('fetchQuoteMutation')
 )
 
 export const fetchQuoteMutationWithParams = pipe(
     fetchQuoteWithParams,
-    ROR.toMutationEffectR((s: QuoteState) => (quote): QuoteState => ({ ...s, quote })),
+    ROR.fetchToMutationEffectR((s: QuoteState) => (quote): QuoteState => ({ ...s, quote })),
     MS.ctorMutationCR('fetchQuoteMutationWithParams')
 )
 
 export const fetchQuoteMutationWithDelay = pipe(
     fetchQuoteWithDelay,
-    ROR.toMutationEffectR((s: QuoteState) => (quote): QuoteState => ({ ...s, quote })),
+    ROR.fetchToMutationEffectR((s: QuoteState) => (quote): QuoteState => ({ ...s, quote })),
     MS.ctorMutationCR('fetchQuoteMutationWithDelay')
 )
 

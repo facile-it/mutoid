@@ -77,7 +77,7 @@ describe('react', () => {
                 200: t.string.decode,
             })
 
-        const { result } = renderHook(() => MR.useResourceFetcher(resource))
+        const { result } = renderHook(() => MR.useFetchObservableResource(resource))
 
         expect(result.current[0]._tag).toBe('init')
 
@@ -99,7 +99,7 @@ describe('react', () => {
                 200: t.string.decode,
             })
 
-        const { result } = renderHook(() => MR.useResourceFetcher(resource, { notifierTakeUntil: of(1) }))
+        const { result } = renderHook(() => MR.useFetchObservableResource(resource, { notifierTakeUntil: of(1) }))
 
         expect(result.current[0]._tag).toBe('init')
 
@@ -122,7 +122,7 @@ describe('react', () => {
             })
 
         const { result } = renderHook(() =>
-            MR.useResourceFetcher(resource, {
+            MR.useFetchObservableResource(resource, {
                 mapAcknowledged: s => {
                     switch (s._tag) {
                         case 'done':

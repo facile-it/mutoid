@@ -214,7 +214,7 @@ export const MonadObservable: MonadObservable3<URI> = {
 // destructors
 // -------------------------------------------------------------------------------------
 
-export const toMutationEffectR = <
+export const fetchToMutationEffectR = <
     RORK extends (...i: P) => ReaderObservableResource<R, E, A>,
     SS extends S,
     S,

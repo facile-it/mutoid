@@ -231,7 +231,7 @@ describe('ObservableResource', () => {
         const mutation = () =>
             pipe(
                 () => _.fromAjax(ajax, decoders),
-                _.toMutationEffect((_s: typeof state) => name => ({ name })),
+                _.fetchToMutationEffect((_s: typeof state) => name => ({ name })),
                 MS.ctorMutationC('test')
             )
         const task = MS.toTask(store)

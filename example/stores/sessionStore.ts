@@ -48,7 +48,7 @@ export type SessionState =
 
 export const sessionStore = MS.ctor<'session', SessionState>(() => ({ name: 'session', initState: { status: 'init' } }))
 
-// mutation
+// mutationR
 
 type optional = string | undefined
 type SessionStateInit = Extract<SessionState, { status: 'init' }>

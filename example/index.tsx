@@ -11,7 +11,12 @@ import { ajax } from 'rxjs/ajax'
 import * as RES from '../src/http/Resource'
 import * as MR from '../src/react'
 import * as MS from '../src/state'
-import { fetchQuote, fetchQuoteWithDelay, fetchQuoteWithParams, quoteResource } from './resources/quoteResource'
+import {
+    fetchQuoteWithDelay,
+    fetchQuoteWithNoDeps,
+    fetchQuoteWithParams,
+    quoteResource,
+} from './resources/quoteResource'
 import {
     quoteStore,
     fetchQuoteMutation,
@@ -153,7 +158,7 @@ const QuoteFromStateWithDelay: React.FC = () => {
 }
 
 const QuoteWithHook: React.FC = () => {
-    const [quote, quoteFetcher] = MR.useResourceFetcher(fetchQuote(resourceDeps), {
+    const [quote, quoteFetcher] = MR.useFetchObservableResource(fetchQuoteWithNoDeps, {
         mapAcknowledged: c => {
             switch (c._tag) {
                 case 'fail':
@@ -200,7 +205,7 @@ const QuoteWithHook: React.FC = () => {
 }
 
 const QuoteWithHookWithParams: React.FC = () => {
-    const [quote, quoteFetcher] = MR.useResourceFetcher(fetchQuoteWithParams({ ajax: ajax }))
+    const [quote, quoteFetcher] = MR.useFetchReaderObservableResource(fetchQuoteWithParams, { ajax })
 
     React.useEffect(() => {
         quoteFetcher(1, 'useResourceFetcher')
@@ -243,9 +248,7 @@ const QuoteWithHookWithParams: React.FC = () => {
 const QuoteWithHookWithDelay: React.FC = () => {
     const notifier = React.useRef(new Subject<number>())
 
-    const fetch = fetchQuoteWithDelay(resourceDeps)
-
-    const [quote, quoteFetcher] = MR.useResourceFetcher(fetch, {
+    const [quote, quoteFetcher] = MR.useFetchReaderObservableResource(fetchQuoteWithDelay, resourceDeps, {
         notifierTakeUntil: notifier.current,
     })
 

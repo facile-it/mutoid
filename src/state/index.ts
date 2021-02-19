@@ -37,6 +37,8 @@ export type Mutation<NM, P extends Array<unknown>, S, SS extends S> = Readonly<{
     filterPredicate?: (state: S) => state is SS
 }>
 
+export type MutationR<R, NM, P extends Array<unknown>, S, SS extends S> = (r: R) => Mutation<NM, P, S, SS>
+
 // constructor
 
 export const ctor = <N extends storeName, T>(init: Lazy<{ name: N; initState: T }>): Lazy<Store<N, T>> => {
@@ -52,6 +54,8 @@ export const ctor = <N extends storeName, T>(init: Lazy<{ name: N; initState: T 
     })
 }
 
+// mutation
+
 export const ctorMutation = <NM extends allMutationName, P extends Array<unknown>, S>(
     name: NM,
     effect: MutationEffect<P, S, S>
@@ -64,6 +68,8 @@ export const ctorMutationC = <NM extends allMutationName, P extends Array<unknow
 export const ctorMutationCR = <NM extends allMutationName, P extends Array<unknown>, S, R>(name: NM) => (
     effectR: (r: R) => MutationEffect<P, S, S>
 ): ((r: R) => Mutation<NM, P, S, S>) => r => ctorMutation(name, effectR(r))
+
+// partialMutation
 
 export const ctorPartialMutation = <NM extends allMutationName, P extends Array<unknown>, S, SS extends S>(
     name: NM,
@@ -90,8 +96,8 @@ export const toTask = <N extends storeName, S>(store: Lazy<Store<N, S>>): T.Task
 export interface BaseOptions {
     notifierTakeUntil?: Observable<unknown>
 }
-export interface DepsOptions<D extends Record<string, unknown>> {
-    deps: D
+export interface DepsOptions<R extends Record<string, unknown>> {
+    deps: R
 }
 
 export function mutationRunner<
@@ -100,12 +106,12 @@ export function mutationRunner<
     P extends Array<unknown>,
     S,
     SS extends S,
-    D extends Record<K, unknown>,
+    R extends Record<K, unknown>,
     K extends string
 >(
     storeL: Lazy<Store<N, S>>,
-    mutationL: (deps: D) => Mutation<NM, P, S, SS>,
-    options: BaseOptions & DepsOptions<D>
+    mutationR: (deps: R) => Mutation<NM, P, S, SS>,
+    options: BaseOptions & DepsOptions<R>
     // no deps
 ): (...p: P) => Subscription
 export function mutationRunner<
@@ -114,7 +120,7 @@ export function mutationRunner<
     P extends Array<unknown>,
     S,
     SS extends S,
-    D extends Record<never, unknown>
+    R extends Record<never, unknown>
     // no deps overload
 >(storeL: Lazy<Store<N, S>>, mutationL: () => Mutation<NM, P, S, SS>, options?: BaseOptions): (...p: P) => Subscription
 export function mutationRunner<
@@ -123,16 +129,16 @@ export function mutationRunner<
     P extends Array<unknown>,
     S,
     SS extends S,
-    D extends Record<K, unknown>,
+    R extends Record<K, unknown>,
     K extends never
 >(
     storeL: Lazy<Store<N, S>>,
-    mutationL: (deps?: D) => Mutation<NM, P, S, SS>,
-    options?: BaseOptions & Partial<DepsOptions<D>>
+    mutationR: (deps?: R) => Mutation<NM, P, S, SS>,
+    options?: BaseOptions & Partial<DepsOptions<R>>
 ): (...p: P) => Subscription {
     return (...payload) => {
         const store = storeL()
-        const mutation = mutationL(options?.deps)
+        const mutation = mutationR(options?.deps)
 
         const baseNotify = (state: S, date: Date) => ({
             name: store.name,

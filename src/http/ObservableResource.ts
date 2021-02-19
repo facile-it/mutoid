@@ -101,7 +101,7 @@ export const match: <E, A, R>(
     onFail: (r: E) => Observable<R>
 ) => (ma: ObservableResource<E, A>) => Observable<R> = flow(RES.match, R.chain)
 
-export const toMutationEffect = <
+export const fetchToMutationEffect = <
     AX extends (...i: I) => Observable<R>,
     SS extends S,
     S,

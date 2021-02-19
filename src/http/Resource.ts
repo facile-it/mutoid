@@ -1,4 +1,4 @@
-import type { Applicative2 } from 'fp-ts/Applicative'
+import type { Applicative2 as RES } from 'fp-ts/Applicative'
 import type { Apply2 } from 'fp-ts/Apply'
 import type { Bifunctor2 } from 'fp-ts/Bifunctor'
 import * as E from 'fp-ts/Either'
@@ -218,7 +218,7 @@ export const apW: <D, A>(
 
 export const ap: <E, A>(fa: Resource<E, A>) => <B>(fab: Resource<E, (a: A) => B>) => Resource<E, B> = apW
 
-export const of: Applicative2<URI>['of'] = done
+export const of: RES<URI>['of'] = done
 
 export const chainW = <D, A, B>(f: (a: A) => Resource<D, B>) => <E>(ma: Resource<E, A>): Resource<D | E, B> =>
     isDone(ma) ? f(ma.data) : ma
@@ -306,7 +306,7 @@ export const Bifunctor: Bifunctor2<URI> = {
     mapLeft: mapLeft_,
 }
 
-export const Applicative: Applicative2<URI> = {
+export const Applicative: RES<URI> = {
     URI,
     map: map_,
     ap: ap_,

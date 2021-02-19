@@ -4,7 +4,7 @@ import { map, takeUntil } from 'rxjs/operators'
 import type * as OR from '../http/ObservableResource'
 import * as MRE from '../http/Resource'
 
-export function useResourceFetcher<
+export function useFetchObservableResource<
     F extends (...p: any) => OR.ObservableResource<E, A>,
     RE extends MRE.Resource<E, A>,
     MA extends ((r: MRE.ResourceAcknowledged<E, A>) => MR) | undefined,
