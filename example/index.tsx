@@ -12,6 +12,8 @@ import * as RES from '../src/http/Resource'
 import * as MR from '../src/react'
 import * as MS from '../src/state'
 import {
+    fetchQuoteConcat,
+    fetchQuoteSeqPar,
     fetchQuoteWithDelay,
     fetchQuoteWithNoDeps,
     fetchQuoteWithParams,
@@ -283,6 +285,98 @@ const QuoteWithHookWithDelay: React.FC = () => {
     )
 }
 
+const QuoteWithFetchConcat: React.FC = () => {
+    const [quote, quoteFetcher] = MR.useFetchReaderObservableResource(fetchQuoteConcat, resourceDeps)
+
+    React.useEffect(() => {
+        quoteFetcher()
+    }, [quoteFetcher])
+
+    return (
+        <>
+            <h2>FetchQuoteConcat</h2>
+            <em>
+                {pipe(
+                    quote,
+                    RES.resourceMatch({
+                        onDone: r => {
+                            return `Client error ${r.join(' //// ')}`
+                        },
+                        onInit: () => 'Quote loading init...',
+                        onSubmitted: () => 'Quote loading submitted...',
+                        onFail: e => {
+                            switch (e.type) {
+                                case 'decodeError': {
+                                    return `Error ${e.type} - ${PathReporter.report(E.left(e.detail)).join(', ')}`
+                                }
+                                case 'appError':
+                                    return `Error ${e.type} - ${e.detail}`
+                                case 'networkError':
+                                    return `Error ${e.type} - ${e.detail.message}`
+                                case 'unexpectedResponse':
+                                    return `Error ${e.type} - ${e.detail.status}`
+                                case 'unknownError':
+                                    return `Error ${e.type}`
+                            }
+                        },
+                    })
+                )}
+            </em>
+            <br />
+            <br />
+            <button type="button" onClick={quoteFetcher}>
+                Fetch new quote
+            </button>
+        </>
+    )
+}
+
+const QuoteWithFetchQuoteSeqPar: React.FC = () => {
+    const [quote, quoteFetcher] = MR.useFetchReaderObservableResource(fetchQuoteSeqPar, resourceDeps)
+
+    React.useEffect(() => {
+        quoteFetcher()
+    }, [quoteFetcher])
+
+    return (
+        <>
+            <h2>FetchQuoteSeqPar</h2>
+            <em>
+                {pipe(
+                    quote,
+                    RES.resourceMatch({
+                        onDone: r => {
+                            return `Client error ${r.join(' //// ')}`
+                        },
+                        onInit: () => 'Quote loading init...',
+                        onSubmitted: () => 'Quote loading submitted...',
+                        onFail: e => {
+                            switch (e.type) {
+                                case 'decodeError': {
+                                    return `Error ${e.type} - ${PathReporter.report(E.left(e.detail)).join(', ')}`
+                                }
+                                case 'appError':
+                                    return `Error ${e.type} - ${e.detail}`
+                                case 'networkError':
+                                    return `Error ${e.type} - ${e.detail.message}`
+                                case 'unexpectedResponse':
+                                    return `Error ${e.type} - ${e.detail.status}`
+                                case 'unknownError':
+                                    return `Error ${e.type}`
+                            }
+                        },
+                    })
+                )}
+            </em>
+            <br />
+            <br />
+            <button type="button" onClick={quoteFetcher}>
+                Fetch new quote
+            </button>
+        </>
+    )
+}
+
 const App: React.FC<{ name: string }> = props => {
     React.useEffect(() => {
         // eslint-disable-next-line no-console
@@ -311,6 +405,12 @@ const App: React.FC<{ name: string }> = props => {
             </div>
             <div>
                 <QuoteWithHookWithDelay />
+            </div>
+            <div>
+                <QuoteWithFetchConcat />
+            </div>
+            <div>
+                <QuoteWithFetchQuoteSeqPar />
             </div>
         </>
     )

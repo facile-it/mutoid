@@ -12,7 +12,7 @@ declare module '../../src/state/stores' {
 
 // type
 
-interface ApiKeyBrand {
+export interface ApiKeyBrand {
     readonly ApiKey: unique symbol
 }
 

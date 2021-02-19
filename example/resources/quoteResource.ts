@@ -1,11 +1,13 @@
 import { pipe } from 'fp-ts/function'
+import { sequenceS } from 'fp-ts/lib/Apply'
 import * as t from 'io-ts'
 import { nonEmptyArray } from 'io-ts-types/nonEmptyArray'
 import { ajax } from 'rxjs/ajax'
 import { delay } from 'rxjs/operators'
 import * as OR from '../../src/http/ObservableResource'
 import * as ROR from '../../src/http/ReaderObservableResource'
-import type * as RES from '../../src/http/Resource'
+import * as RES from '../../src/http/Resource'
+import type { StatusCode } from '../../src/http/statusCode'
 import { authAppError, fetchWithAuth } from './fetchWithAuth'
 
 export const quoteDecoders = {
@@ -15,12 +17,16 @@ export const quoteDecoders = {
 
 export type quoteResource = RES.ResourceTypeOf<typeof quoteDecoders, authAppError>
 
+interface Deps {
+    ajax: typeof ajax
+}
+
 //  example: fetch with token but without params
 
 export const fetchQuote = () =>
     pipe(
         fetchWithAuth,
-        ROR.chainW(token => (deps: { ajax: typeof ajax }) =>
+        ROR.chainW(token => (deps: Deps) =>
             OR.fromAjax(deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?token=${token}`), quoteDecoders)
         )
     )
@@ -30,7 +36,7 @@ export const fetchQuote = () =>
 export const fetchQuoteWithTokenAndParams = (id: number) =>
     pipe(
         fetchWithAuth,
-        ROR.chainW(token => (deps: { ajax: typeof ajax }) =>
+        ROR.chainW(token => (deps: Deps) =>
             OR.fromAjax(
                 deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?token=${token}&id=${id}`),
                 quoteDecoders
@@ -42,7 +48,7 @@ export const fetchQuoteWithTokenAndParams = (id: number) =>
 
 export const fetchQuoteWithParams = (id: number, from: string) => {
     return pipe(
-        ROR.ask<{ ajax: typeof ajax }, RES.DecodersToResourceError<typeof quoteDecoders, never>>(),
+        ROR.ask<Deps, RES.DecodersToResourceError<typeof quoteDecoders, never>>(),
         ROR.chainW(deps =>
             ROR.fromAjax(
                 deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?id=${id}&from=${from}`),
@@ -54,7 +60,7 @@ export const fetchQuoteWithParams = (id: number, from: string) => {
 
 // example: same fetchQuoteWithParams different definition
 
-export const fetchQuoteWithParams1 = (id: number, from: string) => (deps: { ajax: typeof ajax; param: string }) => {
+export const fetchQuoteWithParams1 = (id: number, from: string) => (deps: Deps) => {
     return OR.fromAjax(
         deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?id=${id}&from=${from}`),
         quoteDecoders
@@ -66,7 +72,7 @@ export const fetchQuoteWithParams1 = (id: number, from: string) => (deps: { ajax
 export const fetchQuoteWithDelay = () =>
     pipe(
         fetchWithAuth,
-        ROR.chainW(token => (deps: { ajax: typeof ajax }) =>
+        ROR.chainW(token => (deps: Deps) =>
             OR.fromAjax(
                 deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?token=${token}`).pipe(delay(5000)),
                 quoteDecoders
@@ -78,3 +84,63 @@ export const fetchQuoteWithDelay = () =>
 
 export const fetchQuoteWithNoDeps = () =>
     OR.fromAjax(ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes`), quoteDecoders)
+
+//  example: fetch quote concatenated
+
+type PickStatus<D, K extends keyof D, S extends StatusCode> = Omit<D, K> &
+    {
+        [k in K]: Extract<D[K], { status: S }>
+    }
+
+export const fetchQuoteConcat = () =>
+    pipe(
+        fetchWithAuth,
+        ROR.bindTo('token'),
+        ROR.bindW('firstFetch', d => (deps: Deps) =>
+            OR.fromAjax(deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?token=${d.token}`), quoteDecoders)
+        ),
+        ROR.filterOrElseW(
+            (r): r is PickStatus<typeof r, 'firstFetch', 200> => r.firstFetch.status === 200,
+            c => RES.appError(`FirstFetch rejected ${c.firstFetch.status}`)
+        ),
+        ROR.bindW('secondFetch', d => (deps: Deps) =>
+            OR.fromAjax(
+                deps.ajax(
+                    `https://ron-swanson-quotes.herokuapp.com/v2/quotes?token=${d.token}${d.firstFetch.payload[0]}`
+                ),
+                quoteDecoders
+            )
+        ),
+        ROR.filterOrElseW(
+            (r): r is PickStatus<typeof r, 'secondFetch', 200> => r.secondFetch.status === 200,
+            c => RES.appError(`SecondFetch rejected ${c.firstFetch.status}`)
+        ),
+        ROR.map(c => [...c.firstFetch.payload, ...c.secondFetch.payload])
+    )
+
+//  example: fetch quote sequentially parallel
+
+export const fetchQuoteSeqPar = () =>
+    pipe(
+        fetchWithAuth,
+        ROR.chainW(token =>
+            sequenceS(ROR.Applicative)({
+                firstFetch: (deps: Deps) =>
+                    OR.fromAjax(
+                        deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?token=${token}`),
+                        quoteDecoders
+                    ),
+                secondFetch: (deps: Deps) =>
+                    OR.fromAjax(
+                        deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?token=${token} `),
+                        quoteDecoders
+                    ),
+            })
+        ),
+        ROR.filterOrElseW(
+            (r): r is PickStatus<typeof r, 'secondFetch' | 'firstFetch', 200> =>
+                r.secondFetch.status === 200 && r.secondFetch.status === 200,
+            c => RES.appError(`Fetches rejected ${c.firstFetch.status} ${c.secondFetch.status}`)
+        ),
+        ROR.map(c => [...c.firstFetch.payload, ...c.secondFetch.payload])
+    )

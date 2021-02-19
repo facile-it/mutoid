@@ -11,7 +11,7 @@ import type { Monad2 } from 'fp-ts/Monad'
 import type { MonadIO2 } from 'fp-ts/MonadIO'
 import type { MonadTask2 } from 'fp-ts/MonadTask'
 import type * as T from 'fp-ts/Task'
-import { flow, identity } from 'fp-ts/function'
+import { flow, identity, Predicate, Refinement } from 'fp-ts/function'
 import { pipe } from 'fp-ts/pipeable'
 import { Observable, concat } from 'rxjs'
 import type { AjaxError, AjaxResponse } from 'rxjs/ajax'
@@ -43,6 +43,12 @@ export const doneObservable: <E = never, A = never>(oa: Observable<A>) => Observ
 
 export const fail: <E = never, A = never>(e: E) => ObservableResource<E, A> = flow(RES.fail, R.of)
 export const failObservable: <E = never, A = never>(oe: Observable<E>) => ObservableResource<E, A> = R.map(RES.fail)
+
+// TODO maybe wrong
+export const failAppError: <AE = never, A = never>(ae: AE) => ObservableResource<RES.ResourceAjaxError<AE>, A> = flow(
+    RES.failAppError,
+    R.of
+)
 
 export const ajaxFail: <AE = never, A = never>(
     e: RES.ResourceAjaxError<AE>
@@ -110,6 +116,42 @@ export const fetchToMutationEffect = <
 >(
     mapTo: (s: SS) => (i: R) => S
 ) => (ax: AX) => flow(ax, o => (s: SS) => o.pipe(RXoP.map(mapTo(s))))
+
+// -------------------------------------------------------------------------------------
+// combinators
+// -------------------------------------------------------------------------------------
+
+export const orElse: <E, A, M>(
+    onFail: (e: E) => ObservableResource<M, A>
+) => (ma: ObservableResource<E, A>) => ObservableResource<M, A> = f =>
+    R.chain(
+        RES.match(
+            () => init,
+            () => submitted,
+            done,
+            f
+        )
+    )
+
+export const filterOrElseW: {
+    <A, B extends A, E2>(refinement: Refinement<A, B>, onFalse: (a: A) => E2): <E1>(
+        ma: ObservableResource<E1, A>
+    ) => ObservableResource<E1 | E2, B>
+    <A, E2>(predicate: Predicate<A>, onFalse: (a: A) => E2): <E1>(
+        ma: ObservableResource<E1, A>
+    ) => ObservableResource<E1 | E2, A>
+} = <A, E2>(
+    predicate: Predicate<A>,
+    onFalse: (a: A) => E2
+): (<E1>(ma: ObservableResource<E1, A>) => ObservableResource<E1 | E2, A>) =>
+    chainW(a => (predicate(a) ? done(a) : fail(onFalse(a))))
+
+export const filterOrElse: {
+    <E, A, B extends A>(refinement: Refinement<A, B>, onFalse: (a: A) => E): (
+        ma: ObservableResource<E, A>
+    ) => ObservableResource<E, B>
+    <E, A>(predicate: Predicate<A>, onFalse: (a: A) => E): (ma: ObservableResource<E, A>) => ObservableResource<E, A>
+} = filterOrElseW
 
 // -------------------------------------------------------------------------------------
 // type class members

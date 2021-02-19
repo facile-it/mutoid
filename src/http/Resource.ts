@@ -6,7 +6,7 @@ import * as Eq from 'fp-ts/Eq'
 import type { Functor2 } from 'fp-ts/Functor'
 import type { Monad2 } from 'fp-ts/Monad'
 import type { Show } from 'fp-ts/Show'
-import { constFalse, flow, pipe } from 'fp-ts/function'
+import { constFalse, flow, pipe, Predicate, Refinement } from 'fp-ts/function'
 import type { AjaxError, AjaxResponse } from 'rxjs/ajax'
 import type { StatusCode } from './statusCode'
 
@@ -14,13 +14,19 @@ import type { StatusCode } from './statusCode'
 // model
 // -------------------------------------------------------------------------------------
 
+// Init ---------------------------------------------------
+
 export interface ResourceInit {
     readonly _tag: 'init'
 }
 
+// Submitted ----------------------------------------------
+
 export interface ResourceSubmitted {
     readonly _tag: 'submitted'
 }
+
+// Done ---------------------------------------------------
 
 export interface ResourceData<S, P> {
     readonly status: S
@@ -31,6 +37,20 @@ export interface ResourceDone<D> {
     readonly _tag: 'done'
     readonly data: D
 }
+
+// Fail ---------------------------------------------------
+
+export interface AppErr<AE = never> {
+    readonly type: 'appError'
+    readonly detail: AE
+}
+
+export type ResourceAjaxError<AE = never> =
+    | {
+          readonly type: 'unknownError'
+          readonly detail: unknown
+      }
+    | (AE extends never ? never : AppErr<AE>)
 
 export type ResourceError<DE, AE = never> =
     | {
@@ -47,47 +67,47 @@ export type ResourceError<DE, AE = never> =
       }
     | ResourceAjaxError<AE>
 
-export interface ResourceFail<E> {
-    readonly _tag: 'fail'
-    readonly error: E
-}
-
-export type ResourceAjaxError<AE = never> =
-    | {
-          readonly type: 'unknownError'
-          readonly detail: unknown
-      }
-    | (AE extends never
-          ? never
-          : {
-                readonly type: 'appError'
-                readonly detail: AE
-            })
-
 export interface ResourceAjaxFail<AE = never> {
     readonly _tag: 'fail'
     readonly error: ResourceAjaxError<AE>
 }
 
+export interface ResourceFail<E> {
+    readonly _tag: 'fail'
+    readonly error: E
+}
+
+// Resource -----------------------------------------------
+
 export type Resource<E, A> = ResourceInit | ResourceSubmitted | ResourceDone<A> | ResourceFail<E>
 
 export type ResourceAcknowledged<E, A> = ResourceDone<A> | ResourceFail<E>
+
+// ResourceTypeOf -----------------------------------------
 
 export type ResourceDecoders = { [k in StatusCode]?: (i: unknown) => E.Either<unknown, unknown> }
 
 export type ResourceTypeOf<DS extends ResourceDecoders, AE = never> = ResourceInit | ResourceTypeOfStarted<DS, AE>
 
+// ResourceTypeOfStarted ----------------------------------
+
 export type ResourceTypeOfStarted<DS extends ResourceDecoders, AE = never> =
     | ResourceSubmitted
     | ResourceTypeOfAcknowledged<DS, AE>
+
+// ResourceTypeOfAcknowledged -----------------------------
 
 export type ResourceTypeOfAcknowledged<DS extends ResourceDecoders, AE = never> =
     | ResourceTypeOfDone<DS>
     | ResourceTypeOfFail<DS, AE>
 
+// ResourceTypeOfDone -------------------------------------
+
 export type ResourceTypeOfDone<DS extends ResourceDecoders> = ResourceDone<DecodersToResourceData<DS>>
 type ExtractRight<C> = C extends (i: unknown) => E.Either<any, infer A> ? A : never
 export type DecodersToResourceData<DS> = { [S in keyof DS]: ResourceData<S, ExtractRight<DS[S]>> }[keyof DS]
+
+// ResourceTypeOfFail -------------------------------------
 
 export type ResourceTypeOfFail<DS extends ResourceDecoders, AE = never> = ResourceFail<DecodersToResourceError<DS, AE>>
 type ExtractLeft<C> = C extends (i: unknown) => E.Either<infer A, any> ? A : never
@@ -135,6 +155,17 @@ export const ajaxFail = <AE = never, A = never>(error: ResourceAjaxError<AE>): R
     error: error,
 })
 
+// TODO maybe wrong
+export const failAppError = <AE, A = never>(detail: AE): Resource<ResourceAjaxError<AE>, A> => ({
+    _tag: 'fail',
+    error: appError(detail) as any,
+})
+
+export const appError = <AE = never>(detail: AE): AppErr<AE> => ({
+    type: 'appError',
+    detail,
+})
+
 export const ajaxFailOnly = <AE = never>(error: ResourceAjaxError<AE>): ResourceFail<ResourceAjaxError<AE>> => ({
     _tag: 'fail',
     error: error,
@@ -146,8 +177,8 @@ export const fromEither: <E, A>(e: E.Either<E, A>) => Resource<E, A> = E.fold(e 
 // Destructors
 // -------------------------------------------------------------------------------------
 
-export const match = <E, D, R>(onInit: () => R, onSubmitted: () => R, onDone: (r: D) => R, onFail: (r: E) => R) => (
-    r: Resource<E, D>
+export const match = <E, A, R>(onInit: () => R, onSubmitted: () => R, onDone: (r: A) => R, onFail: (r: E) => R) => (
+    r: Resource<E, A>
 ) => {
     switch (r._tag) {
         case 'init':
@@ -161,17 +192,17 @@ export const match = <E, D, R>(onInit: () => R, onSubmitted: () => R, onDone: (r
     }
 }
 
-export const resourceMatch = <E, D, R>(
+export const resourceMatch = <E, A, R>(
     dodo:
         | {
               onInit: () => R
               onSubmitted: () => R
-              onDone: (r: D) => R
+              onDone: (r: A) => R
               onFail: (r: E) => R
           }
         | {
               onPending: () => R
-              onDone: (r: D) => R
+              onDone: (r: A) => R
               onFail: (r: E) => R
           }
 ) =>
@@ -188,6 +219,27 @@ export const match_ = <E, D>(r: Resource<E, D>) => <R>(
     onDone: (r: D) => R,
     onFail: (r: E) => R
 ): R => pipe(r, match(onInit, onSubmitted, onDone, onFail))
+
+// -------------------------------------------------------------------------------------
+// combinators
+// -------------------------------------------------------------------------------------
+
+export function orElse<E, A, M>(onFail: (e: E) => Resource<M, A>): (ma: Resource<E, A>) => Resource<M, A> {
+    return ma => (isFail(ma) ? onFail(ma.error) : ma)
+}
+
+export const filterOrElseW: {
+    <A, B extends A, E2>(refinement: Refinement<A, B>, onFalse: (a: A) => E2): <E1>(
+        ma: Resource<E1, A>
+    ) => Resource<E1 | E2, B>
+    <A, E2>(predicate: Predicate<A>, onFalse: (a: A) => E2): <E1>(ma: Resource<E1, A>) => Resource<E1 | E2, A>
+} = <A, E2>(predicate: Predicate<A>, onFalse: (a: A) => E2): (<E1>(ma: Resource<E1, A>) => Resource<E1 | E2, A>) =>
+    chainW(a => (predicate(a) ? done(a) : fail(onFalse(a))))
+
+export const filterOrElse: {
+    <E, A, B extends A>(refinement: Refinement<A, B>, onFalse: (a: A) => E): (ma: Resource<E, A>) => Resource<E, B>
+    <E, A>(predicate: Predicate<A>, onFalse: (a: A) => E): (ma: Resource<E, A>) => Resource<E, A>
+} = filterOrElseW
 
 // -------------------------------------------------------------------------------------
 // type class members

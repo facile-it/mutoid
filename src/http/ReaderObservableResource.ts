@@ -8,7 +8,7 @@ import type { Monad3 } from 'fp-ts/lib/Monad'
 import type { MonadIO3 } from 'fp-ts/lib/MonadIO'
 import type { MonadTask3 } from 'fp-ts/lib/MonadTask'
 import * as R from 'fp-ts/lib/Reader'
-import { flow, identity, pipe } from 'fp-ts/lib/function'
+import { flow, identity, pipe, Predicate, Refinement } from 'fp-ts/lib/function'
 import type { Observable } from 'rxjs'
 import * as RXoP from 'rxjs/operators'
 import * as OR from './ObservableResource'
@@ -75,6 +75,14 @@ export const fromIO: MonadIO3<URI>['fromIO'] = ma => () => OR.rightIO(ma)
 export const fromAjax = flow(OR.fromAjax, fromObservableResource)
 
 // -------------------------------------------------------------------------------------
+// destructors
+// -------------------------------------------------------------------------------------
+
+export const toMutation = <R, E, A, S, SS extends S>(mapTo: (r: RES.Resource<E, A>) => (s: SS) => S) => (
+    ros: ReaderObservableResource<R, E, A>
+) => flow(ros, c => c.pipe(RXoP.map(mapTo)))
+
+// -------------------------------------------------------------------------------------
 // combinators
 // -------------------------------------------------------------------------------------
 
@@ -82,13 +90,33 @@ export const local: <R2, R1>(
     f: (d: R2) => R1
 ) => <E, A>(ma: ReaderObservableResource<R1, E, A>) => ReaderObservableResource<R2, E, A> = R.local
 
-// -------------------------------------------------------------------------------------
-// destructors
-// -------------------------------------------------------------------------------------
+export function orElse<R, E, A, M>(
+    onLeft: (e: E) => ReaderObservableResource<R, M, A>
+): (ma: ReaderObservableResource<R, E, A>) => ReaderObservableResource<R, M, A> {
+    return ma => r => OR.orElse<E, A, M>(e => onLeft(e)(r))(ma(r))
+}
 
-export const toMutation = <R, E, A, S, SS extends S>(mapTo: (r: RES.Resource<E, A>) => (s: SS) => S) => (
-    ros: ReaderObservableResource<R, E, A>
-) => flow(ros, c => c.pipe(RXoP.map(mapTo)))
+export const filterOrElseW: {
+    <A, B extends A, E2>(refinement: Refinement<A, B>, onFalse: (a: A) => E2): <R, E1>(
+        ma: ReaderObservableResource<R, E1, A>
+    ) => ReaderObservableResource<R, E1 | E2, B>
+    <A, E2>(predicate: Predicate<A>, onFalse: (a: A) => E2): <R, E1>(
+        ma: ReaderObservableResource<R, E1, A>
+    ) => ReaderObservableResource<R, E1 | E2, A>
+} = <A, E2>(
+    predicate: Predicate<A>,
+    onFalse: (a: A) => E2
+): (<R, E1>(ma: ReaderObservableResource<R, E1, A>) => ReaderObservableResource<R, E1 | E2, A>) =>
+    chainW(a => (predicate(a) ? done(a) : fail(onFalse(a))))
+
+export const filterOrElse: {
+    <E, A, B extends A>(refinement: Refinement<A, B>, onFalse: (a: A) => E): <R>(
+        ma: ReaderObservableResource<R, E, A>
+    ) => ReaderObservableResource<R, E, B>
+    <E, A>(predicate: Predicate<A>, onFalse: (a: A) => E): <R>(
+        ma: ReaderObservableResource<R, E, A>
+    ) => ReaderObservableResource<R, E, A>
+} = filterOrElseW
 
 // -------------------------------------------------------------------------------------
 // type class members
