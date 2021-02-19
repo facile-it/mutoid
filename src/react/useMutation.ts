@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef } from 'react'
 import type { Subscription } from 'rxjs'
 import * as MS from '../state'
 import type { mutationName, storeName } from '../state/stores'
+import { useSubscriptionRef } from './useSubscriptionRef'
 
 export function useMutation<
     N extends storeName,
@@ -42,12 +43,21 @@ export function useMutation<
     mutationL: (deps?: D) => MS.Mutation<NM, P, S, SS>,
     options?: MS.BaseOptions & Partial<MS.DepsOptions<D>>
 ): (...payload: P) => Subscription {
-    const optionsRef = useRef(options)
+    const [subscriptionRef, subscriptionUnsubscribe] = useSubscriptionRef()
 
+    const optionsRef = useRef(options)
     useEffect(() => {
         optionsRef.current = options
-    })
+    }, [options])
 
-    // can't eta reduction
-    return useCallback((...payload) => MS.mutationRunner(s, mutationL, optionsRef.current)(...payload), [s, mutationL])
+    return useCallback(
+        (...payload) => {
+            subscriptionUnsubscribe()
+
+            subscriptionRef.current = MS.mutationRunner(s, mutationL, optionsRef.current)(...payload)
+
+            return subscriptionRef.current
+        },
+        [s, mutationL, subscriptionRef, subscriptionUnsubscribe]
+    )
 }

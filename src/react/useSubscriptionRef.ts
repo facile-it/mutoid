@@ -4,15 +4,14 @@ import type { Subscription } from 'rxjs'
 export const useSubscriptionRef = (): [React.MutableRefObject<Subscription | null>, () => void] => {
     const subRef = useRef<Subscription | null>(null)
 
-    const s = subRef.current
-
     useEffect(() => {
         return () => {
-            if (s && s.closed !== true) {
-                s.unsubscribe()
+            if (subRef.current && subRef.current.closed !== true) {
+                // eslint-disable-next-line react-hooks/exhaustive-deps
+                subRef.current.unsubscribe()
             }
         }
-    }, [s])
+    }, [])
 
     return [
         subRef,
