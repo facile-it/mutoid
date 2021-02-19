@@ -1,7 +1,6 @@
-import { flow } from 'fp-ts/function'
+import { pipe } from 'fp-ts/function'
 import { Observable, of } from 'rxjs'
-import { map } from 'rxjs/operators'
-import * as RR from '../../src/http/ObservableResource'
+import * as ROR from '../../src/http/ReaderObservableResource'
 import * as RES from '../../src/http/Resource'
 import * as MS from '../../src/state'
 import { fetchQuote, fetchQuoteWithDelay, fetchQuoteWithParams, quoteResource } from '../resources/quoteResource'
@@ -11,6 +10,7 @@ declare module '../../src/state/stores' {
         quote:
             | 'fetchQuoteMutation'
             | 'fetchQuoteMutationWithParams'
+            | 'fetchQuoteMutationWithParams2'
             | 'fetchQuoteMutationWithDelay'
             | 'resetQuoteMutation'
     }
@@ -32,25 +32,22 @@ export const quoteStore = MS.ctor(() => ({ name: 'quote', initState: quoteState 
 
 // mutation
 
-export const fetchQuoteMutation = flow(fetchQuote, fetch =>
-    MS.ctorMutation(
-        'fetchQuoteMutation',
-        RR.toMutationEffect(fetch, (o, s: QuoteState): Observable<QuoteState> => o.pipe(map(c => ({ ...s, quote: c }))))
-    )
+export const fetchQuoteMutation = pipe(
+    fetchQuote,
+    ROR.toMutationEffectR((s: QuoteState) => (quote): QuoteState => ({ ...s, quote })),
+    MS.ctorMutationCR('fetchQuoteMutation')
 )
 
-export const fetchQuoteMutationWithParams = flow(fetchQuoteWithParams, fetch =>
-    MS.ctorMutation(
-        'fetchQuoteMutationWithParams',
-        RR.toMutationEffect(fetch, (o, s: QuoteState): Observable<QuoteState> => o.pipe(map(c => ({ ...s, quote: c }))))
-    )
+export const fetchQuoteMutationWithParams = pipe(
+    fetchQuoteWithParams,
+    ROR.toMutationEffectR((s: QuoteState) => (quote): QuoteState => ({ ...s, quote })),
+    MS.ctorMutationCR('fetchQuoteMutationWithParams')
 )
 
-export const fetchQuoteMutationWithDelay = flow(fetchQuoteWithDelay, fetch =>
-    MS.ctorMutation(
-        'fetchQuoteMutationWithDelay',
-        RR.toMutationEffect(fetch, (o, s: QuoteState): Observable<QuoteState> => o.pipe(map(c => ({ ...s, quote: c }))))
-    )
+export const fetchQuoteMutationWithDelay = pipe(
+    fetchQuoteWithDelay,
+    ROR.toMutationEffectR((s: QuoteState) => (quote): QuoteState => ({ ...s, quote })),
+    MS.ctorMutationCR('fetchQuoteMutationWithDelay')
 )
 
 export const resetQuoteMutation = () =>

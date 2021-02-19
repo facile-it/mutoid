@@ -1,3 +1,4 @@
+import type { ReaderObservableEither } from 'fp-ts-rxjs/ReaderObservableEither'
 import type { MonadObservable3 } from 'fp-ts-rxjs/lib/MonadObservable'
 import type { Applicative3 } from 'fp-ts/lib/Applicative'
 import type { Apply3 } from 'fp-ts/lib/Apply'
@@ -9,57 +10,69 @@ import type { MonadTask3 } from 'fp-ts/lib/MonadTask'
 import * as R from 'fp-ts/lib/Reader'
 import { flow, identity, pipe } from 'fp-ts/lib/function'
 import type { Observable } from 'rxjs'
-import * as RRES from './ObservableResource'
+import * as RXoP from 'rxjs/operators'
+import * as OR from './ObservableResource'
+import type * as RES from './Resource'
 
 // -------------------------------------------------------------------------------------
 // model
 // -------------------------------------------------------------------------------------
 
 export interface ReaderObservableResource<R, E, A> {
-    (r: R): RRES.ObservableResource<E, A>
+    (r: R): OR.ObservableResource<E, A>
 }
+
+export type ObservableResourceTypeOf<R, DS extends RES.ResourceDecoders, AE = never> = ReaderObservableResource<
+    R,
+    RES.DecodersToResourceError<DS, AE>,
+    RES.DecodersToResourceData<DS>
+>
 
 // -------------------------------------------------------------------------------------
 // constructors
 // -------------------------------------------------------------------------------------
 
-export const fromObservableResource: <R, E, A>(ma: RRES.ObservableResource<E, A>) => ReaderObservableResource<R, E, A> =
+export const fromObservableResource: <R, E, A>(ma: OR.ObservableResource<E, A>) => ReaderObservableResource<R, E, A> =
     R.of
 
-export const init: ReaderObservableResource<never, never, never> = () => RRES.init
-export const submitted: ReaderObservableResource<never, never, never> = () => RRES.submitted
+export const init: ReaderObservableResource<never, never, never> = () => OR.init
+export const submitted: ReaderObservableResource<never, never, never> = () => OR.submitted
 
 export const done: <R, E = never, A = never>(d: A) => ReaderObservableResource<R, E, A> = flow(
-    RRES.done,
+    OR.done,
     fromObservableResource
 )
 export const doneObservable: <R, E = never, A = never>(oa: Observable<A>) => ReaderObservableResource<R, E, A> = flow(
-    RRES.doneObservable,
+    OR.doneObservable,
     fromObservableResource
 )
 
 export const fail: <R, E = never, A = never>(e: E) => ReaderObservableResource<R, E, A> = flow(
-    RRES.fail,
+    OR.fail,
     fromObservableResource
 )
 export const failObservable: <R, E = never, A = never>(oe: Observable<E>) => ReaderObservableResource<R, E, A> = flow(
-    RRES.failObservable,
+    OR.failObservable,
     fromObservableResource
 )
 
-export const ask: <R, E>() => ReaderObservableResource<R, E, R> = () => RRES.done
+export const ask: <R, E>() => ReaderObservableResource<R, E, R> = () => OR.done
 
-export const asks: <R, E, A>(f: (r: R) => A) => ReaderObservableResource<R, E, A> = f => flow(RRES.done, RRES.map(f))
+export const asks: <R, E, A>(f: (r: R) => A) => ReaderObservableResource<R, E, A> = f => flow(OR.done, OR.map(f))
 
-export const fromReader: <R, E, A>(ma: R.Reader<R, A>) => ReaderObservableResource<R, E, A> = ma => flow(ma, RRES.done)
+export const fromReader: <R, E, A>(ma: R.Reader<R, A>) => ReaderObservableResource<R, E, A> = ma => flow(ma, OR.done)
 
-export const fromTask: MonadTask3<URI>['fromTask'] = ma => () => RRES.fromTask(ma)
+export const fromTask: MonadTask3<URI>['fromTask'] = ma => () => OR.fromTask(ma)
 
-export const fromObservable: MonadObservable3<URI>['fromObservable'] = ma => () => RRES.doneObservable(ma)
+export const fromObservable: MonadObservable3<URI>['fromObservable'] = ma => () => OR.doneObservable(ma)
 
-export const fromIO: MonadIO3<URI>['fromIO'] = ma => () => RRES.rightIO(ma)
+export const fromReaderObservableEither = <R, E, A>(
+    e: ReaderObservableEither<R, E, A>
+): ReaderObservableResource<R, E, A> => flow(e, OR.fromObservableEither)
 
-export const fromAjax = flow(RRES.fromAjax, fromObservableResource)
+export const fromIO: MonadIO3<URI>['fromIO'] = ma => () => OR.rightIO(ma)
+
+export const fromAjax = flow(OR.fromAjax, fromObservableResource)
 
 // -------------------------------------------------------------------------------------
 // combinators
@@ -70,36 +83,43 @@ export const local: <R2, R1>(
 ) => <E, A>(ma: ReaderObservableResource<R1, E, A>) => ReaderObservableResource<R2, E, A> = R.local
 
 // -------------------------------------------------------------------------------------
+// destructors
+// -------------------------------------------------------------------------------------
+
+export const toMutation = <R, E, A, S, SS extends S>(mapTo: (r: RES.Resource<E, A>) => (s: SS) => S) => (
+    ros: ReaderObservableResource<R, E, A>
+) => flow(ros, c => c.pipe(RXoP.map(mapTo)))
+
+// -------------------------------------------------------------------------------------
 // type class members
 // -------------------------------------------------------------------------------------
 
 export const map: <A, B>(
     f: (a: A) => B
-) => <R, E>(fa: ReaderObservableResource<R, E, A>) => ReaderObservableResource<R, E, B> = f => fa =>
-    flow(fa, RRES.map(f))
+) => <R, E>(fa: ReaderObservableResource<R, E, A>) => ReaderObservableResource<R, E, B> = f => fa => flow(fa, OR.map(f))
 
 export const bimap: <E, G, A, B>(
     f: (e: E) => G,
     g: (a: A) => B
 ) => <R>(fa: ReaderObservableResource<R, E, A>) => ReaderObservableResource<R, G, B> = (f, g) => fea => r =>
-    RRES.bimap(f, g)(fea(r))
+    OR.bimap(f, g)(fea(r))
 
 export const mapLeft: <E, G>(
     f: (e: E) => G
 ) => <R, A>(fa: ReaderObservableResource<R, E, A>) => ReaderObservableResource<R, G, A> = f => fea => r =>
-    RRES.mapLeft(f)(fea(r))
+    OR.mapLeft(f)(fea(r))
 
 export const ap: <R, E, A>(
     fa: ReaderObservableResource<R, E, A>
 ) => <B>(fab: ReaderObservableResource<R, E, (a: A) => B>) => ReaderObservableResource<R, E, B> = fa => fab => r =>
-    pipe(fab(r), RRES.ap(fa(r)))
+    pipe(fab(r), OR.ap(fa(r)))
 
 export const chainW = <A, R2, E2, B>(f: (a: A) => ReaderObservableResource<R2, E2, B>) => <R1, E1>(
     ma: ReaderObservableResource<R1, E1, A>
 ): ReaderObservableResource<R1 & R2, E1 | E2, B> => r =>
     pipe(
         ma(r),
-        RRES.chainW(a => f(a)(r))
+        OR.chainW(a => f(a)(r))
     )
 
 export const chain: <R, E, A, B>(
@@ -189,6 +209,22 @@ export const MonadObservable: MonadObservable3<URI> = {
     fromObservable,
     fromTask,
 }
+
+// -------------------------------------------------------------------------------------
+// destructors
+// -------------------------------------------------------------------------------------
+
+export const toMutationEffectR = <
+    RORK extends (...i: P) => ReaderObservableResource<R, E, A>,
+    SS extends S,
+    S,
+    R = RORK extends (...i: any) => ReaderObservableResource<infer I, any, any> ? I : never,
+    E = RORK extends (...i: any) => ReaderObservableResource<any, infer I, any> ? I : never,
+    A = RORK extends (...i: any) => ReaderObservableResource<any, any, infer I> ? I : never,
+    P extends Array<any> = Parameters<RORK>
+>(
+    mapTo: (s: SS) => (i: RES.Resource<E, A>) => S
+) => (rork: RORK) => (r: R) => (...i: P) => pipe(rork(...i)(r), o => (s: SS) => o.pipe(RXoP.map(mapTo(s))))
 
 // -------------------------------------------------------------------------------------
 // utils

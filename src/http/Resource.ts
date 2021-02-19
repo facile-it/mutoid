@@ -1,7 +1,7 @@
 import type { Applicative2 } from 'fp-ts/Applicative'
 import type { Apply2 } from 'fp-ts/Apply'
 import type { Bifunctor2 } from 'fp-ts/Bifunctor'
-import type * as E from 'fp-ts/Either'
+import * as E from 'fp-ts/Either'
 import * as Eq from 'fp-ts/Eq'
 import type { Functor2 } from 'fp-ts/Functor'
 import type { Monad2 } from 'fp-ts/Monad'
@@ -32,7 +32,7 @@ export interface ResourceDone<D> {
     readonly data: D
 }
 
-export type ResourceDataError<DE, AE = never> =
+export type ResourceError<DE, AE = never> =
     | {
           readonly type: 'decodeError'
           readonly detail: DE
@@ -45,14 +45,14 @@ export type ResourceDataError<DE, AE = never> =
           readonly type: 'unexpectedResponse'
           readonly detail: AjaxResponse | AjaxError
       }
-    | ResourceAjaxDataError<AE>
+    | ResourceAjaxError<AE>
 
 export interface ResourceFail<E> {
     readonly _tag: 'fail'
     readonly error: E
 }
 
-export type ResourceAjaxDataError<AE = never> =
+export type ResourceAjaxError<AE = never> =
     | {
           readonly type: 'unknownError'
           readonly detail: unknown
@@ -66,12 +66,12 @@ export type ResourceAjaxDataError<AE = never> =
 
 export interface ResourceAjaxFail<AE = never> {
     readonly _tag: 'fail'
-    readonly error: ResourceAjaxDataError<AE>
+    readonly error: ResourceAjaxError<AE>
 }
 
-export type Resource<E, D> = ResourceInit | ResourceSubmitted | ResourceDone<D> | ResourceFail<E>
+export type Resource<E, A> = ResourceInit | ResourceSubmitted | ResourceDone<A> | ResourceFail<E>
 
-export type ResourceAcknowledged<E, D> = ResourceDone<D> | ResourceFail<E>
+export type ResourceAcknowledged<E, A> = ResourceDone<A> | ResourceFail<E>
 
 export type ResourceDecoders = { [k in StatusCode]?: (i: unknown) => E.Either<unknown, unknown> }
 
@@ -86,16 +86,12 @@ export type ResourceTypeOfAcknowledged<DS extends ResourceDecoders, AE = never> 
     | ResourceTypeOfFail<DS, AE>
 
 export type ResourceTypeOfDone<DS extends ResourceDecoders> = ResourceDone<DecodersToResourceData<DS>>
-
-export type ResourceTypeOfFail<DS extends ResourceDecoders, AE = never> = ResourceFail<
-    DecodersToResourceDataError<DS, AE>
->
-
 type ExtractRight<C> = C extends (i: unknown) => E.Either<any, infer A> ? A : never
 export type DecodersToResourceData<DS> = { [S in keyof DS]: ResourceData<S, ExtractRight<DS[S]>> }[keyof DS]
 
+export type ResourceTypeOfFail<DS extends ResourceDecoders, AE = never> = ResourceFail<DecodersToResourceError<DS, AE>>
 type ExtractLeft<C> = C extends (i: unknown) => E.Either<infer A, any> ? A : never
-export type DecodersToResourceDataError<DS extends ResourceDecoders, AE> = ResourceDataError<
+export type DecodersToResourceError<DS extends ResourceDecoders, AE> = ResourceError<
     { [S in keyof DS]: ExtractLeft<DS[S]> }[keyof DS],
     AE
 >
@@ -134,16 +130,18 @@ export const fail = <E = never, A = never>(error: E): Resource<E, A> => ({
     _tag: 'fail',
     error: error,
 })
-export const ajaxFail = <AE = never>(error: ResourceAjaxDataError<AE>): ResourceAjaxFail<AE> => ({
+export const ajaxFail = <AE = never, A = never>(error: ResourceAjaxError<AE>): Resource<ResourceAjaxError<AE>, A> => ({
     _tag: 'fail',
     error: error,
 })
+
+export const fromEither: <E, A>(e: E.Either<E, A>) => Resource<E, A> = E.fold(e => fail(e), done)
 
 // -------------------------------------------------------------------------------------
 // Destructors
 // -------------------------------------------------------------------------------------
 
-export const fold = <E, D, R>(onInit: () => R, onSubmitted: () => R, onDone: (r: D) => R, onFail: (r: E) => R) => (
+export const match = <E, D, R>(onInit: () => R, onSubmitted: () => R, onDone: (r: D) => R, onFail: (r: E) => R) => (
     r: Resource<E, D>
 ) => {
     switch (r._tag) {
@@ -158,7 +156,7 @@ export const fold = <E, D, R>(onInit: () => R, onSubmitted: () => R, onDone: (r:
     }
 }
 
-export const resourceFold = <E, D, R>(
+export const resourceMatch = <E, D, R>(
     dodo:
         | {
               onInit: () => R
@@ -172,19 +170,19 @@ export const resourceFold = <E, D, R>(
               onFail: (r: E) => R
           }
 ) =>
-    fold(
+    match(
         (dodo as any).onInit || (dodo as any).onPending,
         (dodo as any).onSubmitted || (dodo as any).onPending,
         dodo.onDone,
         dodo.onFail
     )
 
-export const fold_ = <E, D>(r: Resource<E, D>) => <R>(
+export const match_ = <E, D>(r: Resource<E, D>) => <R>(
     onInit: () => R,
     onSubmitted: () => R,
     onDone: (r: D) => R,
     onFail: (r: E) => R
-): R => pipe(r, fold(onInit, onSubmitted, onDone, onFail))
+): R => pipe(r, match(onInit, onSubmitted, onDone, onFail))
 
 // -------------------------------------------------------------------------------------
 // type class members
@@ -196,7 +194,7 @@ export const map: <A, B>(f: (a: A) => B) => <E>(fa: Resource<E, A>) => Resource<
 export const bimap = <E, G, A, B>(f: (e: E) => G, g: (a: A) => B) => (fa: Resource<E, A>): Resource<G, B> =>
     pipe(
         fa,
-        fold(
+        match(
             (): Resource<G, B> => init,
             (): Resource<G, B> => submitted,
             flow(g, done),
@@ -268,18 +266,18 @@ export function getEq<E, A>(EL: Eq.Eq<E>, EA: Eq.Eq<A>): Eq.Eq<Resource<E, A>> {
     return Eq.fromEquals((a, b) =>
         pipe(
             a,
-            fold(
+            match(
                 () => b._tag === 'init',
                 () => b._tag === 'submitted',
                 fa =>
                     pipe(
                         b,
-                        fold(constFalse, constFalse, fb => EA.equals(fa, fb), constFalse)
+                        match(constFalse, constFalse, fb => EA.equals(fa, fb), constFalse)
                     ),
                 sa =>
                     pipe(
                         b,
-                        fold(constFalse, constFalse, constFalse, sb => EL.equals(sa, sb))
+                        match(constFalse, constFalse, constFalse, sb => EL.equals(sa, sb))
                     )
             )
         )

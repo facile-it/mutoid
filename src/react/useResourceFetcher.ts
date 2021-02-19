@@ -1,16 +1,16 @@
 import { useCallback, useState, useRef, useEffect } from 'react'
 import type { Observable, Subscription } from 'rxjs'
 import { map, take, takeUntil } from 'rxjs/operators'
-import type * as MOR from '../http/ObservableResource'
+import type * as OR from '../http/ObservableResource'
 import * as MRE from '../http/Resource'
 
 export function useResourceFetcher<
-    F extends (...p: any) => MOR.ObservableResource<E, A>,
+    F extends (...p: any) => OR.ObservableResource<E, A>,
     RE extends MRE.Resource<E, A>,
     MA extends ((r: MRE.ResourceAcknowledged<E, A>) => MR) | undefined,
     MR extends { _tag: unknown } = MA extends (...c: any) => any ? ReturnType<MA> : never,
-    E = F extends (...p: any) => MOR.ObservableResource<infer T, any> ? T : never,
-    A = F extends (...p: any) => MOR.ObservableResource<any, infer T> ? T : never,
+    E = F extends (...p: any) => OR.ObservableResource<infer T, any> ? T : never,
+    A = F extends (...p: any) => OR.ObservableResource<any, infer T> ? T : never,
     P extends Array<unknown> = Parameters<F>
 >(
     fetch: F,

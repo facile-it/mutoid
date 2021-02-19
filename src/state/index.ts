@@ -57,11 +57,30 @@ export const ctorMutation = <NM extends allMutationName, P extends Array<unknown
     effect: MutationEffect<P, S, S>
 ): Mutation<NM, P, S, S> => ({ name, effect })
 
+export const ctorMutationC = <NM extends allMutationName, P extends Array<unknown>, S>(name: NM) => (
+    effect: MutationEffect<P, S, S>
+): Mutation<NM, P, S, S> => ctorMutation(name, effect)
+
+export const ctorMutationCR = <NM extends allMutationName, P extends Array<unknown>, S, R>(name: NM) => (
+    effectR: (r: R) => MutationEffect<P, S, S>
+): ((r: R) => Mutation<NM, P, S, S>) => r => ctorMutation(name, effectR(r))
+
 export const ctorPartialMutation = <NM extends allMutationName, P extends Array<unknown>, S, SS extends S>(
     name: NM,
     filterPredicate: (s: S) => s is SS,
     effect: MutationEffect<P, S, SS>
 ): Mutation<NM, P, S, SS> => ({ name, filterPredicate, effect })
+
+export const ctorPartialMutationC = <NM extends allMutationName, P extends Array<unknown>, S, SS extends S>(
+    name: NM,
+    filterPredicate: (s: S) => s is SS
+) => (effect: MutationEffect<P, S, SS>): Mutation<NM, P, S, SS> => ctorPartialMutation(name, filterPredicate, effect)
+
+export const ctorPartialMutationCR = <NM extends allMutationName, P extends Array<unknown>, S, SS extends S, R>(
+    name: NM,
+    filterPredicate: (s: S) => s is SS
+) => (effectR: (r: R) => MutationEffect<P, S, SS>): ((r: R) => Mutation<NM, P, S, SS>) => (r: R) =>
+    ctorPartialMutation(name, filterPredicate, effectR(r))
 
 // runner
 

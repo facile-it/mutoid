@@ -29,7 +29,7 @@ const resourceDeps = {
 const renderQuote = (quote: quoteResource): React.ReactChild => {
     return pipe(
         quote,
-        RES.resourceFold({
+        RES.resourceMatch({
             onDone: r => {
                 switch (r.status) {
                     case 200:
@@ -212,7 +212,7 @@ const QuoteWithHookWithParams: React.FC = () => {
             <em>
                 {pipe(
                     quote,
-                    RES.resourceFold({
+                    RES.resourceMatch({
                         onDone: r => {
                             switch (r.status) {
                                 case 200:

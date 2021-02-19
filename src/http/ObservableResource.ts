@@ -1,5 +1,6 @@
 import type { MonadObservable2 } from 'fp-ts-rxjs/MonadObservable'
 import * as R from 'fp-ts-rxjs/Observable'
+import type { ObservableEither } from 'fp-ts-rxjs/lib/ObservableEither'
 import type { Applicative2 } from 'fp-ts/Applicative'
 import type { Apply2 } from 'fp-ts/Apply'
 import type { Bifunctor2 } from 'fp-ts/Bifunctor'
@@ -26,6 +27,10 @@ import type { StatusCode } from './statusCode'
 
 export type ObservableResource<E, A> = Observable<RES.Resource<E, A>>
 
+export type ObservableResourceTypeOf<DS extends RES.ResourceDecoders, AE = never> = Observable<
+    RES.ResourceTypeOf<DS, AE>
+>
+
 // -------------------------------------------------------------------------------------
 // constructors
 // -------------------------------------------------------------------------------------
@@ -39,22 +44,22 @@ export const doneObservable: <E = never, A = never>(oa: Observable<A>) => Observ
 export const fail: <E = never, A = never>(e: E) => ObservableResource<E, A> = flow(RES.fail, R.of)
 export const failObservable: <E = never, A = never>(oe: Observable<E>) => ObservableResource<E, A> = R.map(RES.fail)
 
-export const ajaxFail: <AE = never>(e: RES.ResourceAjaxDataError<AE>) => Observable<RES.ResourceAjaxFail<AE>> = flow(
-    RES.ajaxFail,
-    R.of
-)
-export const ajaxFailObservable: <AE = never>(
-    e: Observable<RES.ResourceAjaxDataError<AE>>
-) => Observable<RES.ResourceAjaxFail<AE>> = R.map(RES.ajaxFail)
+export const ajaxFail: <AE = never, A = never>(
+    e: RES.ResourceAjaxError<AE>
+) => ObservableResource<RES.ResourceAjaxError<AE>, A> = flow(RES.ajaxFail, R.of)
+
+export const ajaxFailObservable: <AE = never, A = never>(
+    e: Observable<RES.ResourceAjaxError<AE>>
+) => ObservableResource<RES.ResourceAjaxError<AE>, A> = R.map(RES.ajaxFail)
 
 export type ObservableAjax<AE = never> = Observable<AjaxResponse | RES.ResourceAjaxFail<AE>>
 
 export const fromAjax = <DS extends RES.ResourceDecoders, AE = never>(
     ajax$: ObservableAjax<AE>,
     decoders: DS
-): Observable<RES.ResourceTypeOfStarted<DS, AE>> =>
+): ObservableResourceTypeOf<DS, AE> =>
     concat(
-        submitted as Observable<RES.ResourceSubmitted>,
+        submitted,
         ajax$.pipe(
             RXoP.map(decodeResponse(decoders)),
             RXoP.catchError(
@@ -80,27 +85,31 @@ export const fromIO: MonadIO2<URI>['fromIO'] = rightIO
 
 export const fromObservable: MonadObservable2<URI>['fromObservable'] = doneObservable
 
+export const fromEither: <E, A>(e: E.Either<E, A>) => ObservableResource<E, A> = flow(RES.fromEither, R.of)
+
+export const fromObservableEither = <E, A>(oe: ObservableEither<E, A>): ObservableResource<E, A> =>
+    oe.pipe(RXoP.map(RES.fromEither))
+
 // -------------------------------------------------------------------------------------
 // destructors
 // -------------------------------------------------------------------------------------
 
-export const fold: <E, A, R>(
+export const match: <E, A, R>(
     onInit: () => Observable<R>,
     onSubmitted: () => Observable<R>,
     onDone: (r: A) => Observable<R>,
     onFail: (r: E) => Observable<R>
-) => (ma: ObservableResource<E, A>) => Observable<R> = flow(RES.fold, R.chain)
+) => (ma: ObservableResource<E, A>) => Observable<R> = flow(RES.match, R.chain)
 
 export const toMutationEffect = <
-    AJ extends (...args: any) => Observable<R>,
+    AX extends (...i: I) => Observable<R>,
     SS extends S,
     S,
-    I extends Array<any> = Parameters<AJ>,
-    R = AJ extends (...args: any) => Observable<infer R> ? R : never
+    I extends Array<any> = Parameters<AX>,
+    R = AX extends (...args: any) => Observable<infer R> ? R : never
 >(
-    aj: AJ,
-    apOperators: (i: Observable<R>, s: SS) => Observable<S>
-) => (...i: I) => (s: SS): Observable<S> => aj(...i).pipe(RXoP.switchMap(r => apOperators(R.of(r), s)))
+    mapTo: (s: SS) => (i: R) => S
+) => (ax: AX) => flow(ax, o => (s: SS) => o.pipe(RXoP.map(mapTo(s))))
 
 // -------------------------------------------------------------------------------------
 // type class members
@@ -131,7 +140,7 @@ export const chainW = <A, E2, B>(f: (a: A) => ObservableResource<E2, B>) => <E1>
     pipe(
         ma,
         R.chain(
-            RES.fold(
+            RES.match(
                 () => init,
                 () => submitted,
                 f,
