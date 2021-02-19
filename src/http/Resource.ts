@@ -135,6 +135,11 @@ export const ajaxFail = <AE = never, A = never>(error: ResourceAjaxError<AE>): R
     error: error,
 })
 
+export const ajaxFailOnly = <AE = never>(error: ResourceAjaxError<AE>): ResourceFail<ResourceAjaxError<AE>> => ({
+    _tag: 'fail',
+    error: error,
+})
+
 export const fromEither: <E, A>(e: E.Either<E, A>) => Resource<E, A> = E.fold(e => fail(e), done)
 
 // -------------------------------------------------------------------------------------

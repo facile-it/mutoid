@@ -1,9 +1,8 @@
 import * as E from 'fp-ts/Either'
 import { pipe } from 'fp-ts/function'
 import * as t from 'io-ts'
-import { of, Observable } from 'rxjs'
+import { of } from 'rxjs'
 import type { AjaxError, AjaxResponse } from 'rxjs/ajax'
-import { map } from 'rxjs/operators'
 import { TestScheduler } from 'rxjs/testing'
 import * as _ from '../../src/http/ObservableResource'
 import * as RES from '../../src/http/Resource'
@@ -186,8 +185,8 @@ describe('ObservableResource', () => {
 
     test('fromAjax already fail', () => {
         testSchedulerBuilder().run(({ cold, expectObservable }) => {
-            const ajax = cold<RES.ResourceAjaxFail<string>>('--a', {
-                a: RES.ajaxFail<string>({
+            const ajax = cold<RES.ResourceFail<RES.ResourceAjaxError<string>>>('--a', {
+                a: RES.ajaxFailOnly({
                     type: 'appError',
                     detail: 'bhoo',
                 }),
@@ -230,14 +229,11 @@ describe('ObservableResource', () => {
         } as AjaxResponse)
 
         const mutation = () =>
-            MS.ctorMutation(
-                'test' as const,
-                _.toMutationEffect(
-                    () => _.fromAjax(ajax, decoders),
-                    (o, _S: typeof state): Observable<typeof state> => o.pipe(map(n => ({ name: n })))
-                )
+            pipe(
+                () => _.fromAjax(ajax, decoders),
+                _.toMutationEffect((_s: typeof state) => name => ({ name })),
+                MS.ctorMutationC('test')
             )
-
         const task = MS.toTask(store)
 
         expect((await task()).name._tag).toBe('init')

@@ -1,6 +1,6 @@
 import { useCallback, useState, useRef, useEffect } from 'react'
 import type { Observable, Subscription } from 'rxjs'
-import { map, take, takeUntil } from 'rxjs/operators'
+import { map, takeUntil } from 'rxjs/operators'
 import type * as OR from '../http/ObservableResource'
 import * as MRE from '../http/Resource'
 
@@ -48,7 +48,6 @@ export function useResourceFetcher<
 
             subscriptionRef.current = resourceTaken$
                 .pipe(
-                    take(2),
                     map(s => {
                         return mapAcknowledgedRef.current && (s._tag === 'done' || s._tag === 'fail')
                             ? mapAcknowledgedRef.current(s)
