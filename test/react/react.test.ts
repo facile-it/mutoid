@@ -66,7 +66,7 @@ describe('react', () => {
         expect(stateUpdatedHey.age).toBe(15)
     })
 
-    test('useSeleuseResourceFetcherctor', () => {
+    test('useFetchObservableResource', () => {
         const ajax = of({
             status: 200,
             response: 'hello',
@@ -88,7 +88,29 @@ describe('react', () => {
         expect(result.current[0]._tag).toBe('done')
     })
 
-    test('useSeleuseResourceFetcherctor killed', () => {
+    test('useFetchReaderObservableResource', async () => {
+        const ajax = of({
+            status: 200,
+            response: 'hello',
+        } as AjaxResponse)
+
+        const resource = () => (d: { ajax: typeof ajax }) =>
+            OR.fromAjax(d.ajax, {
+                200: t.string.decode,
+            })
+
+        const { result } = renderHook(() => MR.useFetchReaderObservableResource(resource, { ajax }))
+
+        expect(result.current[0]._tag).toBe('init')
+
+        act(() => {
+            result.current[1]()
+        })
+
+        expect(result.current[0]._tag).toBe('done')
+    })
+
+    test('useFetchObservableResource killed', () => {
         const ajax = of({
             status: 200,
             response: 'hello',
@@ -110,7 +132,7 @@ describe('react', () => {
         expect(result.current[0]._tag).toBe('init')
     })
 
-    test('useSeleuseResourceFetcherctor mapAcknowledged', () => {
+    test('useResourceFetcher mapAcknowledged', () => {
         const ajax = of({
             status: 200,
             response: 'hello',
@@ -122,7 +144,7 @@ describe('react', () => {
             })
 
         const { result } = renderHook(() =>
-            MR.useFetchObservableResource(resource, {
+            MR.useResourceFetcher(resource, {
                 mapAcknowledged: s => {
                     switch (s._tag) {
                         case 'done':

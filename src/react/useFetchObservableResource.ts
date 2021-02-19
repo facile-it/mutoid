@@ -1,8 +1,9 @@
 import { useCallback, useState, useRef, useEffect } from 'react'
-import type { Observable, Subscription } from 'rxjs'
+import type { Observable } from 'rxjs'
 import { takeUntil } from 'rxjs/operators'
 import type * as OR from '../http/ObservableResource'
 import * as RES from '../http/Resource'
+import { useSubscriptionRef } from './useSubscriptionRef'
 
 export function useFetchObservableResource<
     F extends (...p: any) => OR.ObservableResource<E, A>,
@@ -17,30 +18,31 @@ export function useFetchObservableResource<
     }
 ): [RES.Resource<E, A>, (...p: P) => void] {
     const [value, setValue] = useState<RES.Resource<E, A>>(options?.iniState || RES.init)
+    const [subscriptionRef, subscriptionUnsubscribe] = useSubscriptionRef()
 
-    const subscriptionRef = useRef<Subscription | null>(null)
     const fetchRef = useRef(fetch)
     const notifierTakeUntilRef = useRef(options?.notifierTakeUntil)
 
     useEffect(() => {
         fetchRef.current = fetch
         notifierTakeUntilRef.current = options?.notifierTakeUntil
-    })
+    }, [fetch, options])
 
     return [
         value,
-        useCallback((...p: P) => {
-            if (subscriptionRef.current && subscriptionRef.current.closed !== true) {
-                subscriptionRef.current.unsubscribe()
-            }
+        useCallback(
+            (...p: P) => {
+                subscriptionUnsubscribe()
 
-            const resource$ = fetchRef.current(...p)
+                const resource$ = fetchRef.current(...p)
 
-            const resourceTaken$ = notifierTakeUntilRef.current
-                ? resource$.pipe(takeUntil(notifierTakeUntilRef.current))
-                : resource$
+                const resourceTaken$ = notifierTakeUntilRef.current
+                    ? resource$.pipe(takeUntil(notifierTakeUntilRef.current))
+                    : resource$
 
-            subscriptionRef.current = resourceTaken$.subscribe(setValue)
-        }, []),
+                subscriptionRef.current = resourceTaken$.subscribe(setValue)
+            },
+            [subscriptionRef, subscriptionUnsubscribe]
+        ),
     ]
 }

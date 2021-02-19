@@ -1,8 +1,9 @@
 import { useCallback, useState, useRef, useEffect } from 'react'
-import type { Observable, Subscription } from 'rxjs'
+import type { Observable } from 'rxjs'
 import { takeUntil } from 'rxjs/operators'
 import type * as ROR from '../http/ReaderObservableResource'
 import * as RES from '../http/Resource'
+import { useSubscriptionRef } from './useSubscriptionRef'
 
 export function useFetchReaderObservableResource<
     F extends (...p: any) => ROR.ReaderObservableResource<R, E, A>,
@@ -19,8 +20,8 @@ export function useFetchReaderObservableResource<
     }
 ): [RES.Resource<E, A>, (...p: P) => void] {
     const [value, setValue] = useState<RES.Resource<E, A>>(options?.iniState || RES.init)
+    const [subscriptionRef, subscriptionUnsubscribe] = useSubscriptionRef()
 
-    const subscriptionRef = useRef<Subscription | null>(null)
     const fetchRef = useRef(fetch)
     const depsRef = useRef(deps)
     const notifierTakeUntilRef = useRef(options?.notifierTakeUntil)
@@ -29,22 +30,23 @@ export function useFetchReaderObservableResource<
         fetchRef.current = fetch
         depsRef.current = deps
         notifierTakeUntilRef.current = options?.notifierTakeUntil
-    })
+    }, [fetch, deps, options])
 
     return [
         value,
-        useCallback((...p: P) => {
-            if (subscriptionRef.current && subscriptionRef.current.closed !== true) {
-                subscriptionRef.current.unsubscribe()
-            }
+        useCallback(
+            (...p: P) => {
+                subscriptionUnsubscribe()
 
-            const resource$ = fetchRef.current(...p)(depsRef.current)
+                const resource$ = fetchRef.current(...p)(depsRef.current)
 
-            const resourceTaken$ = notifierTakeUntilRef.current
-                ? resource$.pipe(takeUntil(notifierTakeUntilRef.current))
-                : resource$
+                const resourceTaken$ = notifierTakeUntilRef.current
+                    ? resource$.pipe(takeUntil(notifierTakeUntilRef.current))
+                    : resource$
 
-            subscriptionRef.current = resourceTaken$.subscribe(setValue)
-        }, []),
+                subscriptionRef.current = resourceTaken$.subscribe(setValue)
+            },
+            [subscriptionRef, subscriptionUnsubscribe]
+        ),
     ]
 }
