@@ -158,7 +158,7 @@ const QuoteFromStateWithDelay: React.FC = () => {
 }
 
 const QuoteWithHook: React.FC = () => {
-    const [quote, quoteFetcher] = MR.useFetchObservableResource(fetchQuoteWithNoDeps, {
+    const [quote, quoteFetcher] = MR.useResourceFetcher(fetchQuoteWithNoDeps, {
         mapAcknowledged: c => {
             switch (c._tag) {
                 case 'fail':
