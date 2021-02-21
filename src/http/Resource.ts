@@ -192,7 +192,7 @@ export const match = <E, A, R>(onInit: () => R, onSubmitted: () => R, onDone: (r
     }
 }
 
-export const resourceMatch = <E, A, R>(
+export const matchD = <E, A, R>(
     dodo:
         | {
               onInit: () => R

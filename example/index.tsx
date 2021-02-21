@@ -36,7 +36,7 @@ const resourceDeps = {
 const renderQuote = (quote: quoteResource): React.ReactChild => {
     return pipe(
         quote,
-        RES.resourceMatch({
+        RES.matchD({
             onDone: r => {
                 switch (r.status) {
                     case 200:
@@ -219,7 +219,7 @@ const QuoteWithHookWithParams: React.FC = () => {
             <em>
                 {pipe(
                     quote,
-                    RES.resourceMatch({
+                    RES.matchD({
                         onDone: r => {
                             switch (r.status) {
                                 case 200:
@@ -298,7 +298,7 @@ const QuoteWithFetchConcat: React.FC = () => {
             <em>
                 {pipe(
                     quote,
-                    RES.resourceMatch({
+                    RES.matchD({
                         onDone: r => {
                             return `Client error ${r.join(' //// ')}`
                         },
@@ -344,7 +344,7 @@ const QuoteWithFetchQuoteSeqPar: React.FC = () => {
             <em>
                 {pipe(
                     quote,
-                    RES.resourceMatch({
+                    RES.matchD({
                         onDone: r => {
                             return `Client error ${r.join(' //// ')}`
                         },

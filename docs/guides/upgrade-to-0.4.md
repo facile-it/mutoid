@@ -160,3 +160,82 @@ const fetchSomethingMutation = () =>
         MS.ctorMutationCR('fetchSomethingMutation')
     )
 ```
+
+### Resource fold
+
+Before
+
+```ts
+import * as MH from 'mutoid/http'
+import { pipe } from 'fp-ts/function'
+
+const result = pipe(
+    userResource,
+    MH.resourceFold({
+        onInit: () => 'loading...',
+        onSubmitted: () => 'loading...',
+        onDone: r => r.payload.name,
+        onFail: e => e.error.type,
+    })
+)
+```
+
+After
+
+```ts
+import * as RES from 'mutoid/http/Resource'
+import { pipe } from 'fp-ts/function'
+
+const result = pipe(
+    userResource,
+    RES.matchD({
+        onInit: () => 'loading...',
+        onSubmitted: () => 'loading...',
+        onDone: r => r.payload.name,
+        onFail: e => e.error.type,
+    })
+)
+
+// or
+
+const result = pipe(
+    userResource,
+    RES.matchD({
+        onPending: () => 'loading...',
+        onDone: r => r.payload.name,
+        onFail: e => e.type,
+    })
+)
+
+// or
+
+const result = pipe(userResource, RES.match(onInit, onSubmitted, onDone, onFail))
+```
+
+The `ResourceDone` internal structure has been changed
+
+Before
+
+```ts
+export interface ResourceDone<S, P> {
+    readonly tag: 'done'
+    readonly status: S
+    readonly payload: P
+}
+```
+
+After
+
+```ts
+export interface ResourceData<S, P> {
+    readonly status: S
+    readonly payload: P
+}
+
+export interface ResourceDone<D> {
+    readonly _tag: 'done'
+    readonly data: D
+}
+```
+
+The discriminator now is `_tag`

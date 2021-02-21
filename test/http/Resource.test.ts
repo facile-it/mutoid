@@ -94,7 +94,7 @@ describe('resource', () => {
         ]
 
         ts.forEach(([r, m]) => {
-            pipe(r, _.resourceMatch(c))
+            pipe(r, _.matchD(c))
             expect(m.mock.calls.length).toBe(1)
             jest.resetAllMocks()
         })
