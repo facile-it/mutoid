@@ -3,6 +3,13 @@ import { Lazy } from 'fp-ts/function'
 import { Observable } from 'rxjs'
 import * as MS from '../../src/state'
 
+declare module '../../src/state/stores' {
+    interface Stores {
+        store: 'mutation' | 'mutationWithOneParam' | 'mutationWithTwoParam'
+        store_2: 'mutationString'
+    }
+}
+
 declare const storeString: Lazy<MS.Store<'store', string>>
 declare const mutation: {
     name: 'mutation'

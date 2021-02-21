@@ -3,25 +3,26 @@ import type * as T from 'fp-ts/Task'
 import type { Lazy } from 'fp-ts/function'
 import { BehaviorSubject, Observable, Subscription } from 'rxjs'
 import { switchMap, take, takeUntil, takeWhile, tap } from 'rxjs/operators'
+import type { allMutationName, mutationName, storeName } from './stores'
 
 // type
 
-type MutationNotify<N, S> = Readonly<{
+type MutationNotify<N extends storeName, S> = Readonly<{
     state: S
     name: N
-    mutationName: string
+    mutationName: mutationName<N>
     payload: Array<unknown>
     date: ReturnType<Date['toISOString']>
 }>
 
-type NotifySubject<N, S> = Readonly<
+type NotifySubject<N extends storeName, S> = Readonly<
     | { type: 'initStore'; name: N }
     | ({ type: 'mutationLoad' } & MutationNotify<N, S>)
     | ({ type: 'mutationStart' } & MutationNotify<N, S>)
     | ({ type: 'mutationEnd' } & MutationNotify<N, S>)
 >
 
-export type Store<N extends string, S> = Readonly<{
+export type Store<N extends storeName, S> = Readonly<{
     name: N
     state$: BehaviorSubject<S>
     notifier$: BehaviorSubject<NotifySubject<N, S>>
@@ -30,15 +31,18 @@ export type Store<N extends string, S> = Readonly<{
 
 export type MutationEffect<P extends Array<unknown>, S, SS extends S> = (...p: P) => (state: SS) => Observable<S>
 
-export type Mutation<NM, P extends Array<unknown>, S, SS extends S> = Readonly<{
+type MutationOpaque<NM, P extends Array<unknown>, S, SS extends S> = Readonly<{
     name: NM
     effect: MutationEffect<P, S, SS>
     filterPredicate?: (state: S) => state is SS
 }>
 
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface Mutation<NM, P extends Array<unknown>, S, SS extends S> extends MutationOpaque<NM, P, S, SS> {}
+
 // constructor
 
-export const ctor = <N extends string, T>(init: Lazy<{ name: N; initState: T }>): Lazy<Store<N, T>> => {
+export const ctor = <N extends storeName, T>(init: Lazy<{ name: N; initState: T }>): Lazy<Store<N, T>> => {
     return memoize(() => {
         const c = init()
 
@@ -51,68 +55,91 @@ export const ctor = <N extends string, T>(init: Lazy<{ name: N; initState: T }>)
     })
 }
 
-export const ctorMutation = <NM extends string, P extends Array<unknown>, S>(
+// mutation
+
+export const ctorMutation = <NM extends allMutationName, P extends Array<unknown>, S>(
     name: NM,
     effect: MutationEffect<P, S, S>
 ): Mutation<NM, P, S, S> => ({ name, effect })
 
-export const ctorPartialMutation = <NM extends string, P extends Array<unknown>, S, SS extends S>(
+export const ctorMutationC = <NM extends allMutationName, P extends Array<unknown>, S>(name: NM) => (
+    effect: MutationEffect<P, S, S>
+): Mutation<NM, P, S, S> => ctorMutation(name, effect)
+
+export const ctorMutationCR = <NM extends allMutationName, P extends Array<unknown>, S, R>(name: NM) => (
+    effectR: (r: R) => MutationEffect<P, S, S>
+): ((r: R) => Mutation<NM, P, S, S>) => r => ctorMutation(name, effectR(r))
+
+// partialMutation
+
+export const ctorPartialMutation = <NM extends allMutationName, P extends Array<unknown>, S, SS extends S>(
     name: NM,
     filterPredicate: (s: S) => s is SS,
     effect: MutationEffect<P, S, SS>
 ): Mutation<NM, P, S, SS> => ({ name, filterPredicate, effect })
 
+export const ctorPartialMutationC = <NM extends allMutationName, P extends Array<unknown>, S, SS extends S>(
+    name: NM,
+    filterPredicate: (s: S) => s is SS
+) => (effect: MutationEffect<P, S, SS>): Mutation<NM, P, S, SS> => ctorPartialMutation(name, filterPredicate, effect)
+
+export const ctorPartialMutationCR = <NM extends allMutationName, P extends Array<unknown>, S, SS extends S, R>(
+    name: NM,
+    filterPredicate: (s: S) => s is SS
+) => (effectR: (r: R) => MutationEffect<P, S, SS>): ((r: R) => Mutation<NM, P, S, SS>) => (r: R) =>
+    ctorPartialMutation(name, filterPredicate, effectR(r))
+
 // runner
 
-export const toTask = <N extends string, S>(store: Lazy<Store<N, S>>): T.Task<S> => () =>
+export const toTask = <N extends storeName, S>(store: Lazy<Store<N, S>>): T.Task<S> => () =>
     store().state$.pipe(take(1)).toPromise()
 
 export interface BaseOptions {
     notifierTakeUntil?: Observable<unknown>
 }
-export interface DepsOptions<D extends Record<string, unknown>> {
-    deps: D
+export interface DepsOptions<R extends Record<string, unknown>> {
+    deps: R
 }
 
 export function mutationRunner<
-    N extends string,
-    NM extends string,
+    N extends storeName,
+    NM extends mutationName<N>,
     P extends Array<unknown>,
     S,
     SS extends S,
-    D extends Record<K, unknown>,
+    R extends Record<K, unknown>,
     K extends string
 >(
     storeL: Lazy<Store<N, S>>,
-    mutationL: (deps: D) => Mutation<NM, P, S, SS>,
-    options: BaseOptions & DepsOptions<D>
+    mutationR: (deps: R) => Mutation<NM, P, S, SS>,
+    options: BaseOptions & DepsOptions<R>
     // no deps
 ): (...p: P) => Subscription
 export function mutationRunner<
-    N extends string,
-    NM extends string,
+    N extends storeName,
+    NM extends mutationName<N>,
     P extends Array<unknown>,
     S,
     SS extends S,
-    D extends Record<never, unknown>
+    R extends Record<never, unknown>
     // no deps overload
 >(storeL: Lazy<Store<N, S>>, mutationL: () => Mutation<NM, P, S, SS>, options?: BaseOptions): (...p: P) => Subscription
 export function mutationRunner<
-    N extends string,
-    NM extends string,
+    N extends storeName,
+    NM extends mutationName<N>,
     P extends Array<unknown>,
     S,
     SS extends S,
-    D extends Record<K, unknown>,
+    R extends Record<K, unknown>,
     K extends never
 >(
     storeL: Lazy<Store<N, S>>,
-    mutationL: (deps?: D) => Mutation<NM, P, S, SS>,
-    options?: BaseOptions & Partial<DepsOptions<D>>
+    mutationR: (deps?: R) => Mutation<NM, P, S, SS>,
+    options?: BaseOptions & Partial<DepsOptions<R>>
 ): (...p: P) => Subscription {
     return (...payload) => {
         const store = storeL()
-        const mutation = mutationL(options?.deps)
+        const mutation = mutationR(options?.deps)
 
         const baseNotify = (state: S, date: Date) => ({
             name: store.name,

@@ -1,7 +1,6 @@
 {
     "compilerOptions": {
         "noEmit": true,
-        "outDir": "./dist/lib",
         "target": "es5",
         "module": "commonjs",
         "lib": ["DOM", "ESNext"],

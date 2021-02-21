@@ -1,20 +1,12 @@
-/* istanbul ignore file */
-
 import { useCallback, useState, useRef, useEffect } from 'react'
 import type { Observable } from 'rxjs'
-import { map, takeUntil } from 'rxjs/operators'
+import { takeUntil } from 'rxjs/operators'
 import type * as OR from '../http/ObservableResource'
-import * as MRE from '../http/Resource'
+import * as RES from '../http/Resource'
 import { useSubscriptionRef } from './useSubscriptionRef'
 
-/**
- * @deprecated
- */
-export function useResourceFetcher<
+export function useFetchObservableResource<
     F extends (...p: any) => OR.ObservableResource<E, A>,
-    RE extends MRE.Resource<E, A>,
-    MA extends ((r: MRE.ResourceAcknowledged<E, A>) => MR) | undefined,
-    MR extends { _tag: unknown } = MA extends (...c: any) => any ? ReturnType<MA> : never,
     E = F extends (...p: any) => OR.ObservableResource<infer T, any> ? T : never,
     A = F extends (...p: any) => OR.ObservableResource<any, infer T> ? T : never,
     P extends Array<unknown> = Parameters<F>
@@ -22,25 +14,22 @@ export function useResourceFetcher<
     fetch: F,
     options?: {
         notifierTakeUntil?: Observable<unknown>
-        iniState?: RE
-        mapAcknowledged?: MA
+        iniState?: RES.Resource<E, A>
     }
-): [MA extends undefined ? MRE.Resource<E, A> : MR | MRE.ResourceInit | MRE.ResourceSubmitted, (...p: P) => void] {
-    const [value, setValue] = useState<unknown>(options?.iniState || MRE.init)
-
+): [RES.Resource<E, A>, (...p: P) => void] {
+    const [value, setValue] = useState<RES.Resource<E, A>>(options?.iniState || RES.init)
     const [subscriptionRef, subscriptionUnsubscribe] = useSubscriptionRef()
+
     const fetchRef = useRef(fetch)
     const notifierTakeUntilRef = useRef(options?.notifierTakeUntil)
-    const mapAcknowledgedRef = useRef(options?.mapAcknowledged)
 
     useEffect(() => {
         fetchRef.current = fetch
         notifierTakeUntilRef.current = options?.notifierTakeUntil
-        mapAcknowledgedRef.current = options?.mapAcknowledged
     }, [fetch, options])
 
     return [
-        value as any,
+        value,
         useCallback(
             (...p: P) => {
                 subscriptionUnsubscribe()
@@ -51,15 +40,7 @@ export function useResourceFetcher<
                     ? resource$.pipe(takeUntil(notifierTakeUntilRef.current))
                     : resource$
 
-                subscriptionRef.current = resourceTaken$
-                    .pipe(
-                        map(s => {
-                            return mapAcknowledgedRef.current && (s._tag === 'done' || s._tag === 'fail')
-                                ? mapAcknowledgedRef.current(s)
-                                : s
-                        })
-                    )
-                    .subscribe(setValue)
+                subscriptionRef.current = resourceTaken$.subscribe(setValue)
             },
             [subscriptionRef, subscriptionUnsubscribe]
         ),

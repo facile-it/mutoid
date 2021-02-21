@@ -1,6 +1,13 @@
 import { of, Observable } from 'rxjs'
 import { TestScheduler } from 'rxjs/testing'
-import * as MS from '../src/state/index'
+import * as MS from '../../src/state/index'
+
+declare module '../../src/state/stores' {
+    interface Stores {
+        test: 'test_mutation' | 'test_mutation_1' | 'test_muation_2'
+        state: 'test_mutation'
+    }
+}
 
 describe('state', () => {
     test('create', () => {

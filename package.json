@@ -11,7 +11,7 @@
         "test-type": "dtslint dtslint",
         "clean": "rm -rf dist",
         "prebuild": "npm run clean",
-        "build": "tsc -p ./tsconfig.build.json && tsc -p ./tsconfig.build-es6.json && ts-node scripts/build",
+        "build": "tsc -p ./tsconfig.build.json && ts-node scripts/build",
         "postbuild": "prettier --loglevel=silent --write \"./dist/**/*.ts\"",
         "prepublishOnly": "ts-node scripts/pre-publish",
         "prerelease": "npm run build",
@@ -48,9 +48,11 @@
         "dtslint": "github:gcanti/dtslint",
         "eslint": "^7.0.0",
         "eslint-config-facile": "^0.3.0",
+        "fast-check": "^2.12.0",
         "fork-ts-checker-webpack-plugin": "^5.2.1",
-        "fp-ts": "^2.8.3",
-        "fp-ts-rxjs": "^0.6.9",
+        "fp-ts": "^2.9.3",
+        "fp-ts-laws": "^0.3.0",
+        "fp-ts-rxjs": "^0.6.13",
         "html-webpack-plugin": "^4.3.0",
         "io-ts": "^2.2.10",
         "io-ts-types": "^0.5.11",
@@ -71,9 +73,9 @@
     },
     "peerDependencies": {
         "fp-ts": "^2.8",
+        "fp-ts-rxjs": "^0.6",
         "io-ts": "^2.2",
         "react": "^16.13.1",
-        "react-dom": "^16.13.1",
         "rxjs": "^6.5.5"
     },
     "tags": [
@@ -83,6 +85,7 @@
         "reactivex",
         "rxjs",
         "fp-ts",
+        "fp-ts-rxjs",
         "io-ts",
         "react"
     ],
@@ -93,6 +96,7 @@
         "reactivex",
         "rxjs",
         "fp-ts",
+        "fp-ts-rxjs",
         "io-ts",
         "react"
     ]

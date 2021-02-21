@@ -4,9 +4,9 @@ import * as t from 'io-ts'
 import { of } from 'rxjs'
 import type { AjaxResponse } from 'rxjs/ajax'
 import { delay } from 'rxjs/operators'
-import * as MH from '../src/http'
-import * as MR from '../src/react'
-import * as MS from '../src/state'
+import * as OR from '../../src/http/ObservableResource'
+import * as MR from '../../src/react'
+import * as MS from '../../src/state'
 
 describe('react', () => {
     test('useSelector', () => {
@@ -66,80 +66,124 @@ describe('react', () => {
         expect(stateUpdatedHey.age).toBe(15)
     })
 
-    test('useSeleuseResourceFetcherctor', () => {
+    test('useFetchObservableResource', () => {
         const ajax = of({
             status: 200,
             response: 'hello',
         } as AjaxResponse)
 
         const resource = () =>
-            MH.ajaxToResource(ajax, {
+            OR.fromAjax(ajax, {
                 200: t.string.decode,
             })
 
-        const { result } = renderHook(() => MR.useResourceFetcher(resource))
+        const { result } = renderHook(() => MR.useFetchObservableResource(resource))
 
-        expect(result.current[0].tag).toBe('init')
+        expect(result.current[0]._tag).toBe('init')
 
         act(() => {
             result.current[1]()
         })
 
-        expect(result.current[0].tag).toBe('done')
+        expect(result.current[0]._tag).toBe('done')
     })
 
-    test('useSeleuseResourceFetcherctor killed', () => {
+    test('useFetchReaderObservableResource', () => {
         const ajax = of({
             status: 200,
             response: 'hello',
         } as AjaxResponse)
 
-        const resource = () =>
-            MH.ajaxToResource(ajax.pipe(delay(1000)), {
+        const resource = () => (d: { ajax: typeof ajax }) =>
+            OR.fromAjax(d.ajax, {
                 200: t.string.decode,
             })
 
-        const { result } = renderHook(() => MR.useResourceFetcher(resource, { notifierTakeUntil: of(1) }))
+        const { result } = renderHook(() => MR.useFetchReaderObservableResource(resource, { ajax }))
 
-        expect(result.current[0].tag).toBe('init')
+        expect(result.current[0]._tag).toBe('init')
 
         act(() => {
             result.current[1]()
         })
 
-        expect(result.current[0].tag).toBe('init')
+        expect(result.current[0]._tag).toBe('done')
     })
 
-    test('useSeleuseResourceFetcherctor mapAcknowledged', () => {
+    test('useFetchReaderObservableResource unsubscribe on unMount', async () => {
+        const ajax = of({
+            status: 200,
+            response: 'hello',
+        } as AjaxResponse)
+
+        const resource = () => (d: { ajax: typeof ajax }) =>
+            OR.fromAjax(d.ajax.pipe(delay(1000)), {
+                200: t.string.decode,
+            })
+
+        const { result } = renderHook(() => MR.useFetchReaderObservableResource(resource, { ajax }))
+
+        expect(result.current[0]._tag).toBe('init')
+
+        act(() => {
+            result.current[1]()
+        })
+
+        expect(result.current[0]._tag).toBe('submitted')
+    })
+
+    test('useFetchObservableResource killed', () => {
         const ajax = of({
             status: 200,
             response: 'hello',
         } as AjaxResponse)
 
         const resource = () =>
-            MH.ajaxToResource(ajax, {
+            OR.fromAjax(ajax.pipe(delay(1000)), {
+                200: t.string.decode,
+            })
+
+        const { result } = renderHook(() => MR.useFetchObservableResource(resource, { notifierTakeUntil: of(1) }))
+
+        expect(result.current[0]._tag).toBe('init')
+
+        act(() => {
+            result.current[1]()
+        })
+
+        expect(result.current[0]._tag).toBe('init')
+    })
+
+    test('useResourceFetcher mapAcknowledged', () => {
+        const ajax = of({
+            status: 200,
+            response: 'hello',
+        } as AjaxResponse)
+
+        const resource = () =>
+            OR.fromAjax(ajax, {
                 200: t.string.decode,
             })
 
         const { result } = renderHook(() =>
             MR.useResourceFetcher(resource, {
                 mapAcknowledged: s => {
-                    switch (s.tag) {
+                    switch (s._tag) {
                         case 'done':
-                            return { tag: 'success' }
+                            return { _tag: 'success' }
                         case 'fail':
-                            return { tag: 'error' }
+                            return { _tag: 'error' }
                     }
                 },
             })
         )
 
-        expect(result.current[0].tag).toBe('init')
+        expect(result.current[0]._tag).toBe('init')
 
         act(() => {
             result.current[1]()
         })
 
-        expect(result.current[0].tag).toBe('success')
+        expect(result.current[0]._tag).toBe('success')
     })
 })

@@ -4,9 +4,15 @@ import * as t from 'io-ts'
 import { Observable, of } from 'rxjs'
 import * as MS from '../../src/state'
 
+declare module '../../src/state/stores' {
+    interface Stores {
+        session: 'parseEnv'
+    }
+}
+
 // type
 
-interface ApiKeyBrand {
+export interface ApiKeyBrand {
     readonly ApiKey: unique symbol
 }
 
@@ -42,7 +48,7 @@ export type SessionState =
 
 export const sessionStore = MS.ctor<'session', SessionState>(() => ({ name: 'session', initState: { status: 'init' } }))
 
-// mutation
+// mutationR
 
 type optional = string | undefined
 type SessionStateInit = Extract<SessionState, { status: 'init' }>

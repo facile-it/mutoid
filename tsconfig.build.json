@@ -1,6 +1,8 @@
 {
     "extends": "./tsconfig.json",
     "compilerOptions": {
+        "outDir": "./dist",
+        "module": "es6",
         "noEmit": false
     },
     "include": ["./src"]
