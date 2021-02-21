@@ -1,5 +1,5 @@
+import { sequenceS } from 'fp-ts/Apply'
 import { pipe } from 'fp-ts/function'
-import { sequenceS } from 'fp-ts/lib/Apply'
 import * as t from 'io-ts'
 import { nonEmptyArray } from 'io-ts-types/nonEmptyArray'
 import { ajax } from 'rxjs/ajax'

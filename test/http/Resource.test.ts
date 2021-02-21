@@ -1,7 +1,7 @@
 import * as fc from 'fast-check'
 import * as laws from 'fp-ts-laws'
+import * as Eq from 'fp-ts/Eq'
 import { pipe } from 'fp-ts/function'
-import * as Eq from 'fp-ts/lib/Eq'
 import * as _ from '../../src/http/Resource'
 
 describe('resource', () => {

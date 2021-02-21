@@ -1,4 +1,4 @@
-import type { Lazy } from 'fp-ts/lib/function'
+import type { Lazy } from 'fp-ts/function'
 import { useRef } from 'react'
 import type * as MS from '../state'
 import type { storeName } from '../state/stores'

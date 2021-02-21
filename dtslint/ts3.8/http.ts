@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { pipe } from 'fp-ts/lib/function'
+import { pipe } from 'fp-ts/function'
 import * as t from 'io-ts'
 import { Observable } from 'rxjs'
 import { AjaxResponse } from 'rxjs/ajax'

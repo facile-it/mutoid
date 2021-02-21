@@ -12,7 +12,7 @@ import type { MonadIO2 } from 'fp-ts/MonadIO'
 import type { MonadTask2 } from 'fp-ts/MonadTask'
 import type * as T from 'fp-ts/Task'
 import { flow, identity, Predicate, Refinement } from 'fp-ts/function'
-import { pipe } from 'fp-ts/pipeable'
+import { pipe } from 'fp-ts/function'
 import { Observable, concat } from 'rxjs'
 import type { AjaxError, AjaxResponse } from 'rxjs/ajax'
 // eslint-disable-next-line rxjs/no-internal
