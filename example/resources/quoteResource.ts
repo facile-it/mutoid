@@ -17,7 +17,7 @@ export const quoteDecoders = {
 
 export type quoteResource = RES.ResourceTypeOf<typeof quoteDecoders, authAppError>
 
-interface Deps {
+export interface Deps {
     ajax: typeof ajax
 }
 
@@ -46,9 +46,9 @@ export const fetchQuoteWithTokenAndParams = (id: number) =>
 
 // example: simple fetch without token but with params
 
-export const fetchQuoteWithParams = (id: number, from: string) => {
-    return pipe(
-        ROR.ask<Deps, RES.DecodersToResourceError<typeof quoteDecoders, never>>(),
+export const fetchQuoteWithParams = (id: number, from: string) =>
+    pipe(
+        ROR.askTypeOf<Deps, typeof quoteDecoders>(),
         ROR.chainW(deps =>
             ROR.fromAjax(
                 deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?id=${id}&from=${from}`),
@@ -56,7 +56,6 @@ export const fetchQuoteWithParams = (id: number, from: string) => {
             )
         )
     )
-}
 
 // example: same fetchQuoteWithParams different definition
 

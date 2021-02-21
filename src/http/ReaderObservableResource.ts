@@ -58,6 +58,12 @@ export const failObservable: <R, E = never, A = never>(oe: Observable<E>) => Rea
 
 export const ask: <R, E>() => ReaderObservableResource<R, E, R> = () => OR.done
 
+export const askTypeOf: <R, DS extends RES.ResourceDecoders, AE = never>() => ReaderObservableResource<
+    R,
+    RES.DecodersToResourceError<DS, AE>,
+    R
+> = () => OR.done
+
 export const asks: <R, E, A>(f: (r: R) => A) => ReaderObservableResource<R, E, A> = f => flow(OR.done, OR.map(f))
 
 export const fromReader: <R, E, A>(ma: R.Reader<R, A>) => ReaderObservableResource<R, E, A> = ma => flow(ma, OR.done)

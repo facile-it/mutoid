@@ -34,8 +34,7 @@ This is useful to have the correct inference in the store notifier
 
 ## Data fetching
 
-The http module has been splitted into two modules: `ObservableResource`, `Resource`  
-Two data structures that implement an instance of `Functor`, `Apply`, `Bifunctor`, `Applicative`, `Monad` (and `MonadObservable` for `ObservableResource`)
+The http module has been splitted into 3 modules: `ReaderObservableResource`, `ObservableResource` and `Resource`. Three data structures that implement an instance of `Functor`, `Apply`, `Bifunctor`, `Applicative`, `Monad` (and `MonadObservable` for `ObservableResource` and `ReaderObservableResource`)
 
 ### Extract resource type form decoders
 
@@ -92,7 +91,7 @@ After
 ```ts
 import * as t from 'io-ts'
 import { ajax } from 'rxjs/ajax'
-import * as RRES from 'mutoid/http/ObservableResource'
+import * as ROR from 'mutoid/http/ReaderObservableResource'
 import * as RES from 'mutoid/http/Resource'
 
 export const somethingDecoders = {
@@ -100,10 +99,22 @@ export const somethingDecoders = {
     400: t.string.decode,
 }
 
+export interface Deps {
+    ajax: typeof ajax
+}
+
 type somethingResource = RES.ResourceTypeOf<typeof somethingDecoders>
 
-const fetchSomething = (id: number, from: string) =>
-    RRES.fromAjax(ajax(`https://api.io?id=${id}&from=${from}`), somethingDecoders)
+export const fetchSomething = (id: number, from: string) =>
+    pipe(
+        ROR.askTypeOf<Deps, typeof somethingDecoders>(),
+        ROR.chainW(deps =>
+            ROR.fromAjax(
+                deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?id=${id}&from=${from}`),
+                somethingDecoders
+            )
+        )
+    )
 ```
 
 ### Fetcher to mutation effect
@@ -125,13 +136,27 @@ const fetchSomethingMutation = () =>
 After
 
 ```ts
-import * as t from 'io-ts'
-import { ajax } from 'rxjs/ajax'
-import * as RRES from 'mutoid/http/ObservableResource'
+import * as OR from 'mutoid/http/ObservableResource'
+import * as ROR from 'mutoid/http/ReaderObservableResource'
+import { pipe } from 'fp-ts/function'
+
+// if fetchSomething = (params) => ObservableResource
+// return () => Mutation
 
 const fetchSomethingMutation = () =>
-    MS.ctorMutation(
-        'fetchSomethingMutation',
-        RRES.toMutationEffect(fetchSomething, (o, s: state) => o.pipe(map(c => ({ ...s, something: c }))))
+    pipe(
+        fetchSomething,
+        OR.fetchToMutationEffect((s: state) => c => ({ ...s, something: c })),
+        MS.ctorMutationC('fetchSomethingMutation')
+    )
+
+// if fetchSomething = (params) => ReaderObservableResource
+// return (deps) => Mutation
+
+const fetchSomethingMutation = () =>
+    pipe(
+        fetchSomething,
+        ROR.fetchToMutationEffectR((s: state) => c => ({ ...s, something: c })),
+        MS.ctorMutationCR('fetchSomethingMutation')
     )
 ```

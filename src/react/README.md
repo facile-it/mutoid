@@ -14,10 +14,15 @@ const mutationR = useMutation(store, mutation)
 
 ## useResourceFetcher
 
+Deprecated use `useFetchObservableResource` or better `useFetchReaderObservableResource`
+
+## useFetchReaderObservableResource
+
 ```jsx
 import * as React from 'react'
 import { ajax } from 'rxjs/ajax'
 import * as RES from 'mutoid/http/Resource'
+import * as ROR from 'mutoid/http/ReaderObservableResource'
 import { pipe } from 'fp-ts/function'
 import * as t from 'io-ts'
 
@@ -27,10 +32,19 @@ export const userDecoders = {
     }).decode,
 }
 
-const userFetcher = (id: number) => MH.ajaxToResource(ajax(`https://api.io/user/${id}`), userDecoders)
+export const userFetcher = (id: number, from: string) =>
+    pipe(
+        ROR.askTypeOf<{ajax: typeof ajax}, typeof userDecoders>(),
+        ROR.chainW(deps =>
+            ROR.fromAjax(
+                deps.ajax(`https://api.io/user/${id}`),
+                userDecoders
+            )
+        )
+    )
 
 const App: React.FC<{ id: number }> = ({ id }) => {
-    const [userResource, dispatch] = useResourceFetcher(userFetcher)
+    const [userResource, dispatch] = useFetchReaderObservableResource(userFetcher, { ajax })
 
     React.useEffect(() => {
         dispatch(id)
@@ -45,7 +59,7 @@ const App: React.FC<{ id: number }> = ({ id }) => {
                     RES.resourceFold({
                         onPending: () => 'loading...',
                         onDone: r => r.payload.name,
-                        onFail: e => e.error.type,
+                        onFail: e => e.type,
                     })
                 )}
             </p>
@@ -56,3 +70,7 @@ const App: React.FC<{ id: number }> = ({ id }) => {
     )
 }
 ```
+
+## useFetchObservableResource
+
+Same as `useFetchReaderObservableResource`, the only difference is the input `ObservableResource` instead of `ReaderObservableResource`

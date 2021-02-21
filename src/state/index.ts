@@ -31,13 +31,14 @@ export type Store<N extends storeName, S> = Readonly<{
 
 export type MutationEffect<P extends Array<unknown>, S, SS extends S> = (...p: P) => (state: SS) => Observable<S>
 
-export type Mutation<NM, P extends Array<unknown>, S, SS extends S> = Readonly<{
+type MutationOpaque<NM, P extends Array<unknown>, S, SS extends S> = Readonly<{
     name: NM
     effect: MutationEffect<P, S, SS>
     filterPredicate?: (state: S) => state is SS
 }>
 
-export type MutationR<R, NM, P extends Array<unknown>, S, SS extends S> = (r: R) => Mutation<NM, P, S, SS>
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface Mutation<NM, P extends Array<unknown>, S, SS extends S> extends MutationOpaque<NM, P, S, SS> {}
 
 // constructor
 
