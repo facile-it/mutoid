@@ -56,7 +56,7 @@ const App: React.FC<{ id: number }> = ({ id }) => {
             <p>
                 {pipe(
                     userResource,
-                    RES.resourceFold({
+                    RES.matchD({
                         onPending: () => 'loading...',
                         onDone: r => r.payload.name,
                         onFail: e => e.type,

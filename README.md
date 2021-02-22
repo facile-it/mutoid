@@ -26,12 +26,12 @@ yarn add react
 
 ## Modules
 
-| Module           |                                                                                                |
-| ---------------- | ---------------------------------------------------------------------------------------------- |
-| State management | [README](https://github.com/facile-it/mutoid/tree/master/src/state)                            |
-| Data fetching    | [README](https://github.com/facile-it/mutoid/tree/master/src/http)                             |
-| React bindings   | [README](https://github.com/facile-it/mutoid/tree/master/src/react)                            |
-| RxJs             | Deprecated [README](https://github.com/facile-it/mutoid/tree/master/src/rxjs) |
+| Module           |                                                                                         |
+| ---------------- | --------------------------------------------------------------------------------------- |
+| State management | [README](https://github.com/facile-it/mutoid/tree/master/src/state/README.md)           |
+| Data fetching    | [README](https://github.com/facile-it/mutoid/tree/master/src/http/README.md)            |
+| React bindings   | [README](https://github.com/facile-it/mutoid/tree/master/src/react/README.md)           |
+| RxJs             | Deprecated [README](https://github.com/facile-it/mutoid/tree/master/src/rxjs/README.md) |
 
 ## Run example
 
