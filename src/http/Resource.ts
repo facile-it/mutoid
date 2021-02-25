@@ -224,9 +224,23 @@ export const match_ = <E, D>(r: Resource<E, D>) => <R>(
 // combinators
 // -------------------------------------------------------------------------------------
 
-export function orElse<E, A, M>(onFail: (e: E) => Resource<M, A>): (ma: Resource<E, A>) => Resource<M, A> {
+export function swap<E, A>(ma: Resource<E, A>): Resource<A, E> {
+    return pipe(
+        ma,
+        match(
+            () => init,
+            () => submitted,
+            a => fail<A, E>(a),
+            done
+        )
+    )
+}
+
+export function orElseW<E, M, A, B>(onFail: (e: E) => Resource<M, B>): (ma: Resource<E, A>) => Resource<M, A | B> {
     return ma => (isFail(ma) ? onFail(ma.error) : ma)
 }
+
+export const orElse: <E, A, M>(onFail: (e: E) => Resource<M, A>) => (ma: Resource<E, A>) => Resource<M, A> = orElseW
 
 export const filterOrElseW: {
     <A, B extends A, E2>(refinement: Refinement<A, B>, onFalse: (a: A) => E2): <E1>(

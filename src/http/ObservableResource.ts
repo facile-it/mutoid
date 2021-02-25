@@ -121,17 +121,34 @@ export const fetchToMutationEffect = <
 // combinators
 // -------------------------------------------------------------------------------------
 
-export const orElse: <E, A, M>(
-    onFail: (e: E) => ObservableResource<M, A>
-) => (ma: ObservableResource<E, A>) => ObservableResource<M, A> = f =>
-    R.chain(
+export function swap<E, A>(ma: ObservableResource<E, A>): ObservableResource<A, E> {
+    return pipe(
+        ma,
+        match(
+            () => init,
+            () => submitted,
+            a => fail<A, E>(a),
+            done
+        )
+    )
+}
+
+export function orElseW<E, M, A, B>(
+    onFail: (e: E) => ObservableResource<M, B>
+): (ma: ObservableResource<E, A>) => ObservableResource<M, A | B> {
+    return R.chain(
         RES.match(
             () => init,
             () => submitted,
-            done,
-            f
+            a => done<M, A | B>(a),
+            onFail
         )
     )
+}
+
+export const orElse: <E, A, M>(
+    onFail: (e: E) => ObservableResource<M, A>
+) => (ma: ObservableResource<E, A>) => ObservableResource<M, A> = orElseW
 
 export const filterOrElseW: {
     <A, B extends A, E2>(refinement: Refinement<A, B>, onFalse: (a: A) => E2): <E1>(

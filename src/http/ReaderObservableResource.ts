@@ -66,7 +66,8 @@ export const askTypeOf: <R, DS extends RES.ResourceDecoders, AE = never>() => Re
 
 export const asks: <R, E, A>(f: (r: R) => A) => ReaderObservableResource<R, E, A> = f => flow(OR.done, OR.map(f))
 
-export const fromReader: <R, E, A>(ma: R.Reader<R, A>) => ReaderObservableResource<R, E, A> = ma => flow(ma, OR.done)
+export const fromReader: <R, A, E = never>(ma: R.Reader<R, A>) => ReaderObservableResource<R, E, A> = ma =>
+    flow(ma, OR.done)
 
 export const fromTask: MonadTask3<URI>['fromTask'] = ma => () => OR.fromTask(ma)
 
@@ -96,11 +97,19 @@ export const local: <R2, R1>(
     f: (d: R2) => R1
 ) => <E, A>(ma: ReaderObservableResource<R1, E, A>) => ReaderObservableResource<R2, E, A> = R.local
 
-export function orElse<R, E, A, M>(
-    onLeft: (e: E) => ReaderObservableResource<R, M, A>
-): (ma: ReaderObservableResource<R, E, A>) => ReaderObservableResource<R, M, A> {
-    return ma => r => OR.orElse<E, A, M>(e => onLeft(e)(r))(ma(r))
+export function swap<R, E, A>(ma: ReaderObservableResource<R, E, A>): ReaderObservableResource<R, A, E> {
+    return flow(ma, OR.swap)
 }
+
+export function orElseW<R, R1, E, M, A, B>(
+    onLeft: (e: E) => ReaderObservableResource<R1, M, B>
+): (ma: ReaderObservableResource<R, E, A>) => ReaderObservableResource<R & R1, M, A | B> {
+    return ma => r => OR.orElseW<E, M, A, B>(e => onLeft(e)(r))(ma(r))
+}
+
+export const orElse: <R, E, A, M>(
+    onLeft: (e: E) => ReaderObservableResource<R, M, A>
+) => (ma: ReaderObservableResource<R, E, A>) => ReaderObservableResource<R, M, A> = orElseW
 
 export const filterOrElseW: {
     <A, B extends A, E2>(refinement: Refinement<A, B>, onFalse: (a: A) => E2): <R, E1>(
