@@ -14,11 +14,10 @@
         "noImplicitReturns": true,
         "noFallthroughCasesInSwitch": true,
         "pretty": true,
-        "removeComments": true,
         "stripInternal": true,
         "declaration": true,
         "importsNotUsedAsValues": "error",
-        "importHelpers": true
+        "importHelpers": false
     },
     "include": [
         "./example",

@@ -29,15 +29,39 @@ const copyPackageJson: Build<void> = C =>
 
 const FILES: ReadonlyArray<string> = ['README.md', 'CHANGELOG.md']
 
-const copyFiles: Build<ReadonlyArray<void>> = C =>
+const copyFiles: Build<ReadonlyArray<void>> = D =>
     pipe(
         FILES,
-        A.traverse(TE.taskEither)(from => C.copyFile(from, path.resolve(OUTPUT_FOLDER, from)))
+        A.traverse(TE.taskEither)(from => D.copyFile(from, path.resolve(OUTPUT_FOLDER, from)))
     )
+
+const cleanStores: Build<void> = D => {
+    const fPath = path.resolve(OUTPUT_FOLDER, 'state/stores.d.ts')
+
+    return pipe(
+        D.readFile(fPath),
+        TE.map(data => data.replace("_S: '_M';", '')),
+        TE.chain(data => D.writeFile(fPath, data))
+    )
+}
+
+const fixState: Build<void> = D => {
+    const fPath = path.resolve(OUTPUT_FOLDER, 'state/index.d.ts')
+
+    return pipe(
+        D.readFile(fPath),
+        TE.map(data => data.replace(/"_S"/g, 'storeName')),
+        TE.map(data => data.replace(/"_M"/g, 'allMutationName')),
+        TE.map(data => data.replace('mutationName, storeName', 'mutationName, storeName, allMutationName')),
+        TE.chain(data => D.writeFile(fPath, data))
+    )
+}
 
 const main: Build<unknown> = pipe(
     copyPackageJson,
-    RTE.chain(() => copyFiles)
+    RTE.chain(() => copyFiles),
+    RTE.chain(() => cleanStores),
+    RTE.chain(() => fixState)
 )
 
 run(
