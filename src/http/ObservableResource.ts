@@ -11,6 +11,7 @@ import type { Monad2 } from 'fp-ts/Monad'
 import type { MonadIO2 } from 'fp-ts/MonadIO'
 import type { MonadTask2 } from 'fp-ts/MonadTask'
 import type * as T from 'fp-ts/Task'
+import type * as TE from 'fp-ts/TaskEither'
 import { flow, identity, Predicate, Refinement } from 'fp-ts/function'
 import { pipe } from 'fp-ts/function'
 import { Observable, concat } from 'rxjs'
@@ -79,12 +80,6 @@ export const fromAjax = <DS extends RES.ResourceDecoders, AE = never>(
         )
     ).pipe(RXoP.take(2))
 
-// aggiungere submitted ?
-export const fromTaskResource: <E, A>(t: T.Task<RES.Resource<E, A>>) => ObservableResource<E, A> = R.fromTask
-
-// aggiungere submitted ?
-export const fromTask: MonadTask2<URI>['fromTask'] = flow(R.fromTask, doneObservable)
-
 export const rightIO: <E = never, A = never>(ma: IO<A>) => ObservableResource<E, A> = flow(R.fromIO, doneObservable)
 
 export const fromIO: MonadIO2<URI>['fromIO'] = rightIO
@@ -95,6 +90,15 @@ export const fromEither: <E, A>(e: E.Either<E, A>) => ObservableResource<E, A> =
 
 export const fromObservableEither = <E, A>(oe: ObservableEither<E, A>): ObservableResource<E, A> =>
     oe.pipe(RXoP.map(RES.fromEither))
+
+export const fromTaskResource: <E, A>(t: T.Task<RES.Resource<E, A>>) => ObservableResource<E, A> = R.fromTask
+
+export const fromTask: MonadTask2<URI>['fromTask'] = flow(R.fromTask, doneObservable)
+
+export const fromTaskEither: <E, A>(fa: TE.TaskEither<E, A>) => ObservableResource<E, A> = flow(
+    R.fromTask,
+    fromObservableEither
+)
 
 // -------------------------------------------------------------------------------------
 // destructors

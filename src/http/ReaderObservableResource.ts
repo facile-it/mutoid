@@ -8,6 +8,7 @@ import type { Monad3 } from 'fp-ts/Monad'
 import type { MonadIO3 } from 'fp-ts/MonadIO'
 import type { MonadTask3 } from 'fp-ts/MonadTask'
 import * as R from 'fp-ts/Reader'
+import type * as RTE from 'fp-ts/ReaderTaskEither'
 import { flow, identity, pipe, Predicate, Refinement } from 'fp-ts/function'
 import type { Observable } from 'rxjs'
 import * as RXoP from 'rxjs/operators'
@@ -70,6 +71,10 @@ export const fromReader: <R, A, E = never>(ma: R.Reader<R, A>) => ReaderObservab
     flow(ma, OR.done)
 
 export const fromTask: MonadTask3<URI>['fromTask'] = ma => () => OR.fromTask(ma)
+
+export const fromReaderTaskEither: <R, E, A>(
+    rte: RTE.ReaderTaskEither<R, E, A>
+) => ReaderObservableResource<R, E, A> = rte => flow(rte, OR.fromTaskEither)
 
 export const fromObservable: MonadObservable3<URI>['fromObservable'] = ma => () => OR.doneObservable(ma)
 
