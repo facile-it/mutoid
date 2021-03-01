@@ -50,9 +50,20 @@ const fixState: Build<void> = D => {
 
     return pipe(
         D.readFile(fPath),
-        TE.map(data => data.replace(/"_S"/g, 'storeName')),
-        TE.map(data => data.replace(/"_M"/g, 'allMutationName')),
+        TE.map(data => data.replace(/"extends _S"/g, 'extends storeName')),
+        TE.map(data => data.replace(/extends "_M"/g, 'extends allMutationName')),
         TE.map(data => data.replace('mutationName, storeName', 'mutationName, storeName, allMutationName')),
+        TE.chain(data => D.writeFile(fPath, data))
+    )
+}
+
+const fixReact: Build<void> = D => {
+    const fPath = path.resolve(OUTPUT_FOLDER, 'react/useSelector.d.ts')
+
+    return pipe(
+        D.readFile(fPath),
+        TE.map(data => data.replace(/export declare/g, `import { storeName } from '../state/stores'\nexport declare`)),
+        TE.map(data => data.replace(/extends "_S"/g, 'extends storeName')),
         TE.chain(data => D.writeFile(fPath, data))
     )
 }
@@ -61,7 +72,8 @@ const main: Build<unknown> = pipe(
     copyPackageJson,
     RTE.chain(() => copyFiles),
     RTE.chain(() => cleanStores),
-    RTE.chain(() => fixState)
+    RTE.chain(() => fixState),
+    RTE.chain(() => fixReact)
 )
 
 run(

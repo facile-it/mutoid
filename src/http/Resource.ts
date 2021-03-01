@@ -333,7 +333,7 @@ export function getShow<E, A>(SE: Show<E>, SA: Show<A>): Show<Resource<E, A>> {
     }
 }
 
-export function getEq<E, A>(EL: Eq.Eq<E>, EA: Eq.Eq<A>): Eq.Eq<Resource<E, A>> {
+export function getEq<E, A>(EE: Eq.Eq<E>, EA: Eq.Eq<A>): Eq.Eq<Resource<E, A>> {
     return Eq.fromEquals((a, b) =>
         pipe(
             a,
@@ -348,7 +348,7 @@ export function getEq<E, A>(EL: Eq.Eq<E>, EA: Eq.Eq<A>): Eq.Eq<Resource<E, A>> {
                 sa =>
                     pipe(
                         b,
-                        match(constFalse, constFalse, constFalse, sb => EL.equals(sa, sb))
+                        match(constFalse, constFalse, constFalse, sb => EE.equals(sa, sb))
                     )
             )
         )
