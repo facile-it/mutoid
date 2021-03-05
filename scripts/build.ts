@@ -50,7 +50,7 @@ const fixState: Build<void> = D => {
 
     return pipe(
         D.readFile(fPath),
-        TE.map(data => data.replace(/"extends _S"/g, 'extends storeName')),
+        TE.map(data => data.replace(/extends "_S"/g, 'extends storeName')),
         TE.map(data => data.replace(/extends "_M"/g, 'extends allMutationName')),
         TE.map(data => data.replace('mutationName, storeName', 'mutationName, storeName, allMutationName')),
         TE.chain(data => D.writeFile(fPath, data))
