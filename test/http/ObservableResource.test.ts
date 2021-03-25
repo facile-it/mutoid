@@ -176,6 +176,7 @@ describe('ObservableResource', () => {
                     _tag: 'fail',
                     error: {
                         type: 'decodeError',
+                        statusCode: 200,
                         detail: 'error',
                     },
                 },

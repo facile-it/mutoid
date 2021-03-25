@@ -1,145 +1,63 @@
 import { sequenceS } from 'fp-ts/Apply'
-import { pipe } from 'fp-ts/function'
+import { flow, pipe } from 'fp-ts/function'
 import * as t from 'io-ts'
 import { nonEmptyArray } from 'io-ts-types/nonEmptyArray'
-import { ajax } from 'rxjs/ajax'
+import type { ajax } from 'rxjs/ajax'
 import { delay } from 'rxjs/operators'
 import * as OR from '../../src/http/ObservableResource'
 import * as ROR from '../../src/http/ReaderObservableResource'
-import * as RES from '../../src/http/Resource'
-import type { StatusCode } from '../../src/http/statusCode'
-import { authAppError, fetchWithAuth } from './fetchWithAuth'
+import type * as RES from '../../src/http/Resource'
+import { endpointRequestBuilder } from './endpointRequestBuilder'
+import { fetchBuilder, ResourceBad } from './fetchBuilder'
 
-export const quoteDecoders = {
+export const quoteDecoders = () => ({
     200: nonEmptyArray(t.string).decode,
     400: t.string.decode,
-}
+})
 
-export type quoteResource = RES.ResourceTypeOf<typeof quoteDecoders, authAppError>
-
-export interface Deps {
-    ajax: typeof ajax
-}
+export type QuoteResource = RES.Resource<
+    ResourceBad,
+    Extract<RES.DecodersToResourceData<ReturnType<typeof quoteDecoders>>, { status: 200 }>
+>
 
 //  example: fetch with token but without params
 
-export const fetchQuote = () =>
-    pipe(
-        fetchWithAuth,
-        ROR.chainW(token => (deps: Deps) =>
-            OR.fromAjax(deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?token=${token}`), quoteDecoders)
-        )
-    )
+export const fetchQuote = () => fetchBuilder(endpointRequestBuilder(), quoteDecoders, [200])
 
 // example: fetch with token and params
 
 export const fetchQuoteWithTokenAndParams = (id: number) =>
-    pipe(
-        fetchWithAuth,
-        ROR.chainW(token => (deps: Deps) =>
-            OR.fromAjax(
-                deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?token=${token}&id=${id}`),
-                quoteDecoders
-            )
-        )
-    )
+    fetchBuilder(endpointRequestBuilder({ id }), quoteDecoders, [200])
 
-// example: simple fetch without token but with params
+// example: simple fetch with params
 
-export const fetchQuoteWithParams = (id: number, from: string) =>
-    pipe(
-        ROR.askTypeOf<Deps, typeof quoteDecoders>(),
-        ROR.chainW(deps =>
-            ROR.fromAjax(
-                deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?id=${id}&from=${from}`),
-                quoteDecoders
-            )
-        )
-    )
+export const fetchSimple = (id: number, from: string) => (deps: { ajax: typeof ajax }) =>
+    OR.fromAjax(deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?id=${id}&from=${from}`), quoteDecoders())
 
-// example: same fetchQuoteWithParams different definition
-
-export const fetchQuoteWithParams1 = (id: number, from: string) => (deps: Deps) => {
-    return OR.fromAjax(
-        deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?id=${id}&from=${from}`),
-        quoteDecoders
-    )
-}
-
-// example: fetch quote with delay
+// example: fetch with delay
 
 export const fetchQuoteWithDelay = () =>
-    pipe(
-        fetchWithAuth,
-        ROR.chainW(token => (deps: Deps) =>
-            OR.fromAjax(
-                deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?token=${token}`).pipe(delay(5000)),
-                quoteDecoders
-            )
-        )
-    )
-
-//  example: fetch with no deps
-
-export const fetchQuoteWithNoDeps = () =>
-    OR.fromAjax(ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes`), quoteDecoders)
+    flow(fetchBuilder(endpointRequestBuilder(), quoteDecoders, [200]), o => o.pipe(delay(5_000)))
 
 //  example: fetch quote concatenated
 
-type PickStatus<D, K extends keyof D, S extends StatusCode> = Omit<D, K> &
-    {
-        [k in K]: Extract<D[K], { status: S }>
-    }
-
-export const fetchQuoteConcat = () =>
+export const fetchQuoteSeq = () =>
     pipe(
-        fetchWithAuth,
-        ROR.bindTo('token'),
-        ROR.bindW('firstFetch', d => (deps: Deps) =>
-            OR.fromAjax(deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?token=${d.token}`), quoteDecoders)
-        ),
-        ROR.filterOrElseW(
-            (r): r is PickStatus<typeof r, 'firstFetch', 200> => r.firstFetch.status === 200,
-            c => RES.appError(`FirstFetch rejected ${c.firstFetch.status}`)
-        ),
-        ROR.bindW('secondFetch', d => (deps: Deps) =>
-            OR.fromAjax(
-                deps.ajax(
-                    `https://ron-swanson-quotes.herokuapp.com/v2/quotes?token=${d.token}${d.firstFetch.payload[0]}`
-                ),
-                quoteDecoders
-            )
-        ),
-        ROR.filterOrElseW(
-            (r): r is PickStatus<typeof r, 'secondFetch', 200> => r.secondFetch.status === 200,
-            c => RES.appError(`SecondFetch rejected ${c.firstFetch.status}`)
+        fetchBuilder(endpointRequestBuilder(), quoteDecoders, [200]),
+        ROR.bindTo('firstFetch'),
+        ROR.bind('secondFetch', ff =>
+            fetchBuilder(endpointRequestBuilder({ ff: ff.firstFetch.status }), quoteDecoders, [200])
         ),
         ROR.map(c => [...c.firstFetch.payload, ...c.secondFetch.payload])
     )
 
-//  example: fetch quote sequentially parallel
+//  example: fetch quote parallel
 
 export const fetchQuoteSeqPar = () =>
     pipe(
-        fetchWithAuth,
-        ROR.chainW(token =>
-            sequenceS(ROR.Applicative)({
-                firstFetch: (deps: Deps) =>
-                    OR.fromAjax(
-                        deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?token=${token}`),
-                        quoteDecoders
-                    ),
-                secondFetch: (deps: Deps) =>
-                    OR.fromAjax(
-                        deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?token=${token} `),
-                        quoteDecoders
-                    ),
-            })
-        ),
-        ROR.filterOrElseW(
-            (r): r is PickStatus<typeof r, 'secondFetch' | 'firstFetch', 200> =>
-                r.secondFetch.status === 200 && r.secondFetch.status === 200,
-            c => RES.appError(`Fetches rejected ${c.firstFetch.status} ${c.secondFetch.status}`)
-        ),
+        sequenceS(ROR.Applicative)({
+            firstFetch: fetchBuilder(endpointRequestBuilder(), quoteDecoders, [200]),
+            secondFetch: fetchBuilder(endpointRequestBuilder(), quoteDecoders, [200]),
+        }),
         ROR.map(c => [...c.firstFetch.payload, ...c.secondFetch.payload])
     )

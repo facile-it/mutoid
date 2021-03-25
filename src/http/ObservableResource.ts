@@ -339,6 +339,7 @@ const decodeResponse = <DS extends RES.ResourceDecoders>(decoders: DS) => <AE>(
                     RES.fail({
                         type: 'decodeError',
                         detail: e,
+                        statusCode: response.status,
                     }) as RES.ResourceTypeOfFail<DS, AE>
             )
         )

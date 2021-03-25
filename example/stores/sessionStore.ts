@@ -12,17 +12,17 @@ declare module '../../src/state/stores' {
 
 // type
 
-export interface ApiKeyBrand {
-    readonly ApiKey: unique symbol
+export interface AccessTokenBrand {
+    readonly AccessToken: unique symbol
 }
 
-export const ApiKey = t.brand(
+export const AccessToken = t.brand(
     t.string,
-    (n): n is t.Branded<string, ApiKeyBrand> => n.length > 1 && n[0] === 'x',
-    'ApiKey'
+    (n): n is t.Branded<string, AccessTokenBrand> => n.length > 1 && n[0] === 'x',
+    'AccessToken'
 )
 
-export type ApiKey = t.TypeOf<typeof ApiKey>
+export type AccessToken = t.TypeOf<typeof AccessToken>
 
 const appEnv = t.keyof({
     dev: true,
@@ -36,7 +36,7 @@ export type SessionState =
     | {
           status: 'done'
           userName: string
-          apiKey: ApiKey
+          accessToken: AccessToken
           env: appEnv
       }
     | {
@@ -57,12 +57,12 @@ export const parseEnvMutation = () =>
     MS.ctorPartialMutation(
         'parseEnv' as const,
         (s: SessionState): s is SessionStateInit => s.status === 'init',
-        (confEnv: optional, confApiKey: optional, confUserName: optional) => (s): Observable<SessionState> =>
+        (confEnv: optional, confAccessToken: optional, confUserName: optional) => (s): Observable<SessionState> =>
             of(
                 pipe(
                     appEnv.decode(confEnv),
-                    E.map(env => (apiKey: ApiKey) => ({ ...s, env, apiKey: apiKey })),
-                    E.ap(ApiKey.decode(confApiKey)),
+                    E.map(env => (accessToken: AccessToken) => ({ ...s, env, accessToken })),
+                    E.ap(AccessToken.decode(confAccessToken)),
                     E.map(sp => (userName: string): Extract<SessionState, { status: 'done' }> => ({
                         ...sp,
                         userName,

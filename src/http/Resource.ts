@@ -55,6 +55,7 @@ export type ResourceAjaxError<AE = never> =
 export type ResourceError<DE, AE = never> =
     | {
           readonly type: 'decodeError'
+          readonly statusCode: StatusCode
           readonly detail: DE
       }
     | {

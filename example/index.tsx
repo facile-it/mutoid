@@ -1,9 +1,7 @@
 import * as C from 'fp-ts/Console'
-import * as E from 'fp-ts/Either'
 import * as T from 'fp-ts/Task'
 import { identity } from 'fp-ts/function'
 import { pipe } from 'fp-ts/function'
-import { PathReporter } from 'io-ts/PathReporter'
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import { Subject } from 'rxjs'
@@ -11,13 +9,13 @@ import { ajax } from 'rxjs/ajax'
 import * as RES from '../src/http/Resource'
 import * as MR from '../src/react'
 import * as MS from '../src/state'
+import type { ResourceBad } from './resources/fetchBuilder'
 import {
-    fetchQuoteConcat,
+    fetchQuoteSeq,
     fetchQuoteSeqPar,
     fetchQuoteWithDelay,
-    fetchQuoteWithNoDeps,
-    fetchQuoteWithParams,
-    quoteResource,
+    fetchSimple,
+    QuoteResource,
 } from './resources/quoteResource'
 import {
     quoteStore,
@@ -31,37 +29,25 @@ import { sessionStore, parseEnvMutation } from './stores/sessionStore'
 const resourceDeps = {
     ajax: ajax,
     store: sessionStore,
+    logger: console,
 }
 
-const renderQuote = (quote: quoteResource): React.ReactChild => {
+const renderQuoteResource = (quote: QuoteResource): React.ReactChild => {
+    return pipe(
+        quote,
+        RES.map(r => r.payload),
+        renderQuotes
+    )
+}
+
+const renderQuotes = (quote: RES.Resource<ResourceBad, Array<string>>): React.ReactChild => {
     return pipe(
         quote,
         RES.matchD({
-            onDone: r => {
-                switch (r.status) {
-                    case 200:
-                        return r.payload[0]
-                    case 400:
-                        return `Client error ${r.payload}`
-                }
-            },
+            onDone: r => r.join(' || '),
             onInit: () => 'Quote loading init...',
             onSubmitted: () => 'Quote loading submitted...',
-            onFail: e => {
-                switch (e.type) {
-                    case 'decodeError': {
-                        return `Error ${e.type} - ${PathReporter.report(E.left(e.detail)).join(', ')}`
-                    }
-                    case 'appError':
-                        return `Error ${e.type} - ${e.detail}`
-                    case 'networkError':
-                        return `Error ${e.type} - ${e.detail.message}`
-                    case 'unexpectedResponse':
-                        return `Error ${e.type} - ${e.detail.status}`
-                    case 'unknownError':
-                        return `Error ${e.type}`
-                }
-            },
+            onFail: e => `Error ${e.type}`,
         })
     )
 }
@@ -85,7 +71,7 @@ const QuoteFromState: React.FC = () => {
     return (
         <>
             <h2>Resource from quoteStore</h2>
-            <em>{renderQuote(quote)}</em>
+            <em>{renderQuoteResource(quote)}</em>
             <br />
             <br />
             <button type="button" onClick={fetchQuoteRunner} disabled={quote._tag !== 'done'}>
@@ -97,20 +83,20 @@ const QuoteFromState: React.FC = () => {
 
 const QuoteFromStateWithParams: React.FC = () => {
     const quote = MR.useSelector(quoteStore, s => s.quote)
-    const fetchQuoteRunner = MR.useMutation(quoteStore, fetchQuoteMutationWithParams, { deps: { ajax: ajax } })
+    const fetchQuoteRunner = MR.useMutation(quoteStore, fetchQuoteMutationWithParams, { deps: resourceDeps })
     const resetQuoteRunner = MR.useMutation(quoteStore, resetQuoteMutation)
 
     React.useEffect(() => {
-        fetchQuoteRunner(1, 'useDispatch')
+        fetchQuoteRunner(1)
     }, [fetchQuoteRunner])
 
     return (
         <>
             <h2>Resource from quoteStore with params</h2>
-            <em>{renderQuote(quote)}</em>
+            <em>{renderQuoteResource(quote)}</em>
             <br />
             <br />
-            <button type="button" onClick={() => fetchQuoteRunner(1, 'useDispatch')} disabled={quote._tag !== 'done'}>
+            <button type="button" onClick={() => fetchQuoteRunner(1)} disabled={quote._tag !== 'done'}>
                 Fetch new quote and update state
             </button>{' '}
             <button type="button" onClick={resetQuoteRunner}>
@@ -135,7 +121,7 @@ const QuoteFromStateWithDelay: React.FC = () => {
     return (
         <>
             <h2>Resource from quoteStore with delay (5s)</h2>
-            <em>{renderQuote(quote)}</em>
+            <em>{renderQuoteResource(quote)}</em>
             <br />
             <br />
             <button
@@ -159,55 +145,8 @@ const QuoteFromStateWithDelay: React.FC = () => {
     )
 }
 
-const QuoteWithHook: React.FC = () => {
-    const [quote, quoteFetcher] = MR.useResourceFetcher(fetchQuoteWithNoDeps, {
-        mapAcknowledged: c => {
-            switch (c._tag) {
-                case 'fail':
-                    return { _tag: 'fail' as const, payload: 'error' }
-                case 'done': {
-                    switch (c.data.status) {
-                        case 200:
-                            return { _tag: 'success' as const, payload: c.data.payload[0] }
-                        case 400:
-                            return { _tag: 'badRequest' as const, payload: 'bad' }
-                    }
-                }
-            }
-        },
-    })
-
-    React.useEffect(() => {
-        quoteFetcher()
-    }, [quoteFetcher])
-
-    const render = () => {
-        switch (quote._tag) {
-            case 'badRequest':
-            case 'fail':
-            case 'success':
-                return quote.payload
-            case 'submitted':
-            case 'init':
-                return 'Quote loading...'
-        }
-    }
-
-    return (
-        <>
-            <h2>Resource with hook</h2>
-            <em>{render()}</em>
-            <br />
-            <br />
-            <button type="button" onClick={quoteFetcher}>
-                Fetch new quote
-            </button>
-        </>
-    )
-}
-
 const QuoteWithHookWithParams: React.FC = () => {
-    const [quote, quoteFetcher] = MR.useFetchReaderObservableResource(fetchQuoteWithParams, { ajax })
+    const [quote, quoteFetcher] = MR.useFetchReaderObservableResource(fetchSimple, { ajax })
 
     React.useEffect(() => {
         quoteFetcher(1, 'useResourceFetcher')
@@ -261,7 +200,7 @@ const QuoteWithHookWithDelay: React.FC = () => {
     return (
         <>
             <h2>Resource with hook with delay (5s)</h2>
-            <em>{renderQuote(quote)}</em>
+            <em>{renderQuoteResource(quote)}</em>
             <br />
             <br />
             <button
@@ -286,7 +225,7 @@ const QuoteWithHookWithDelay: React.FC = () => {
 }
 
 const QuoteWithFetchConcat: React.FC = () => {
-    const [quote, quoteFetcher] = MR.useFetchReaderObservableResource(fetchQuoteConcat, resourceDeps)
+    const [quote, quoteFetcher] = MR.useFetchReaderObservableResource(fetchQuoteSeq, resourceDeps)
 
     React.useEffect(() => {
         quoteFetcher()
@@ -295,33 +234,7 @@ const QuoteWithFetchConcat: React.FC = () => {
     return (
         <>
             <h2>FetchQuoteConcat</h2>
-            <em>
-                {pipe(
-                    quote,
-                    RES.matchD({
-                        onDone: r => {
-                            return `Client error ${r.join(' //// ')}`
-                        },
-                        onInit: () => 'Quote loading init...',
-                        onSubmitted: () => 'Quote loading submitted...',
-                        onFail: e => {
-                            switch (e.type) {
-                                case 'decodeError': {
-                                    return `Error ${e.type} - ${PathReporter.report(E.left(e.detail)).join(', ')}`
-                                }
-                                case 'appError':
-                                    return `Error ${e.type} - ${e.detail}`
-                                case 'networkError':
-                                    return `Error ${e.type} - ${e.detail.message}`
-                                case 'unexpectedResponse':
-                                    return `Error ${e.type} - ${e.detail.status}`
-                                case 'unknownError':
-                                    return `Error ${e.type}`
-                            }
-                        },
-                    })
-                )}
-            </em>
+            <em>{renderQuotes(quote)}</em>
             <br />
             <br />
             <button type="button" onClick={quoteFetcher}>
@@ -341,33 +254,7 @@ const QuoteWithFetchQuoteSeqPar: React.FC = () => {
     return (
         <>
             <h2>FetchQuoteSeqPar</h2>
-            <em>
-                {pipe(
-                    quote,
-                    RES.matchD({
-                        onDone: r => {
-                            return `Client error ${r.join(' //// ')}`
-                        },
-                        onInit: () => 'Quote loading init...',
-                        onSubmitted: () => 'Quote loading submitted...',
-                        onFail: e => {
-                            switch (e.type) {
-                                case 'decodeError': {
-                                    return `Error ${e.type} - ${PathReporter.report(E.left(e.detail)).join(', ')}`
-                                }
-                                case 'appError':
-                                    return `Error ${e.type} - ${e.detail}`
-                                case 'networkError':
-                                    return `Error ${e.type} - ${e.detail.message}`
-                                case 'unexpectedResponse':
-                                    return `Error ${e.type} - ${e.detail.status}`
-                                case 'unknownError':
-                                    return `Error ${e.type}`
-                            }
-                        },
-                    })
-                )}
-            </em>
+            <em>{renderQuotes(quote)}</em>
             <br />
             <br />
             <button type="button" onClick={quoteFetcher}>
@@ -396,9 +283,6 @@ const App: React.FC<{ name: string }> = props => {
             </div>
             <div>
                 <QuoteFromStateWithDelay />
-            </div>
-            <div>
-                <QuoteWithHook />
             </div>
             <div>
                 <QuoteWithHookWithParams />

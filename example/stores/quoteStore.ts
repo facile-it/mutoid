@@ -3,7 +3,12 @@ import { Observable, of } from 'rxjs'
 import * as ROR from '../../src/http/ReaderObservableResource'
 import * as RES from '../../src/http/Resource'
 import * as MS from '../../src/state'
-import { fetchQuote, fetchQuoteWithDelay, fetchQuoteWithParams, quoteResource } from '../resources/quoteResource'
+import {
+    fetchQuote,
+    fetchQuoteWithDelay,
+    fetchQuoteWithTokenAndParams,
+    QuoteResource,
+} from '../resources/quoteResource'
 
 declare module '../../src/state/stores' {
     interface Stores {
@@ -19,7 +24,7 @@ declare module '../../src/state/stores' {
 // type
 
 export interface QuoteState {
-    quote: quoteResource
+    quote: QuoteResource
 }
 
 const quoteState: QuoteState = {
@@ -30,11 +35,7 @@ const quoteState: QuoteState = {
 
 export const quoteStore = MS.ctor(() => ({ name: 'quote', initState: quoteState }))
 
-// mutationR
-
-/**
- * mutationR is a function with this type: (deps?: R) => Mutation<NM, P, S, SS>
- */
+// mutation
 
 export const fetchQuoteMutation = pipe(
     fetchQuote,
@@ -43,7 +44,7 @@ export const fetchQuoteMutation = pipe(
 )
 
 export const fetchQuoteMutationWithParams = pipe(
-    fetchQuoteWithParams,
+    fetchQuoteWithTokenAndParams,
     ROR.fetchToMutationEffectR((s: QuoteState) => (quote): QuoteState => ({ ...s, quote })),
     MS.ctorMutationCR('fetchQuoteMutationWithParams')
 )
