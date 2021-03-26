@@ -17,7 +17,7 @@ function mapArray(k: string, a: Array<O.Option<string | number>>): Record<string
 
 export type OptionParams = Record<string, O.Option<string | number | Array<O.Option<string | number>>>>
 
-export function serializeToQueryParams(p: OptionParams): string {
+export function serializeToQueryString(p: OptionParams): string {
     return pipe(
         p,
         RE.filter(O.isSome),
@@ -39,11 +39,11 @@ export type NullableParams =
     | undefined
     | Record<string, undefined | null | string | number | Array<string | number | undefined | null>>
 
-export function serializeNullableToQueryParams(p: NullableParams): string {
+export function serializeNullableToQueryString(p: NullableParams): string {
     return pipe(
         p || {},
         RE.map(O.fromNullable),
         RE.map(O.map(v => (Array.isArray(v) ? v.map(O.fromNullable) : v))),
-        serializeToQueryParams
+        serializeToQueryString
     )
 }
