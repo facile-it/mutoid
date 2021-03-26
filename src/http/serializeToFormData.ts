@@ -8,12 +8,18 @@ import { pipe } from 'fp-ts/function'
 // -------------------------------------------------------------------------------------
 
 type Item = string | number | boolean | Blob | Buffer
-type NullableItem = undefined | null | Item | NullableArray | NullableItemRecord
-type NullableArray = Array<NullableItem>
-interface NullableItemRecord {
+
+export type OptionItem = O.Option<Item | OptionItemArray | OptionItemRecord>
+export type OptionItemArray = Array<OptionItem>
+export interface OptionItemRecord {
+    [key: string]: OptionItem
+}
+
+export type NullableItem = undefined | null | Item | NullableItemArray | NullableItemRecord
+export type NullableItemArray = Array<NullableItem>
+export interface NullableItemRecord {
     [key: string]: NullableItem
 }
-export type NullableItemData = undefined | Record<string, NullableItem>
 
 interface DataRecord {
     [k: string]: string | boolean | Buffer | Blob | DataRecord[] | DataRecord
@@ -32,25 +38,68 @@ const isBoolean = (d: unknown): d is boolean => typeof d === 'boolean'
 const isString = (d: unknown): d is string => typeof d === 'string'
 const isNumber = (d: unknown): d is number => typeof d === 'number'
 
-const notNeedWorkInMap = (d: unknown): d is string | boolean | Blob | Buffer =>
+const noNeeRehash = (d: unknown): d is string | boolean | Blob | Buffer =>
     isString(d) || isBoolean(d) || isBlob(d) || isBuffer(d)
 
-const notNeedWorkInAppend = (d: unknown): d is string | boolean | Blob | Buffer | number =>
-    notNeedWorkInMap(d) || isNumber(d)
+const noNeedRecursion = (d: unknown): d is string | boolean | Blob | Buffer | number => noNeeRehash(d) || isNumber(d)
 
 // -------------------------------------------------------------------------------------
-// fun
+// null -> to Option
+// -------------------------------------------------------------------------------------
+
+const convertNullableArray = (data: NullableItemArray): OptionItemArray => {
+    return pipe(
+        data,
+        A.map(O.fromNullable),
+        A.map(
+            O.map(v => {
+                if (noNeedRecursion(v)) {
+                    return v
+                }
+
+                if (Array.isArray(v)) {
+                    return convertNullableArray(v)
+                }
+
+                return convertNullableObject(v)
+            })
+        )
+    )
+}
+
+const convertNullableObject = (data: NullableItemRecord): OptionItemRecord => {
+    return pipe(
+        data,
+        RE.map(O.fromNullable),
+        RE.map(
+            O.map(v => {
+                if (noNeedRecursion(v)) {
+                    return v
+                }
+
+                if (Array.isArray(v)) {
+                    return convertNullableArray(v)
+                }
+
+                return convertNullableObject(v)
+            })
+        )
+    )
+}
+
+// -------------------------------------------------------------------------------------
+// map input to DataRecord
 // -------------------------------------------------------------------------------------
 
 const generateKey = (key: string, root?: string): string => (root ? `${root}[${key}]` : key)
 
-const mapArray = (a: Array<NullableItem>, root: string): DataRecord[] => {
-    const result = a
-        .map(O.fromNullable)
-        .filter(O.isSome)
-        .map(d => d.value)
-        .map((d, i) => {
-            if (notNeedWorkInMap(d)) {
+const mapArray = (a: OptionItemArray, root: string): DataRecord[] => {
+    return pipe(
+        a,
+        A.filter(O.isSome),
+        A.map(d => d.value),
+        A.mapWithIndex((i, d) => {
+            if (noNeeRehash(d)) {
                 return { [`${root}[]`]: d }
             }
 
@@ -64,27 +113,21 @@ const mapArray = (a: Array<NullableItem>, root: string): DataRecord[] => {
 
             return mapObject(d, generateKey(i.toString(), root))
         })
-
-    return result
+    )
 }
 
-const mapObject = (data: Record<string, NullableItem>, root?: string): DataRecord => {
-    const result = pipe(
+const mapObject = (data: OptionItemRecord, root?: string): DataRecord => {
+    return pipe(
         data,
-        RE.map(O.fromNullable),
         RE.filter(O.isSome),
         RE.map(d => d.value),
         RE.mapWithIndex((k, d) => {
-            if (notNeedWorkInMap(d)) {
+            if (noNeeRehash(d)) {
                 return { [generateKey(k, root)]: d }
             }
 
             if (isNumber(d)) {
                 return { [generateKey(k, root)]: d.toString() }
-            }
-
-            if (isBlob(d) || isBuffer(d)) {
-                return { [generateKey(k, root)]: d }
             }
 
             if (Array.isArray(d)) {
@@ -94,15 +137,17 @@ const mapObject = (data: Record<string, NullableItem>, root?: string): DataRecor
             return mapObject(d, generateKey(k, root))
         })
     )
-
-    return result
 }
+
+// -------------------------------------------------------------------------------------
+// append DataRecord to form data
+// -------------------------------------------------------------------------------------
 
 const appendToFormData = (data: DataRecord, formData: FormData): FormData => {
     return pipe(
         data,
         RE.reduceWithIndex(formData, (k, fd, d) => {
-            if (notNeedWorkInAppend(d)) {
+            if (noNeedRecursion(d)) {
                 fd.append(k, d as string)
                 return fd
             }
@@ -119,7 +164,23 @@ const appendToFormData = (data: DataRecord, formData: FormData): FormData => {
     )
 }
 
-export const serializeNullableToFormData = (data: NullableItemData, createFormData?: () => FormData): FormData => {
+// -------------------------------------------------------------------------------------
+// entry point
+// -------------------------------------------------------------------------------------
+
+export const serializeNullableToFormData = (
+    data: NullableItemRecord | undefined,
+    createFormData?: () => FormData
+): FormData => {
     const formData = createFormData ? createFormData() : new FormData()
-    return data ? appendToFormData(mapObject(data), formData) : formData
+    return data ? appendToFormData(mapObject(convertNullableObject(data)), formData) : formData
+}
+
+export const serializeToFormData = (data: O.Option<OptionItemRecord>, createFormData?: () => FormData): FormData => {
+    const formData = createFormData ? createFormData() : new FormData()
+    return pipe(
+        data,
+        O.map(d => appendToFormData(mapObject(d), formData)),
+        O.getOrElse(() => formData)
+    )
 }
