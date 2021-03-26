@@ -8,12 +8,12 @@ import { pipe } from 'fp-ts/function'
 // -------------------------------------------------------------------------------------
 
 type Item = string | number | boolean | Blob | Buffer
-type NullableItem = undefined | null | Item
-type NullableItems =
-    | NullableItem
-    | Record<string, NullableItem | Array<NullableItems | NullableItem>>
-    | Array<NullableItems | NullableItem>
-export type NullableData = undefined | Record<string, NullableItems>
+type NullableItem = undefined | null | Item | NullableArray | NullableItemRecord
+type NullableArray = Array<NullableItem>
+interface NullableItemRecord {
+    [key: string]: NullableItem
+}
+export type NullableItemData = undefined | Record<string, NullableItem>
 
 interface DataRecord {
     [k: string]: string | boolean | Buffer | Blob | DataRecord[] | DataRecord
@@ -44,7 +44,7 @@ const notNeedWorkInAppend = (d: unknown): d is string | boolean | Blob | Buffer 
 
 const generateKey = (key: string, root?: string): string => (root ? `${root}[${key}]` : key)
 
-const mapArray = (a: Array<NullableItem | NullableItems>, root: string): DataRecord[] => {
+const mapArray = (a: Array<NullableItem>, root: string): DataRecord[] => {
     const result = a
         .map(O.fromNullable)
         .filter(O.isSome)
@@ -68,7 +68,7 @@ const mapArray = (a: Array<NullableItem | NullableItems>, root: string): DataRec
     return result
 }
 
-const mapObject = (data: Record<string, NullableItems>, root?: string): DataRecord => {
+const mapObject = (data: Record<string, NullableItem>, root?: string): DataRecord => {
     const result = pipe(
         data,
         RE.map(O.fromNullable),
@@ -119,7 +119,7 @@ const appendToFormData = (data: DataRecord, formData: FormData): FormData => {
     )
 }
 
-export const serializeNullableToFormData = (data: NullableData, createFormData?: () => FormData): FormData => {
+export const serializeNullableToFormData = (data: NullableItemData, createFormData?: () => FormData): FormData => {
     const formData = createFormData ? createFormData() : new FormData()
     return data ? appendToFormData(mapObject(data), formData) : formData
 }

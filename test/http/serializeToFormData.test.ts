@@ -21,14 +21,20 @@ describe('serializeToFormData', () => {
             m: 1,
             n: 'test',
             o: [1, 2, 3],
-            // p: {
-            //     q: 1,
-            // },
+            p: {
+                q: 1,
+            },
         },
         r: null,
         s: {
             t: undefined,
             u: 1,
+            v: {
+                z: 2,
+                aa: {
+                    bb: 'hello',
+                },
+            },
         },
     }
 
@@ -49,11 +55,13 @@ describe('serializeToFormData', () => {
             [formData.get('l[m]'), '1'],
             [formData.get('l[n]'), 'test'],
             [formData.getAll('l[o][]'), ['1', '2', '3']],
-            // [formData.get('l[p][q]'), '1'],
+            [formData.get('l[p][q]'), '1'],
             [formData.has('r'), false],
             [formData.has('s[t]'), false],
             [formData.has('s[u]'), true],
             [formData.get('s[u]'), '1'],
+            [formData.get('s[v][z]'), '2'],
+            [formData.get('s[v][aa][bb]'), 'hello'],
         ]
 
         result.map(d => expect(d[0]).toEqual(d[1]))
