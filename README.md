@@ -10,19 +10,19 @@ To install the last version
 yarn add mutoid rxjs fp-ts fp-ts-rxjs
 ```
 
-if you want to use [`io-ts`](https://github.com/gcanti/io-ts) decoder in data fetching
-
-```sh
-yarn add io-ts
-```
-
 if you want also to use with [`react`](https://github.com/facebook/react)
 
 ```sh
 yarn add react
 ```
 
-**Note** [`rxjs`](https://github.com/ReactiveX/rxjs), [`fp-ts`](https://github.com/gcanti/fp-ts),[`fp-ts-rxjs`](https://github.com/gcanti/fp-ts-rxjs), [`io-ts`](https://github.com/gcanti/io-ts), [`react`](https://github.com/facebook/react) are a peer dependencies for `mutoid`
+**Note** [`rxjs`](https://github.com/ReactiveX/rxjs), [`fp-ts`](https://github.com/gcanti/fp-ts),[`fp-ts-rxjs`](https://github.com/gcanti/fp-ts-rxjs), [`react`](https://github.com/facebook/react) are a peer dependencies for `mutoid`
+
+if you want to use [`io-ts`](https://github.com/gcanti/io-ts) decoder in data fetching
+
+```sh
+yarn add io-ts
+```
 
 ## Modules
 

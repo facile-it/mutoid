@@ -1,4 +1,5 @@
-import { serializeNullableToFormData } from '../../src/http/serializeToFormData'
+import * as O from 'fp-ts/Option'
+import { serializeNullableToFormData, serializeToFormData } from '../../src/http/serializeToFormData'
 
 describe('serializeToFormData', () => {
     const data = {
@@ -38,7 +39,7 @@ describe('serializeToFormData', () => {
         },
     }
 
-    test('Test method serializeToFormData', () => {
+    test('serializeNullableToFormData', () => {
         const formData = serializeNullableToFormData(data)
 
         const result = [
@@ -62,6 +63,38 @@ describe('serializeToFormData', () => {
             [formData.get('s[u]'), '1'],
             [formData.get('s[v][z]'), '2'],
             [formData.get('s[v][aa][bb]'), 'hello'],
+        ]
+
+        result.map(d => expect(d[0]).toEqual(d[1]))
+    })
+
+    const dataOption = {
+        a: O.some(1),
+        b: 'test',
+        c: O.some(true),
+        d: [1, 2, 3],
+        e: O.some({
+            a: O.some('1'),
+        }),
+        f: [O.none, O.some('hello')],
+        g: {
+            a: O.some(1),
+        },
+        h: O.none,
+    }
+
+    test('serializeToFormData', () => {
+        const formData = serializeToFormData(O.some(dataOption))
+
+        const result = [
+            [formData.get('a'), '1'],
+            [formData.get('b'), 'test'],
+            [formData.get('c'), 'true'],
+            [formData.getAll('d[]'), ['1', '2', '3']],
+            [formData.get('e[a]'), '1'],
+            [formData.getAll('f[]'), ['hello']],
+            [formData.get('g[a]'), '1'],
+            [formData.has('h'), false],
         ]
 
         result.map(d => expect(d[0]).toEqual(d[1]))

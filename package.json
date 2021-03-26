@@ -74,7 +74,6 @@
     "peerDependencies": {
         "fp-ts": "^2.8",
         "fp-ts-rxjs": "^0.6",
-        "io-ts": "^2.2",
         "react": "^16.8 || ^17.0.1",
         "rxjs": "^6.6"
     },

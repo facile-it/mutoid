@@ -7,15 +7,22 @@ import { pipe } from 'fp-ts/function'
 // model
 // -------------------------------------------------------------------------------------
 
-type Item = string | number | boolean | Blob | Buffer
+type ItemBase = string | number | boolean | Blob | Buffer
 
-export type OptionItem = O.Option<Item | OptionItemArray | OptionItemRecord>
-export type OptionItemArray = Array<OptionItem>
+export type Item = ItemBase | ItemArray | ItemRecord
+export type ItemArray = Array<Item | OptionItem>
+export interface ItemRecord {
+    [key: string]: Item | OptionItem
+}
+export type OptionItem = O.Option<ItemBase | OptionItemArray | OptionItemRecord | Item> | Item
+export type OptionItemArray = Array<OptionItem | Item>
 export interface OptionItemRecord {
-    [key: string]: OptionItem
+    [key: string]: OptionItem | Item
 }
 
-export type NullableItem = undefined | null | Item | NullableItemArray | NullableItemRecord
+type OAll = O.Option<Item | OptionItemArray | OptionItemRecord>
+
+export type NullableItem = undefined | null | ItemBase | NullableItemArray | NullableItemRecord
 export type NullableItemArray = Array<NullableItem>
 export interface NullableItemRecord {
     [key: string]: NullableItem
@@ -93,17 +100,27 @@ const convertNullableObject = (data: NullableItemRecord): OptionItemRecord => {
 
 const generateKey = (key: string, root?: string): string => (root ? `${root}[${key}]` : key)
 
-const mapArray = (a: OptionItemArray, root: string): DataRecord[] => {
+const hasTag = (a: unknown): a is { _tag: unknown } =>
+    typeof a === 'object' && Object.prototype.hasOwnProperty.call(a, '_tag')
+
+const isOption = (oi: OptionItem | Item): oi is OAll => {
+    return hasTag(oi) && (oi._tag === 'None' || oi._tag === 'Some')
+}
+
+const mapArray = (data: Array<OptionItem | Item>, root: string): DataRecord[] => {
     return pipe(
-        a,
+        data,
+        A.map(oi => (isOption(oi) ? oi : O.some(oi))),
         A.filter(O.isSome),
         A.map(d => d.value),
         A.mapWithIndex((i, d) => {
             if (noNeeRehash(d)) {
+                // check, empty ?
                 return { [`${root}[]`]: d }
             }
 
             if (isNumber(d)) {
+                // check, empty ?
                 return { [`${root}[]`]: d.toString() }
             }
 
@@ -116,9 +133,15 @@ const mapArray = (a: OptionItemArray, root: string): DataRecord[] => {
     )
 }
 
-const mapObject = (data: OptionItemRecord, root?: string): DataRecord => {
+const mapObject = (
+    data: {
+        [key: string]: OptionItem | Item
+    },
+    root?: string
+): DataRecord => {
     return pipe(
         data,
+        RE.map(oi => (isOption(oi) ? oi : O.some(oi))),
         RE.filter(O.isSome),
         RE.map(d => d.value),
         RE.mapWithIndex((k, d) => {
