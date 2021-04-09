@@ -290,19 +290,6 @@ export const MonadObservable: MonadObservable2<URI> = {
     fromObservable,
 }
 
-export const observableResource: Monad2<URI> & Bifunctor2<URI> & MonadObservable2<URI> = {
-    URI,
-    map: map_,
-    of,
-    ap: ap_,
-    chain: chain_,
-    bimap: bimap_,
-    mapLeft: mapLeft_,
-    fromIO: rightIO,
-    fromTask,
-    fromObservable,
-}
-
 // -------------------------------------------------------------------------------------
 // utils
 // -------------------------------------------------------------------------------------

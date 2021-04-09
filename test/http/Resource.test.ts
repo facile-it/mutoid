@@ -5,8 +5,8 @@ import { showString } from 'fp-ts/Show'
 import { pipe } from 'fp-ts/function'
 import * as _ from '../../src/http/Resource'
 
-describe('resource', () => {
-    describe('pipeables', () => {
+describe('Resource', () => {
+    describe('type class members', () => {
         const length = (s: string): number => s.length
         const lengthR = (s: string): _.Resource<string, number> => _.done(s.length)
         const double = (n: number): number => n * 2
@@ -105,28 +105,28 @@ describe('resource', () => {
 
     describe('laws', () => {
         test('Functor', () => {
-            laws.functor(_.resource)(
+            laws.functor(_.Functor)(
                 a => getResource(fc.string(), a),
                 Eqa => _.getEq(Eq.eqString, Eqa)
             )
         })
 
         test('Apply', () => {
-            laws.apply(_.resource)(
+            laws.apply(_.Apply)(
                 a => getResource(fc.string(), a),
                 Eqa => _.getEq(Eq.eqString, Eqa)
             )
         })
 
         test('Applicative', () => {
-            laws.applicative(_.resource)(
+            laws.applicative(_.Applicative)(
                 a => getResource(fc.string(), a),
                 Eqa => _.getEq(Eq.eqString, Eqa)
             )
         })
 
         test('Monad', () => {
-            laws.monad(_.resource)(Eqa => _.getEq(Eq.eqString, Eqa))
+            laws.monad(_.Monad)(Eqa => _.getEq(Eq.eqString, Eqa))
         })
     })
 

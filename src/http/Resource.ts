@@ -387,13 +387,3 @@ export const Monad: Monad2<URI> = {
     of,
     chain: chain_,
 }
-
-export const resource: Monad2<URI> & Bifunctor2<URI> = {
-    URI,
-    map: map_,
-    bimap: bimap_,
-    mapLeft: mapLeft_,
-    of,
-    ap: ap_,
-    chain: chain_,
-}
