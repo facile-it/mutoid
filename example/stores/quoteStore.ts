@@ -33,7 +33,9 @@ const quoteState: QuoteState = {
 
 // constructor
 
-export const quoteStore = MS.ctor({ name: 'quote', initState: quoteState })
+export const quoteStore = () => MS.ctor({ name: 'quote', initState: quoteState })
+type QuoteStoreOpaque = ReturnType<typeof quoteStore>
+export interface QuoteStore extends QuoteStoreOpaque {}
 
 // mutation
 

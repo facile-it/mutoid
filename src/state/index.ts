@@ -35,7 +35,6 @@ type MutationOpaque<NM, P extends Array<unknown>, S, SS extends S> = Readonly<{
     filterPredicate?: (state: S) => state is SS
 }>
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface Mutation<NM, P extends Array<unknown>, S, SS extends S> extends MutationOpaque<NM, P, S, SS> {}
 
 // constructor

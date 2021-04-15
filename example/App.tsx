@@ -7,6 +7,7 @@ import { Subject } from 'rxjs'
 import { ajax } from 'rxjs/ajax'
 import * as RES from '../src/http/Resource'
 import * as MR from '../src/react'
+import { useStore } from '../src/react/useStore'
 import * as MS from '../src/state'
 import type { ResourceBad } from './resources/fetchBuilder'
 import {
@@ -22,14 +23,15 @@ import {
     fetchQuoteMutationWithDelay,
     fetchQuoteMutationWithParams,
     resetQuoteMutation,
+    QuoteStore,
 } from './stores/quoteStore'
-import { sessionStore, parseEnvMutation } from './stores/sessionStore'
+import { sessionStore, parseEnvMutation, SessionStoreContext, useSessionStore } from './stores/sessionStore'
 
-const resourceDeps = {
+const useResourceDeps = () => ({
     ajax: ajax,
-    store: sessionStore,
     logger: console,
-}
+    store: useSessionStore(),
+})
 
 const renderQuoteResource = (quote: QuoteResource): React.ReactChild => {
     return pipe(
@@ -51,9 +53,9 @@ const renderQuotes = (quote: RES.Resource<ResourceBad, Array<string>>): React.Re
     )
 }
 
-const QuoteFromState: React.FC = () => {
-    const quote = MR.useSelector(quoteStore, s => s.quote)
-    const fetchQuoteRunner = MR.useMutation(quoteStore, fetchQuoteMutation, { deps: resourceDeps })
+const QuoteFromState: React.FC<{ store: QuoteStore }> = ({ store }) => {
+    const quote = MR.useSelector(store, s => s.quote)
+    const fetchQuoteRunner = MR.useMutation(store, fetchQuoteMutation, { deps: useResourceDeps() })
 
     React.useEffect(() => {
         fetchQuoteRunner()
@@ -61,11 +63,11 @@ const QuoteFromState: React.FC = () => {
 
     React.useEffect(() => {
         pipe(
-            MS.toTask(quoteStore),
+            MS.toTask(store),
             T.map(qs => `App loaded. Lo stato delle quote in questo momento è: ${qs.quote._tag}`),
             T.chainIOK(C.log)
         )()
-    }, [])
+    }, [store])
 
     return (
         <>
@@ -80,10 +82,10 @@ const QuoteFromState: React.FC = () => {
     )
 }
 
-const QuoteFromStateWithParams: React.FC = () => {
-    const quote = MR.useSelector(quoteStore, s => s.quote)
-    const fetchQuoteRunner = MR.useMutation(quoteStore, fetchQuoteMutationWithParams, { deps: resourceDeps })
-    const resetQuoteRunner = MR.useMutation(quoteStore, resetQuoteMutation)
+const QuoteFromStateWithParams: React.FC<{ store: QuoteStore }> = ({ store }) => {
+    const quote = MR.useSelector(store, s => s.quote)
+    const fetchQuoteRunner = MR.useMutation(store, fetchQuoteMutationWithParams, { deps: useResourceDeps() })
+    const resetQuoteRunner = MR.useMutation(store, resetQuoteMutation)
 
     React.useEffect(() => {
         fetchQuoteRunner(1)
@@ -105,12 +107,12 @@ const QuoteFromStateWithParams: React.FC = () => {
     )
 }
 
-const QuoteFromStateWithDelay: React.FC = () => {
-    const quote = MR.useSelector(quoteStore, s => s.quote)
+const QuoteFromStateWithDelay: React.FC<{ store: QuoteStore }> = ({ store }) => {
+    const quote = MR.useSelector(store, s => s.quote)
     const notifier = React.useRef(new Subject<number>())
-    const fetchQuoteRunner = MR.useMutation(quoteStore, fetchQuoteMutationWithDelay, {
+    const fetchQuoteRunner = MR.useMutation(store, fetchQuoteMutationWithDelay, {
         notifierTakeUntil: notifier.current,
-        deps: resourceDeps,
+        deps: useResourceDeps(),
     })
 
     React.useEffect(() => {
@@ -188,7 +190,7 @@ const QuoteWithHookWithParams: React.FC = () => {
 const QuoteWithHookWithDelay: React.FC = () => {
     const notifier = React.useRef(new Subject<number>())
 
-    const [quote, quoteFetcher] = MR.useFetchReaderObservableResource(fetchQuoteWithDelay, resourceDeps, {
+    const [quote, quoteFetcher] = MR.useFetchReaderObservableResource(fetchQuoteWithDelay, useResourceDeps(), {
         notifierTakeUntil: notifier.current,
     })
 
@@ -224,7 +226,7 @@ const QuoteWithHookWithDelay: React.FC = () => {
 }
 
 const QuoteWithFetchConcat: React.FC = () => {
-    const [quote, quoteFetcher] = MR.useFetchReaderObservableResource(fetchQuoteSeq, resourceDeps)
+    const [quote, quoteFetcher] = MR.useFetchReaderObservableResource(fetchQuoteSeq, useResourceDeps())
 
     React.useEffect(() => {
         quoteFetcher()
@@ -244,7 +246,7 @@ const QuoteWithFetchConcat: React.FC = () => {
 }
 
 const QuoteWithFetchQuoteSeqPar: React.FC = () => {
-    const [quote, quoteFetcher] = MR.useFetchReaderObservableResource(fetchQuoteSeqPar, resourceDeps)
+    const [quote, quoteFetcher] = MR.useFetchReaderObservableResource(fetchQuoteSeqPar, useResourceDeps())
 
     React.useEffect(() => {
         quoteFetcher()
@@ -264,24 +266,26 @@ const QuoteWithFetchQuoteSeqPar: React.FC = () => {
 }
 
 const App: React.FC<{ name: string }> = props => {
+    const quoteStoreRef = useStore(quoteStore)
+
     React.useEffect(() => {
         // eslint-disable-next-line no-console
-        const sub = quoteStore.notifier$.subscribe(console.log)
+        const sub = quoteStoreRef.notifier$.subscribe(console.log)
 
         return () => sub.unsubscribe()
-    }, [])
+    }, [quoteStoreRef])
 
     return (
         <>
             <h1>Hello {props.name}</h1>
             <div>
-                <QuoteFromState />
+                <QuoteFromState store={quoteStoreRef} />
             </div>
             <div>
-                <QuoteFromStateWithParams />
+                <QuoteFromStateWithParams store={quoteStoreRef} />
             </div>
             <div>
-                <QuoteFromStateWithDelay />
+                <QuoteFromStateWithDelay store={quoteStoreRef} />
             </div>
             <div>
                 <QuoteWithHookWithParams />
@@ -304,8 +308,10 @@ declare const APIKEY: string | undefined
 declare const USERNAME: string | undefined
 
 export const AppInitializer: React.FC = () => {
-    const sessionState = MR.useSelector(sessionStore, identity)
-    const parseEnv = MR.useMutation(sessionStore, parseEnvMutation)
+    const sessionStoreRef = useStore(sessionStore)
+
+    const sessionState = MR.useSelector(sessionStoreRef, identity)
+    const parseEnv = MR.useMutation(sessionStoreRef, parseEnvMutation)
 
     React.useEffect(() => {
         parseEnv(ENV, APIKEY, USERNAME)
@@ -313,10 +319,10 @@ export const AppInitializer: React.FC = () => {
 
     React.useEffect(() => {
         // eslint-disable-next-line no-console
-        const sub = sessionStore.notifier$.subscribe(console.log)
+        const sub = sessionStoreRef.notifier$.subscribe(console.log)
 
         return () => sub.unsubscribe()
-    }, [])
+    }, [sessionStoreRef])
 
     switch (sessionState.status) {
         case 'init':
@@ -324,6 +330,10 @@ export const AppInitializer: React.FC = () => {
         case 'error':
             return <h1>Error {sessionState.message}</h1>
         case 'done':
-            return <App name={sessionState.userName} />
+            return (
+                <SessionStoreContext.Provider value={sessionStoreRef}>
+                    <App name={sessionState.userName} />
+                </SessionStoreContext.Provider>
+            )
     }
 }
