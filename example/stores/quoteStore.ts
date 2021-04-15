@@ -21,7 +21,9 @@ declare module '../../src/state/stores' {
     }
 }
 
-// type
+// -------------------------------------------------------------------------------------
+// Model
+// -------------------------------------------------------------------------------------
 
 export interface QuoteState {
     quote: QuoteResource
@@ -31,13 +33,18 @@ const quoteState: QuoteState = {
     quote: RES.init,
 }
 
-// constructor
-
-export const quoteStore = () => MS.ctor({ name: 'quote', initState: quoteState })
 type QuoteStoreOpaque = ReturnType<typeof quoteStore>
 export interface QuoteStore extends QuoteStoreOpaque {}
 
-// mutation
+// -------------------------------------------------------------------------------------
+// Constructor
+// -------------------------------------------------------------------------------------
+
+export const quoteStore = () => MS.ctor({ name: 'quote', initState: quoteState })
+
+// -------------------------------------------------------------------------------------
+// Mutation
+// -------------------------------------------------------------------------------------
 
 export const fetchQuoteMutation = pipe(
     fetchQuote,

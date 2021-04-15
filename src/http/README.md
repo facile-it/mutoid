@@ -1,8 +1,12 @@
 # Mutoid - Data fetching
 
-In this section are exported 3 modules: `ReaderObservableResource`, `ObservableResource` and `Resource`. Three data structures that implement an instance of `Functor`, `Apply`, `Bifunctor`, `Applicative`, `Monad` (and `MonadObservable` for `ObservableResource` and `ReaderObservableResource`)
+## ReaderObservableResource, ObservableResource, Resource
 
-## fromAjax
+Three data structures that implement an instance of `Functor`, `Apply`, `Bifunctor`, `Applicative`, `Monad` (and `MonadObservable` for `ObservableResource` and `ReaderObservableResource`)
+
+### fromAjax
+
+Build ReaderObservableResource from ajax
 
 ```typescript
 import * as t from 'io-ts'
@@ -39,7 +43,7 @@ export const fetchSomething = (id: number, from: string) =>
     )
 ```
 
-## toMutationEffect
+### toMutationEffect
 
 From ObservableResource
 
@@ -79,3 +83,7 @@ export const fetchQuoteMutationWithParams = pipe(
     MS.ctorMutationCR('fetchSomethingMutation')
 )
 ```
+
+## DataSerializer
+
+Module for serialize data (nullable or Option) to URLSearchParams or FormData

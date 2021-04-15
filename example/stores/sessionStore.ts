@@ -58,7 +58,9 @@ const stateInit: SessionState = { status: 'init' }
 
 export const sessionStore = () => MS.ctor<'session', SessionState>({ name: 'session', initState: stateInit })
 
+// -------------------------------------------------------------------------------------
 // Context
+// -------------------------------------------------------------------------------------
 
 export const SessionStoreContext = React.createContext(sessionStore())
 
@@ -66,7 +68,9 @@ export const useSessionStore = () => {
     return React.useContext(SessionStoreContext)
 }
 
-// mutation
+// -------------------------------------------------------------------------------------
+// Mutation
+// -------------------------------------------------------------------------------------
 
 type optional = string | undefined
 type SessionStateInit = Extract<SessionState, { status: 'init' }>
