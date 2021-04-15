@@ -11,7 +11,7 @@ import * as MS from '../../src/state'
 describe('react', () => {
     test('useSelector', () => {
         const state = { name: 'mutoid' }
-        const store = MS.ctor(() => ({ initState: state, name: 'test' }))
+        const store = MS.ctor({ initState: state, name: 'test' })
 
         const { result } = renderHook(() => MR.useSelector(store, identity))
 
@@ -20,7 +20,7 @@ describe('react', () => {
 
     test('useSelector', async () => {
         const state = { name: 'mutoid', age: 15 }
-        const store = MS.ctor(() => ({ initState: state, name: 'test' as const }))
+        const store = MS.ctor({ initState: state, name: 'test' as const })
 
         const mutation = () =>
             MS.ctorMutation('test_mutation', () => (s: typeof state) =>
@@ -44,7 +44,7 @@ describe('react', () => {
 
     test('useSelector and killer', async () => {
         const state = { name: 'mutoid', age: 15 }
-        const store = MS.ctor(() => ({ initState: state, name: 'test' as const }))
+        const store = MS.ctor({ initState: state, name: 'test' as const })
 
         const mutation = () =>
             MS.ctorMutation('test_mutation', () => (s: typeof state) =>

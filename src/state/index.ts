@@ -1,6 +1,4 @@
-import memoize from 'fast-memoize'
 import type * as T from 'fp-ts/Task'
-import type { Lazy } from 'fp-ts/function'
 import { BehaviorSubject, Observable, Subscription } from 'rxjs'
 import { switchMap, take, takeUntil, takeWhile, tap } from 'rxjs/operators'
 import type { allMutationName, mutationName, storeName } from './stores'
@@ -42,17 +40,13 @@ export interface Mutation<NM, P extends Array<unknown>, S, SS extends S> extends
 
 // constructor
 
-export const ctor = <N extends storeName, T>(init: Lazy<{ name: N; initState: T }>): Lazy<Store<N, T>> => {
-    return memoize(() => {
-        const c = init()
-
-        return {
-            name: c.name,
-            state$: new BehaviorSubject<T>(c.initState),
-            notifier$: new BehaviorSubject<NotifySubject<N, T>>({ type: 'initStore', name: c.name }),
-            initState: c.initState,
-        }
-    })
+export const ctor = <N extends storeName, T>(c: { name: N; initState: T }): Store<N, T> => {
+    return {
+        name: c.name,
+        state$: new BehaviorSubject<T>(c.initState),
+        notifier$: new BehaviorSubject<NotifySubject<N, T>>({ type: 'initStore', name: c.name }),
+        initState: c.initState,
+    }
 }
 
 // mutation
@@ -91,8 +85,8 @@ export const ctorPartialMutationCR = <NM extends allMutationName, P extends Arra
 
 // runner
 
-export const toTask = <N extends storeName, S>(store: Lazy<Store<N, S>>): T.Task<S> => () =>
-    store().state$.pipe(take(1)).toPromise()
+export const toTask = <N extends storeName, S>(store: Store<N, S>): T.Task<S> => () =>
+    store.state$.pipe(take(1)).toPromise()
 
 export interface BaseOptions {
     notifierTakeUntil?: Observable<unknown>
@@ -110,7 +104,7 @@ export function mutationRunner<
     R extends Record<K, unknown>,
     K extends string
 >(
-    storeL: Lazy<Store<N, S>>,
+    store: Store<N, S>,
     mutationR: (deps: R) => Mutation<NM, P, S, SS>,
     options: BaseOptions & DepsOptions<R>
     // no deps
@@ -123,7 +117,7 @@ export function mutationRunner<
     SS extends S,
     R extends Record<never, unknown>
     // no deps overload
->(storeL: Lazy<Store<N, S>>, mutationL: () => Mutation<NM, P, S, SS>, options?: BaseOptions): (...p: P) => Subscription
+>(store: Store<N, S>, mutationL: () => Mutation<NM, P, S, SS>, options?: BaseOptions): (...p: P) => Subscription
 export function mutationRunner<
     N extends storeName,
     NM extends mutationName<N>,
@@ -133,12 +127,11 @@ export function mutationRunner<
     R extends Record<K, unknown>,
     K extends never
 >(
-    storeL: Lazy<Store<N, S>>,
+    store: Store<N, S>,
     mutationR: (deps?: R) => Mutation<NM, P, S, SS>,
     options?: BaseOptions & Partial<DepsOptions<R>>
 ): (...p: P) => Subscription {
     return (...payload) => {
-        const store = storeL()
         const mutation = mutationR(options?.deps)
 
         const baseNotify = (state: S, date: Date) => ({
@@ -175,7 +168,7 @@ export function mutationRunner<
         return sequence.subscribe({
             next: s => store.state$.next(s),
             complete: () =>
-                toTask(storeL)().then(s => store.notifier$.next({ ...baseNotify(s, new Date()), type: 'mutationEnd' })),
+                toTask(store)().then(s => store.notifier$.next({ ...baseNotify(s, new Date()), type: 'mutationEnd' })),
         })
     }
 }

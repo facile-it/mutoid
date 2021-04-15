@@ -257,7 +257,7 @@ describe('ObservableResource', () => {
         type nameResource = RES.ResourceTypeOf<typeof decoders>
 
         const state: { name: nameResource } = { name: RES.init }
-        const store = MS.ctor(() => ({ initState: state, name: 'http_test' }))
+        const store = MS.ctor({ initState: state, name: 'http_test' })
 
         const ajax = of({
             status: 200,

@@ -1,9 +1,10 @@
 # Changelog
 
-## 0.4.0
+## 0.4.0 (2021-04-13)
 
 -   deprecated module `rxjs` use `fp-ts-rxjs`
--   added `ReaderObservableResource`, `ObservableResource` and `Resource` (see upgrade-to-0.4 guide)
+-   added `ReaderObservableResource`, `ObservableResource` and `Resource` in http module (see upgrade-to-0.4 guide)
+-   added `dataSerializer` in http module
 -   added `mutoid/state/stores` (see upgrade-to-0.4 guide)
 
 ## 0.3.1 (2020-11-25)

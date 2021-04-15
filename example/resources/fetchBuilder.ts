@@ -110,7 +110,7 @@ const buildApiRequests: ROR.ReaderObservableResource<
     RES.ResourceAjaxError<authAppError>,
     AccessToken
 > = deps => {
-    return deps.store().state$.pipe(
+    return deps.store.state$.pipe(
         take(1),
         map(ss =>
             ss.status === 'done'

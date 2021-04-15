@@ -266,7 +266,7 @@ const QuoteWithFetchQuoteSeqPar: React.FC = () => {
 const App: React.FC<{ name: string }> = props => {
     React.useEffect(() => {
         // eslint-disable-next-line no-console
-        const sub = quoteStore().notifier$.subscribe(console.log)
+        const sub = quoteStore.notifier$.subscribe(console.log)
 
         return () => sub.unsubscribe()
     }, [])
@@ -313,7 +313,7 @@ export const AppInitializer: React.FC = () => {
 
     React.useEffect(() => {
         // eslint-disable-next-line no-console
-        const sub = sessionStore().notifier$.subscribe(console.log)
+        const sub = sessionStore.notifier$.subscribe(console.log)
 
         return () => sub.unsubscribe()
     }, [])

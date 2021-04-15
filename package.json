@@ -35,14 +35,13 @@
     "module": "es6/index.js",
     "typings": "lib/index.d.ts",
     "sideEffects": false,
-    "dependencies": {
-        "fast-memoize": "^2.5.2"
-    },
+    "dependencies": {},
     "devDependencies": {
         "@testing-library/react-hooks": "^3.3.0",
         "@types/jest": "^26.0.22",
         "@types/react": "^17.0.2",
         "@types/react-dom": "^17.0.1",
+        "@types/webpack-dev-server": "^3.11.3",
         "dtslint": "github:gcanti/dtslint",
         "eslint": "^7.0.0",
         "eslint-config-facile": "^0.3.5",

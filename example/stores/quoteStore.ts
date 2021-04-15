@@ -33,7 +33,7 @@ const quoteState: QuoteState = {
 
 // constructor
 
-export const quoteStore = MS.ctor(() => ({ name: 'quote', initState: quoteState }))
+export const quoteStore = MS.ctor({ name: 'quote', initState: quoteState })
 
 // mutation
 
