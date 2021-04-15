@@ -3,7 +3,7 @@ import HtmlWebpackPlugin from 'html-webpack-plugin'
 import * as webpack from 'webpack'
 import * as path from 'path'
 
-const config = (_: unknown, argv: { mode: string }): webpack.Configuration => ({
+const config = (_: unknown, argv: { mode: string }): webpack.Configuration & { devServer: unknown } => ({
     entry: './example/index.tsx',
     devtool: argv.mode === 'production' ? 'source-map' : 'inline-source-map',
     resolve: {

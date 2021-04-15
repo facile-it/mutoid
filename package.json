@@ -41,7 +41,7 @@
         "@types/jest": "^26.0.22",
         "@types/react": "^17.0.2",
         "@types/react-dom": "^17.0.1",
-        "@types/webpack-dev-server": "^3.11.3",
+        "@types/webpack": "^5.28.0",
         "dtslint": "github:gcanti/dtslint",
         "eslint": "^7.0.0",
         "eslint-config-facile": "^0.3.5",
