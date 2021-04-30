@@ -6,6 +6,7 @@
 -   split http module in `ReaderObservableResource`, `ObservableResource` and `Resource` [BREAKING CHANGE] (see [upgrade-to-0.4 guide](https://github.com/facile-it/mutoid/blob/master/docs/guides/upgrade-to-0.4.md))
 -   added `dataSerializer` in http module
 -   added `mutoid/state/stores` and remove memorization in ctor [BREAKING CHANGE] (see [upgrade-to-0.4 guide](https://github.com/facile-it/mutoid/blob/master/docs/guides/upgrade-to-0.4.md))
+-   removed fast-memoize dependency
 
 ## 0.3.1 (2020-11-25)
 
