@@ -1,11 +1,11 @@
 # Changelog
 
-## 0.4.0 (2021-04-13)
+## 0.4.0 (2021-05-01)
 
 -   deprecated module `rxjs` use `fp-ts-rxjs`
--   added `ReaderObservableResource`, `ObservableResource` and `Resource` in http module (see upgrade-to-0.4 guide)
+-   split http module in `ReaderObservableResource`, `ObservableResource` and `Resource` [BREAKING CHANGE] (see [upgrade-to-0.4 guide](https://github.com/facile-it/mutoid/blob/master/docs/guides/upgrade-to-0.4.md))
 -   added `dataSerializer` in http module
--   added `mutoid/state/stores` (see upgrade-to-0.4 guide)
+-   added `mutoid/state/stores` and remove memorization in ctor [BREAKING CHANGE] (see [upgrade-to-0.4 guide](https://github.com/facile-it/mutoid/blob/master/docs/guides/upgrade-to-0.4.md))
 
 ## 0.3.1 (2020-11-25)
 
