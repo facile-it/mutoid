@@ -76,8 +76,4 @@ const main: Build<unknown> = pipe(
     RTE.chain(() => fixReact)
 )
 
-run(
-    main({
-        ...fileSystem,
-    })
-)
+pipe(fileSystem, main, run)

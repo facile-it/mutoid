@@ -42,7 +42,7 @@ const App: React.FC<{ id: number }> = ({ id }) => {
 
     React.useEffect(() => {
         dispatch(id)
-    }, [dispatch])
+    }, [dispatch, id])
 
     return (
         <>
