@@ -14,7 +14,7 @@ npm install fp-ts-rxjs
 
 ## State management
 
-We removed the memorization in store ctor. 
+We removed the memoization in store ctor. 
 
 Now we recommend to use a lazy store like
 
