@@ -1,6 +1,7 @@
 import * as E from 'fp-ts/Either'
 import { pipe } from 'fp-ts/function'
 import * as t from 'io-ts'
+import * as React from 'react'
 import { Observable, of } from 'rxjs'
 import * as MS from '../../src/state'
 
@@ -10,7 +11,9 @@ declare module '../../src/state/stores' {
     }
 }
 
-// type
+// -------------------------------------------------------------------------------------
+// Model
+// -------------------------------------------------------------------------------------
 
 export interface AccessTokenBrand {
     readonly AccessToken: unique symbol
@@ -44,11 +47,30 @@ export type SessionState =
           message: string
       }
 
-// constructor
+type SessionStoreOpaque = ReturnType<typeof sessionStore>
+export interface SessionStore extends SessionStoreOpaque {}
 
-export const sessionStore = MS.ctor<'session', SessionState>(() => ({ name: 'session', initState: { status: 'init' } }))
+// -------------------------------------------------------------------------------------
+// Constructor
+// -------------------------------------------------------------------------------------
 
-// mutationR
+const stateInit: SessionState = { status: 'init' }
+
+export const sessionStore = () => MS.ctor<'session', SessionState>({ name: 'session', initState: stateInit })
+
+// -------------------------------------------------------------------------------------
+// Context
+// -------------------------------------------------------------------------------------
+
+export const SessionStoreContext = React.createContext(sessionStore())
+
+export const useSessionStore = () => {
+    return React.useContext(SessionStoreContext)
+}
+
+// -------------------------------------------------------------------------------------
+// Mutation
+// -------------------------------------------------------------------------------------
 
 type optional = string | undefined
 type SessionStateInit = Extract<SessionState, { status: 'init' }>

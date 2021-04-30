@@ -50,9 +50,9 @@ const fixState: Build<void> = D => {
 
     return pipe(
         D.readFile(fPath),
-        TE.map(data => data.replace(/extends "_S"/g, 'extends storeName')),
-        TE.map(data => data.replace(/extends "_M"/g, 'extends allMutationName')),
-        TE.map(data => data.replace('mutationName, storeName', 'mutationName, storeName, allMutationName')),
+        TE.map(data => data.replace(/extends "_S"/g, 'extends StoreName')),
+        TE.map(data => data.replace(/extends "_M"/g, 'extends AllMutationName')),
+        TE.map(data => data.replace('MutationName, StoreName', 'MutationName, StoreName, AllMutationName')),
         TE.chain(data => D.writeFile(fPath, data))
     )
 }
@@ -62,8 +62,8 @@ const fixReact: Build<void> = D => {
 
     return pipe(
         D.readFile(fPath),
-        TE.map(data => data.replace(/export declare/g, `import { storeName } from '../state/stores'\nexport declare`)),
-        TE.map(data => data.replace(/extends "_S"/g, 'extends storeName')),
+        TE.map(data => data.replace(/export declare/g, `import { StoreName } from '../state/stores'\nexport declare`)),
+        TE.map(data => data.replace(/extends "_S"/g, 'extends StoreName')),
         TE.chain(data => D.writeFile(fPath, data))
     )
 }
@@ -76,8 +76,4 @@ const main: Build<unknown> = pipe(
     RTE.chain(() => fixReact)
 )
 
-run(
-    main({
-        ...fileSystem,
-    })
-)
+pipe(fileSystem, main, run)

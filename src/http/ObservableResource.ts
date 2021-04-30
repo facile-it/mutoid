@@ -116,7 +116,7 @@ export const fetchToMutationEffect = <
     SS extends S,
     S,
     I extends Array<any> = Parameters<AX>,
-    R = AX extends (...args: any) => Observable<infer R> ? R : never
+    R = AX extends (...args: any) => Observable<infer RR> ? RR : never
 >(
     mapTo: (s: SS) => (i: R) => S
 ) => (ax: AX) => flow(ax, o => (s: SS) => o.pipe(RXoP.map(mapTo(s))))

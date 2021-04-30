@@ -1,8 +1,18 @@
 # Mutoid - Data fetching
 
-In this section are exported 3 modules: `ReaderObservableResource`, `ObservableResource` and `Resource`. Three data structures that implement an instance of `Functor`, `Apply`, `Bifunctor`, `Applicative`, `Monad` (and `MonadObservable` for `ObservableResource` and `ReaderObservableResource`)
+## ReaderObservableResource, ObservableResource, Resource
 
-## fromAjax
+Three data structures that implement an instance of `Functor`, `Apply`, `Bifunctor`, `Applicative`, `Monad` (and `MonadObservable` for `ObservableResource` and `ReaderObservableResource`)
+
+If you want to see some examples:
+
+1 - simple fetch with token in store: [example](https://github.com/facile-it/mutoid/blob/pre_release_04/example/resources/quoteResource.ts#L23)  
+2 - fetch in series: [example](https://github.com/facile-it/mutoid/blob/pre_release_04/example/resources/quoteResource.ts#L42)  
+3 - fetch in parallel: [example](https://github.com/facile-it/mutoid/blob/pre_release_04/example/resources/quoteResource.ts#L54)
+
+### fromAjax
+
+Build ReaderObservableResource from ajax
 
 ```typescript
 import * as t from 'io-ts'
@@ -39,7 +49,7 @@ export const fetchSomething = (id: number, from: string) =>
     )
 ```
 
-## toMutationEffect
+### toMutationEffect
 
 From ObservableResource
 
@@ -79,3 +89,23 @@ export const fetchQuoteMutationWithParams = pipe(
     MS.ctorMutationCR('fetchSomethingMutation')
 )
 ```
+
+## Data serializer
+
+Module for serialize data (nullable or Option) to URLSearchParams or FormData
+
+```typescript
+import * as DS from 'mutoid/http/dataSerializer'
+
+const queryString = pipe({ page: 2, id: 5 }, DS.serializeUrl(new URLSearchParams()), DS.toQueryString)
+```
+
+You can use URLSearchParams on browser and NodeJs
+
+```typescript
+import * as DS from 'mutoid/http/dataSerializer'
+
+const formData = pipe({ name: 'iacopo' }, DS.serializeForm(new FormData()))
+```
+
+You can use FormData only in browser, for NodeJs you can use something like [form-data](https://www.npmjs.com/package/form-data)

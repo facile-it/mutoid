@@ -7,7 +7,7 @@ import * as RES from '../../src/http/Resource'
 import type { StatusCode } from '../../src/http/statusCode'
 import type { LoggerDeps } from '../logger'
 import { logError } from '../logger'
-import type { AccessToken, sessionStore } from '../stores/sessionStore'
+import type { AccessToken, SessionStore } from '../stores/sessionStore'
 
 export type FetchDeps = LoggerDeps & DepsAjax & DepsStore
 
@@ -16,7 +16,7 @@ export interface DepsAjax {
 }
 
 export interface DepsStore {
-    store: typeof sessionStore
+    store: SessionStore
 }
 
 export interface ResourceRejected {
@@ -110,7 +110,7 @@ const buildApiRequests: ROR.ReaderObservableResource<
     RES.ResourceAjaxError<authAppError>,
     AccessToken
 > = deps => {
-    return deps.store().state$.pipe(
+    return deps.store.state$.pipe(
         take(1),
         map(ss =>
             ss.status === 'done'

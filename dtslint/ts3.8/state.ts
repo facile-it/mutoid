@@ -10,7 +10,7 @@ declare module '../../src/state/stores' {
     }
 }
 
-declare const storeString: Lazy<MS.Store<'store', string>>
+declare const storeString: MS.Store<'store', string>
 declare const mutation: {
     name: 'mutation'
     effect: () => (s: string) => Observable<string>
@@ -33,7 +33,7 @@ const d1 = MS.mutationRunner(storeString, () => mutationWithOneParam)
 // $ExpectType (id: number, name: string) => Subscription
 const d2 = MS.mutationRunner(storeString, () => mutationWithTwoParam)
 
-declare const storeNumber: Lazy<MS.Store<'store_2', number>>
+declare const storeNumber: MS.Store<'store_2', number>
 declare const mutationString: {
     name: 'mutationString'
     effect: () => (s: number) => Observable<string>

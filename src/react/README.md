@@ -9,7 +9,7 @@ const userName = useSelector(store, s => s.userName)
 ## useMutation
 
 ```typescript
-const mutationR = useMutation(store, mutation)
+const m = useMutation(store, mutation)
 ```
 
 ## useResourceFetcher
@@ -23,6 +23,8 @@ import * as React from 'react'
 import { ajax } from 'rxjs/ajax'
 import * as RES from 'mutoid/http/Resource'
 import * as ROR from 'mutoid/http/ReaderObservableResource'
+import * as OR from 'mutoid/http/ObservableResource'
+import { useFetchReaderObservableResource } from 'mutoid/react'
 import { pipe } from 'fp-ts/function'
 import * as t from 'io-ts'
 
@@ -32,23 +34,15 @@ export const userDecoders = {
     }).decode,
 }
 
-export const userFetcher = (id: number, from: string) =>
-    pipe(
-        ROR.askTypeOf<{ajax: typeof ajax}, typeof userDecoders>(),
-        ROR.chainW(deps =>
-            ROR.fromAjax(
-                deps.ajax(`https://api.io/user/${id}`),
-                userDecoders
-            )
-        )
-    )
+export const userFetcher = (id: number) => (deps: { ajax: typeof ajax }) =>
+    OR.fromAjax(deps.ajax(`https://api.io/user/${id}`), userDecoders)
 
 const App: React.FC<{ id: number }> = ({ id }) => {
     const [userResource, dispatch] = useFetchReaderObservableResource(userFetcher, { ajax })
 
     React.useEffect(() => {
         dispatch(id)
-    }, [dispatch])
+    }, [dispatch, id])
 
     return (
         <>
@@ -74,3 +68,13 @@ const App: React.FC<{ id: number }> = ({ id }) => {
 ## useFetchObservableResource
 
 Same as `useFetchReaderObservableResource`, the only difference is the input `ObservableResource` instead of `ReaderObservableResource`
+
+## useStore
+
+If you have a lazy store, you can use this hook to maintain the ref over the renders
+
+```ts
+const appStore = () => MS.ctor({ name: 'appStore', initState: { userName: 'Marco' } })
+
+const appStoreRef = useStore(appStore)
+```
