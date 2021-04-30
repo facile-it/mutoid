@@ -6,9 +6,41 @@ Now `fp-ts-rxjs` is a peer dependency
 
 ```sh
 yarn add fp-ts-rxjs
+
+// or
+
+npm install fp-ts-rxjs
 ```
 
 ## State management
+
+We removed the memorization in store ctor. 
+
+Now we recommend to use a lazy store like
+
+```ts
+const appStore = () => MS.ctor({ name: 'appStore', initState: { userName: 'Marco' } })
+```
+
+In any case you can still use a singleton store. The only difference is the ctor first argument
+
+```ts
+// before
+const appStore = MS.ctor(() => { name: 'appStore', initState: { userName: 'Marco' } })
+
+// after
+const appStore = MS.ctor({ name: 'appStore', initState: { userName: 'Marco' } })
+```
+
+And now when the store is built, it is no more lazy so you have to change some uses, for example
+
+```ts
+// before
+store().state$.pipe(take(1), map(s => ...))
+
+// after
+store.state$.pipe(take(1), map(s => ...))
+```
 
 We added `mutoid/state/stores` to populate the stores and mutations names using the module augmentation feature
 
@@ -31,6 +63,7 @@ const mutation = MS.ctorMutation(
 ```
 
 This is useful to have the correct inference in the store notifier
+In any case, if you don't declare anything there is a fallback to string
 
 ## Data fetching
 

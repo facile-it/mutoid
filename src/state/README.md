@@ -11,8 +11,13 @@ declare module 'mutoid/state/stores' {
     }
 }
 
-const appStore = MS.ctor({ name: 'appStore', initState: { userName: 'Marco' } })
+const appStore = () => MS.ctor({ name: 'appStore', initState: { userName: 'Marco' } })
 ```
+
+You can choose to use a singleton store or a lazy store. In some cases, to use a lazy store it's a better choice  
+If you declare the store name and the mutation names with module augmentation, the notifier can inference the mutation name in the subject  
+In any case, if you don't declare anything there is a fallback to string
+
 
 ## Read the status from anywhere
 
@@ -29,6 +34,8 @@ const program = pipe(
 
 program()
 ```
+
+_If you use a lazy store, make sure to use the correct instance_
 
 ## Mutation
 
@@ -85,7 +92,7 @@ const mutation = MS.mutationRunner(store, identityPartialMutation)
 mutation(id)
 ```
 
-if you want to kill the mutation `MS.mutationRunner` accept as third parameter "options" with propriety `notifierTakeUntil?: Observable<unknown>`
+If you want to cancel the mutation `MS.mutationRunner` accept as third parameter "options" with propriety `notifierTakeUntil?: Observable<unknown>`
 
 ## Store notifier
 

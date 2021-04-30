@@ -5,8 +5,8 @@
         "lint-fix": "eslint . --ext .ts,.tsx --fix",
         "prettier": "prettier --check \"{src,test,dtslint,example}/**/*.{ts,tsx}\"",
         "prettier-fix": "prettier --write \"./{src,test,dtslint,example}/**/*.ts\"",
-        "pretest": "yarn lint && yarn prettier",
-        "test": "yarn test-unit",
+        "pretest": "npm run lint && npm run prettier",
+        "test": "npm run test-unit",
         "test-unit": "jest",
         "test-type": "dtslint dtslint",
         "clean": "rm -rf dist",
@@ -35,6 +35,9 @@
     "module": "index.js",
     "typings": "index.d.ts",
     "sideEffects": false,
+    "engines": {
+        "node": ">=14"
+    },
     "devDependencies": {
         "@testing-library/react-hooks": "^3.3.0",
         "@types/jest": "^26.0.22",
@@ -72,6 +75,11 @@
         "fp-ts-rxjs": "^0.6",
         "react": "^16.8 || ^17.0",
         "rxjs": "^6.6"
+    },
+    "peerDependenciesMeta": {
+        "react": {
+            "optional": true
+        }
     },
     "tags": [
         "typescript",

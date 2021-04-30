@@ -4,6 +4,12 @@
 
 Three data structures that implement an instance of `Functor`, `Apply`, `Bifunctor`, `Applicative`, `Monad` (and `MonadObservable` for `ObservableResource` and `ReaderObservableResource`)
 
+If you want to see some examples:
+
+1 - simple fetch with token in store: [example](https://github.com/facile-it/mutoid/blob/pre_release_04/example/resources/quoteResource.ts#L23)  
+2 - fetch in series: [example](https://github.com/facile-it/mutoid/blob/pre_release_04/example/resources/quoteResource.ts#L42)  
+3 - fetch in parallel: [example](https://github.com/facile-it/mutoid/blob/pre_release_04/example/resources/quoteResource.ts#L54)
+
 ### fromAjax
 
 Build ReaderObservableResource from ajax

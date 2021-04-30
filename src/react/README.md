@@ -68,3 +68,13 @@ const App: React.FC<{ id: number }> = ({ id }) => {
 ## useFetchObservableResource
 
 Same as `useFetchReaderObservableResource`, the only difference is the input `ObservableResource` instead of `ReaderObservableResource`
+
+## useStore
+
+If you have a lazy store, you can use this hook to maintain the ref over the renders
+
+```ts
+const appStore = () => MS.ctor({ name: 'appStore', initState: { userName: 'Marco' } })
+
+const appStoreRef = useStore(appStore)
+```

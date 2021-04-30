@@ -16,7 +16,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [12.x]
+        node-version: [14.x]
 
     steps:
     - uses: actions/checkout@v2
@@ -24,9 +24,8 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
-    - run: npm install -g yarn
-    - run: yarn install
-    - run: yarn build
-    - run: yarn clean
-    - run: yarn test-unit
-    - run: yarn test-type
+    - run: npm install
+    - run: npm run build
+    - run: npm run clean
+    - run: npm run test-unit
+    - run: npm run test-type

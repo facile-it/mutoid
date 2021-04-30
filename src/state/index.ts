@@ -1,26 +1,26 @@
 import type * as T from 'fp-ts/Task'
 import { BehaviorSubject, Observable, Subscription } from 'rxjs'
 import { switchMap, take, takeUntil, takeWhile, tap } from 'rxjs/operators'
-import type { allMutationName, mutationName, storeName } from './stores'
+import type { AllMutationName, MutationName, StoreName } from './stores'
 
 // type
 
-type MutationNotify<N extends storeName, S> = Readonly<{
+type MutationNotify<N extends StoreName, S> = Readonly<{
     state: S
     name: N
-    mutationName: mutationName<N>
+    mutationName: MutationName<N>
     payload: Array<unknown>
     date: ReturnType<Date['toISOString']>
 }>
 
-type NotifySubject<N extends storeName, S> = Readonly<
+type NotifySubject<N extends StoreName, S> = Readonly<
     | { type: 'initStore'; name: N }
     | ({ type: 'mutationLoad' } & MutationNotify<N, S>)
     | ({ type: 'mutationStart' } & MutationNotify<N, S>)
     | ({ type: 'mutationEnd' } & MutationNotify<N, S>)
 >
 
-export type Store<N extends storeName, S> = Readonly<{
+export type Store<N extends StoreName, S> = Readonly<{
     name: N
     state$: BehaviorSubject<S>
     notifier$: BehaviorSubject<NotifySubject<N, S>>
@@ -39,7 +39,7 @@ export interface Mutation<NM, P extends Array<unknown>, S, SS extends S> extends
 
 // constructor
 
-export const ctor = <N extends storeName, T>(c: { name: N; initState: T }): Store<N, T> => {
+export const ctor = <N extends StoreName, T>(c: { name: N; initState: T }): Store<N, T> => {
     return {
         name: c.name,
         state$: new BehaviorSubject<T>(c.initState),
@@ -50,33 +50,33 @@ export const ctor = <N extends storeName, T>(c: { name: N; initState: T }): Stor
 
 // mutation
 
-export const ctorMutation = <NM extends allMutationName, P extends Array<unknown>, S>(
+export const ctorMutation = <NM extends AllMutationName, P extends Array<unknown>, S>(
     name: NM,
     effect: MutationEffect<P, S, S>
 ): Mutation<NM, P, S, S> => ({ name, effect })
 
-export const ctorMutationC = <NM extends allMutationName, P extends Array<unknown>, S>(name: NM) => (
+export const ctorMutationC = <NM extends AllMutationName, P extends Array<unknown>, S>(name: NM) => (
     effect: MutationEffect<P, S, S>
 ): Mutation<NM, P, S, S> => ctorMutation(name, effect)
 
-export const ctorMutationCR = <NM extends allMutationName, P extends Array<unknown>, S, R>(name: NM) => (
+export const ctorMutationCR = <NM extends AllMutationName, P extends Array<unknown>, S, R>(name: NM) => (
     effectR: (r: R) => MutationEffect<P, S, S>
 ): ((r: R) => Mutation<NM, P, S, S>) => r => ctorMutation(name, effectR(r))
 
 // partialMutation
 
-export const ctorPartialMutation = <NM extends allMutationName, P extends Array<unknown>, S, SS extends S>(
+export const ctorPartialMutation = <NM extends AllMutationName, P extends Array<unknown>, S, SS extends S>(
     name: NM,
     filterPredicate: (s: S) => s is SS,
     effect: MutationEffect<P, S, SS>
 ): Mutation<NM, P, S, SS> => ({ name, filterPredicate, effect })
 
-export const ctorPartialMutationC = <NM extends allMutationName, P extends Array<unknown>, S, SS extends S>(
+export const ctorPartialMutationC = <NM extends AllMutationName, P extends Array<unknown>, S, SS extends S>(
     name: NM,
     filterPredicate: (s: S) => s is SS
 ) => (effect: MutationEffect<P, S, SS>): Mutation<NM, P, S, SS> => ctorPartialMutation(name, filterPredicate, effect)
 
-export const ctorPartialMutationCR = <NM extends allMutationName, P extends Array<unknown>, S, SS extends S, R>(
+export const ctorPartialMutationCR = <NM extends AllMutationName, P extends Array<unknown>, S, SS extends S, R>(
     name: NM,
     filterPredicate: (s: S) => s is SS
 ) => (effectR: (r: R) => MutationEffect<P, S, SS>): ((r: R) => Mutation<NM, P, S, SS>) => (r: R) =>
@@ -84,7 +84,7 @@ export const ctorPartialMutationCR = <NM extends allMutationName, P extends Arra
 
 // runner
 
-export const toTask = <N extends storeName, S>(store: Store<N, S>): T.Task<S> => () =>
+export const toTask = <N extends StoreName, S>(store: Store<N, S>): T.Task<S> => () =>
     store.state$.pipe(take(1)).toPromise()
 
 export interface BaseOptions {
@@ -95,8 +95,8 @@ export interface DepsOptions<R extends Record<string, unknown>> {
 }
 
 export function mutationRunner<
-    N extends storeName,
-    NM extends mutationName<N>,
+    N extends StoreName,
+    NM extends MutationName<N>,
     P extends Array<unknown>,
     S,
     SS extends S,
@@ -109,17 +109,16 @@ export function mutationRunner<
     // no deps
 ): (...p: P) => Subscription
 export function mutationRunner<
-    N extends storeName,
-    NM extends mutationName<N>,
+    N extends StoreName,
+    NM extends MutationName<N>,
     P extends Array<unknown>,
     S,
-    SS extends S,
-    R extends Record<never, unknown>
+    SS extends S
     // no deps overload
 >(store: Store<N, S>, mutationL: () => Mutation<NM, P, S, SS>, options?: BaseOptions): (...p: P) => Subscription
 export function mutationRunner<
-    N extends storeName,
-    NM extends mutationName<N>,
+    N extends StoreName,
+    NM extends MutationName<N>,
     P extends Array<unknown>,
     S,
     SS extends S,

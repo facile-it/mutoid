@@ -39,7 +39,7 @@ export const fetchSimple = (id: number, from: string) => (deps: { ajax: typeof a
 export const fetchQuoteWithDelay = () =>
     flow(fetchBuilder(endpointRequestBuilder(), quoteDecoders, [200]), o => o.pipe(delay(5_000)))
 
-//  example: fetch quote concatenated
+//  fetch in series the quotes
 
 export const fetchQuoteSeq = () =>
     pipe(
@@ -51,7 +51,7 @@ export const fetchQuoteSeq = () =>
         ROR.map(c => [...c.firstFetch.payload, ...c.secondFetch.payload])
     )
 
-//  example: fetch quote parallel
+//  example: fetch in parallel the quotes
 
 export const fetchQuoteSeqPar = () =>
     pipe(

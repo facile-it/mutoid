@@ -3,7 +3,7 @@ import { identity } from 'fp-ts/function'
 import * as t from 'io-ts'
 import { of } from 'rxjs'
 import type { AjaxResponse } from 'rxjs/ajax'
-import { delay } from 'rxjs/operators'
+import { delay, take } from 'rxjs/operators'
 import * as OR from '../../src/http/ObservableResource'
 import * as MR from '../../src/react'
 import * as MS from '../../src/state'
@@ -185,5 +185,21 @@ describe('react', () => {
         })
 
         expect(result.current[0]._tag).toBe('success')
+    })
+
+    test('useStore', async () => {
+        const state = { name: 'mutoid' }
+        const store = () => MS.ctor({ initState: state, name: 'test' })
+
+        const { result } = renderHook(() => MR.useStore(store))
+
+        expect(result.current.name).toBe('test')
+
+        act(() => {
+            result.current.state$.next({ name: 'boom' })
+        })
+
+        const s = await result.current.state$.pipe(take(1)).toPromise()
+        expect(s.name).toBe('boom')
     })
 })
