@@ -4,15 +4,55 @@
 
 Three data structures that implement an instance of `Functor`, `Apply`, `Bifunctor`, `Applicative`, `Monad` (and `MonadObservable` for `ObservableResource` and `ReaderObservableResource`)
 
-If you want to see some examples:
+All modules have the same structure (more or less) as a fp-ts module:
 
-1 - simple fetch with token in store: [example](https://github.com/facile-it/mutoid/blob/pre_release_04/example/resources/quoteResource.ts#L23)  
-2 - fetch in series: [example](https://github.com/facile-it/mutoid/blob/pre_release_04/example/resources/quoteResource.ts#L42)  
-3 - fetch in parallel: [example](https://github.com/facile-it/mutoid/blob/pre_release_04/example/resources/quoteResource.ts#L54)
+-   constructor
+-   destructors
+-   combinators
+-   type class members
+-   instances
 
-### fromAjax
+### Resource
 
-Build ReaderObservableResource from ajax
+Resource, that is the basic data structures, is a sum type that represents all possible cases of async provisioning of data.
+
+-   _ResourceInit_: nothing happened
+-   _ResourceSubmitted_: the asynchronous request has started
+-   _ResourceDone_: the asynchronous request **has** terminated in an **expected state**
+-   _ResourceFail_: the asynchronous request **hasn't** terminated in an **expected state**
+
+### Constructors
+
+There are some classic constructors and some helper constructors from data structure `IO`, `Task`, `Either`, etc..
+
+#### fromAjax
+
+One of the most important and (hopefully) useful implemented in ReaderObservableResource and ObservableResource
+
+The inputs are: **ObservableAjax** and **ResourceDecoders**
+
+**ObservableAjax**
+
+```ts
+type ObservableAjax<AE = never> = Observable<AjaxResponse | RES.ResourceAjaxFail<AE>>
+```
+
+Where:
+
+-   `AjaxResponse` is A normalized response from an AJAX request [defined in rxjs](https://rxjs-dev.firebaseapp.com/api/ajax/AjaxResponse)
+-   `ResourceAjaxFail` is a sum type defined with two cases `unknownError` and `appError` (you can find the constructor in Resource)
+
+**ResourceDecoders**
+
+```ts
+import * as E from 'fp-ts/Either'
+
+type ResourceDecoders = { [k in StatusCode]?: (i: unknown) => E.Either<unknown, unknown> }
+```
+
+You can use `io-ts` to build easily the decoders
+
+##### Example
 
 ```typescript
 import * as t from 'io-ts'
@@ -20,6 +60,7 @@ import { ajax } from 'rxjs/ajax'
 import * as ROR from 'mutoid/http/ReaderObservableResource'
 import * as OR from 'mutoid/http/ObservableResource'
 import * as RES from 'mutoid/http/Resource'
+import { pipe } from 'fp-ts/function'
 
 export interface Deps {
     ajax: typeof ajax
@@ -49,9 +90,66 @@ export const fetchSomething = (id: number, from: string) =>
     )
 ```
 
-### toMutationEffect
+When you use `fromAjax`, we consider all status code in the decoder dictionary as a `Done` case.
 
-From ObservableResource
+In that case the done resource data is described by a sum type
+
+```ts
+interface ResourceData<S, P> {
+    readonly status: S
+    readonly payload: P
+}
+```
+
+where status and payload are inferred from your decoder dictionary
+
+Instead the fail resource data is described by a sum type that has (4+1) cases:
+
+-   `unknownError`
+-   `decodeError` errors are inferred from your decoder dictionary
+-   `networkError`
+-   `unexpectedResponse` all status code that you don't specify in decoder dictionary
+-   `appError` inferred if you specify that
+
+If you want to see some examples:
+
+1 - simple fetch with token in store: [example](https://github.com/facile-it/mutoid/blob/pre_release_04/example/resources/quoteResource.ts#L23)  
+2 - fetch in series: [example](https://github.com/facile-it/mutoid/blob/pre_release_04/example/resources/quoteResource.ts#L42)  
+3 - fetch in parallel: [example](https://github.com/facile-it/mutoid/blob/pre_release_04/example/resources/quoteResource.ts#L54)
+
+### Destructors
+
+#### match (Resource)
+
+Take 4 functions for each case: `onInit`, `onSubmitted`, `onDone`, `onFail`
+
+### matchD (Resource)
+
+Same of `match` but with different input
+
+```ts
+{
+    onInit: () => R
+    onSubmitted: () => R
+    onDone: (r: A) => R
+    onFail: (r: E) => R
+}
+
+// or
+
+{
+    onPending: () => R
+    onDone: (r: A) => R
+    onFail: (r: E) => R
+}
+```
+
+#### toMutationEffect (ReaderObservableResource, ObservableResource)
+
+This destructor is useful when you want to update a store after an asynchronous request.
+Implemented in ReaderObservableResource and ObservableResource
+
+In ObservableResource
 
 ```typescript
 import { map } from 'rxjs/operators'
@@ -72,7 +170,7 @@ export const fetchQuoteMutationWithParams = pipe(
 )
 ```
 
-From ReaderObservableResource
+In ReaderObservableResource
 
 ```typescript
 import { map } from 'rxjs/operators'
@@ -96,6 +194,7 @@ Module for serialize data (nullable or Option) to URLSearchParams or FormData
 
 ```typescript
 import * as DS from 'mutoid/http/dataSerializer'
+import { pipe } from 'fp-ts/function'
 
 const queryString = pipe({ page: 2, id: 5 }, DS.serializeUrl(new URLSearchParams()), DS.toQueryString)
 ```
@@ -104,6 +203,7 @@ You can use URLSearchParams on browser and NodeJs
 
 ```typescript
 import * as DS from 'mutoid/http/dataSerializer'
+import { pipe } from 'fp-ts/function'
 
 const formData = pipe({ name: 'iacopo' }, DS.serializeForm(new FormData()))
 ```
