@@ -125,6 +125,7 @@ After
 import * as t from 'io-ts'
 import { ajax } from 'rxjs/ajax'
 import * as ROR from 'mutoid/http/ReaderObservableResource'
+import * as OR from 'mutoid/http/ObservableResource'
 import * as RES from 'mutoid/http/Resource'
 
 export const somethingDecoders = {
@@ -137,6 +138,11 @@ export interface Deps {
 }
 
 type somethingResource = RES.ResourceTypeOf<typeof somethingDecoders>
+
+const fetchSomething = (id: number, from: string) => (deps: Deps) =>
+    OR.fromAjax(deps.ajax(`https://api.io?id=${id}&from=${from}`), somethingDecoders)
+
+// or
 
 export const fetchSomething = (id: number, from: string) =>
     pipe(
