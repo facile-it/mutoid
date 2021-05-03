@@ -31,7 +31,7 @@ One of the most important and (hopefully) useful implemented in ReaderObservable
 
 The inputs are: **ObservableAjax** and **ResourceDecoders**
 
-**ObservableAjax**
+\>> `ObservableAjax`
 
 ```ts
 type ObservableAjax<AE = never> = Observable<AjaxResponse | RES.ResourceAjaxFail<AE>>
@@ -40,9 +40,9 @@ type ObservableAjax<AE = never> = Observable<AjaxResponse | RES.ResourceAjaxFail
 Where:
 
 -   `AjaxResponse` is A normalized response from an AJAX request [defined in rxjs](https://rxjs-dev.firebaseapp.com/api/ajax/AjaxResponse)
--   `ResourceAjaxFail` is a sum type defined with two cases `unknownError` and `appError` (you can find the constructor in Resource)
+-   `ResourceAjaxFail` is a sum type defined with two cases `unknownError` and `appError` (you can find a constructor in Resource)
 
-**ResourceDecoders**
+\>> `ResourceDecoders`
 
 ```ts
 import * as E from 'fp-ts/Either'
@@ -123,7 +123,7 @@ If you want to see some examples:
 
 Take 4 functions for each case: `onInit`, `onSubmitted`, `onDone`, `onFail`
 
-### matchD (Resource)
+#### matchD (Resource)
 
 Same of `match` but with different input
 
