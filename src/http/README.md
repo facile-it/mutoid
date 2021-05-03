@@ -27,7 +27,7 @@ There are some classic constructors and some helper constructors from data struc
 
 #### fromAjax
 
-One of the most important and (hopefully) useful implemented in ReaderObservableResource and ObservableResource
+One of the most important and (hopefully) useful constructor implemented in ReaderObservableResource and ObservableResource
 
 The inputs are: **ObservableAjax** and **ResourceDecoders**
 
