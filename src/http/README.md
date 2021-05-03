@@ -34,6 +34,10 @@ The inputs are: **ObservableAjax** and **ResourceDecoders**
 \>> `ObservableAjax`
 
 ```ts
+import * as RES from 'mutoid/http/Resource'
+import { AjaxError } from 'rxjs/ajax'
+import { Observable } from 'rxjs'
+
 type ObservableAjax<AE = never> = Observable<AjaxResponse | RES.ResourceAjaxFail<AE>>
 ```
 
@@ -45,9 +49,10 @@ Where:
 \>> `ResourceDecoders`
 
 ```ts
-import * as E from 'fp-ts/Either'
+import { Either } from 'fp-ts/Either'
+import { StatusCode } from 'mutoid/http/statusCode'
 
-type ResourceDecoders = { [k in StatusCode]?: (i: unknown) => E.Either<unknown, unknown> }
+type ResourceDecoders = { [k in StatusCode]?: (i: unknown) => Either<unknown, unknown> }
 ```
 
 You can use `io-ts` to build easily the decoders
