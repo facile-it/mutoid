@@ -7,6 +7,8 @@
 -   added `dataSerializer` in http module
 -   added `mutoid/state/stores` and removed memoization in ctor [BREAKING CHANGE] (see [upgrade-to-0.4 guide](https://github.com/facile-it/mutoid/blob/master/docs/guides/upgrade-to-0.4.md))
 -   removed fast-memoize dependency
+-   added hooks in react module: `useStore`, `useFetchReaderObservableResource`, `useFetchObservableResource`
+-   deprecated `useResourceFetcher` hook in react module
 
 ## 0.3.1 (2020-11-25)
 
