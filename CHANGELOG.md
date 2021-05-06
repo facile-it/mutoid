@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.1 (2021-05-07)
+
+-   fix `useSelector` inference
+-   improve store type
+
 ## 0.4.0 (2021-05-01)
 
 -   deprecated module `rxjs` use `fp-ts-rxjs`
