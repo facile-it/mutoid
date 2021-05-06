@@ -20,12 +20,14 @@ type NotifySubject<N extends StoreName, S> = Readonly<
     | ({ type: 'mutationEnd' } & MutationNotify<N, S>)
 >
 
-export type Store<N extends StoreName, S> = Readonly<{
+type StoreOpaque<N extends StoreName, S> = Readonly<{
     name: N
     state$: BehaviorSubject<S>
     notifier$: BehaviorSubject<NotifySubject<N, S>>
     initState: S
 }>
+
+export interface Store<N extends StoreName, S> extends StoreOpaque<N, S> {}
 
 export type MutationEffect<P extends Array<unknown>, S, SS extends S> = (...p: P) => (state: SS) => Observable<S>
 
