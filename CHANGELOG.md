@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.1 (2021-06-08)
+
+-   Remove key engines from builded package json
+
 ## 0.4.1 (2021-05-07)
 
 -   fix `useSelector` inference
