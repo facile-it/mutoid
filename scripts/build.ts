@@ -21,6 +21,7 @@ const copyPackageJson: Build<void> = C =>
 
             delete clone.scripts
             delete clone.devDependencies
+            delete clone.engines
 
             return clone
         }),
