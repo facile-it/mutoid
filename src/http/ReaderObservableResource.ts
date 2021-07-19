@@ -3,6 +3,7 @@ import type { MonadObservable3 } from 'fp-ts-rxjs/lib/MonadObservable'
 import type { Applicative3 } from 'fp-ts/Applicative'
 import type { Apply3 } from 'fp-ts/Apply'
 import type { Bifunctor3 } from 'fp-ts/Bifunctor'
+import { Chain3, chainFirst as chainFirst_ } from 'fp-ts/Chain'
 import type { Functor3 } from 'fp-ts/Functor'
 import type { Monad3 } from 'fp-ts/Monad'
 import type { MonadIO3 } from 'fp-ts/MonadIO'
@@ -86,6 +87,8 @@ export const fromIO: MonadIO3<URI>['fromIO'] = ma => () => OR.rightIO(ma)
 
 export const fromAjax = flow(OR.fromAjax, fromObservableResource)
 
+export const of: Applicative3<URI>['of'] = done
+
 // -------------------------------------------------------------------------------------
 // destructors
 // -------------------------------------------------------------------------------------
@@ -94,49 +97,102 @@ export const toMutation = <R, E, A, S, SS extends S>(mapTo: (r: RES.Resource<E, 
     ros: ReaderObservableResource<R, E, A>
 ) => flow(ros, c => c.pipe(RXoP.map(mapTo)))
 
+export const fetchToMutationEffectR = <
+    RORK extends (...i: P) => ReaderObservableResource<R, E, A>,
+    SS extends S,
+    S,
+    R = RORK extends (...i: any) => ReaderObservableResource<infer I, any, any> ? I : never,
+    E = RORK extends (...i: any) => ReaderObservableResource<any, infer I, any> ? I : never,
+    A = RORK extends (...i: any) => ReaderObservableResource<any, any, infer I> ? I : never,
+    P extends Array<any> = Parameters<RORK>
+>(
+    mapTo: (s: SS) => (i: RES.Resource<E, A>) => S
+) => (rork: RORK) => (r: R) => (...i: P) => pipe(rork(...i)(r), o => (s: SS) => o.pipe(RXoP.map(mapTo(s))))
+
 // -------------------------------------------------------------------------------------
-// combinators
+// instances
 // -------------------------------------------------------------------------------------
 
-export const local: <R2, R1>(
-    f: (d: R2) => R1
-) => <E, A>(ma: ReaderObservableResource<R1, E, A>) => ReaderObservableResource<R2, E, A> = R.local
+/* istanbul ignore next */
+const _map: Functor3<URI>['map'] = (fa, f) => pipe(fa, map(f))
+/* istanbul ignore next */
+const _ap: Apply3<URI>['ap'] = (fab, fa) => pipe(fab, ap(fa))
+/* istanbul ignore next */
+const _chain: Monad3<URI>['chain'] = (ma, f) => pipe(ma, chain(f))
+/* istanbul ignore next */
+const _bimap: Bifunctor3<URI>['bimap'] = (fea, f, g) => pipe(fea, bimap(f, g))
+/* istanbul ignore next */
+const _mapLeft: Bifunctor3<URI>['mapLeft'] = (fea, f) => pipe(fea, mapLeft(f))
 
-export function swap<R, E, A>(ma: ReaderObservableResource<R, E, A>): ReaderObservableResource<R, A, E> {
-    return flow(ma, OR.swap)
+export const URI = 'ReaderObservableResource'
+
+export type URI = typeof URI
+
+declare module 'fp-ts/HKT' {
+    export interface URItoKind3<R, E, A> {
+        readonly [URI]: ReaderObservableResource<R, E, A>
+    }
 }
 
-export function orElseW<R, R1, E, M, A, B>(
-    onLeft: (e: E) => ReaderObservableResource<R1, M, B>
-): (ma: ReaderObservableResource<R, E, A>) => ReaderObservableResource<R & R1, M, A | B> {
-    return ma => r => OR.orElseW<E, M, A, B>(e => onLeft(e)(r))(ma(r))
+export const Functor: Functor3<URI> = {
+    URI,
+    map: _map,
 }
 
-export const orElse: <R, E, A, M>(
-    onLeft: (e: E) => ReaderObservableResource<R, M, A>
-) => (ma: ReaderObservableResource<R, E, A>) => ReaderObservableResource<R, M, A> = orElseW
+export const Apply: Apply3<URI> = {
+    URI,
+    map: _map,
+    ap: _ap,
+}
 
-export const filterOrElseW: {
-    <A, B extends A, E2>(refinement: Refinement<A, B>, onFalse: (a: A) => E2): <R, E1>(
-        ma: ReaderObservableResource<R, E1, A>
-    ) => ReaderObservableResource<R, E1 | E2, B>
-    <A, E2>(predicate: Predicate<A>, onFalse: (a: A) => E2): <R, E1>(
-        ma: ReaderObservableResource<R, E1, A>
-    ) => ReaderObservableResource<R, E1 | E2, A>
-} = <A, E2>(
-    predicate: Predicate<A>,
-    onFalse: (a: A) => E2
-): (<R, E1>(ma: ReaderObservableResource<R, E1, A>) => ReaderObservableResource<R, E1 | E2, A>) =>
-    chainW(a => (predicate(a) ? done(a) : fail(onFalse(a))))
+export const Applicative: Applicative3<URI> = {
+    URI,
+    map: _map,
+    ap: _ap,
+    of,
+}
 
-export const filterOrElse: {
-    <E, A, B extends A>(refinement: Refinement<A, B>, onFalse: (a: A) => E): <R>(
-        ma: ReaderObservableResource<R, E, A>
-    ) => ReaderObservableResource<R, E, B>
-    <E, A>(predicate: Predicate<A>, onFalse: (a: A) => E): <R>(
-        ma: ReaderObservableResource<R, E, A>
-    ) => ReaderObservableResource<R, E, A>
-} = filterOrElseW
+export const Chain: Chain3<URI> = {
+    URI,
+    map: _map,
+    ap: _ap,
+    chain: _chain,
+}
+
+export const Monad: Monad3<URI> = {
+    URI,
+    map: _map,
+    ap: _ap,
+    of,
+    chain: _chain,
+}
+
+export const Bifunctor: Bifunctor3<URI> = {
+    URI,
+    bimap: _bimap,
+    mapLeft: _mapLeft,
+}
+
+export const MonadTask: MonadTask3<URI> = {
+    URI,
+    map: _map,
+    of,
+    ap: _ap,
+    chain: _chain,
+    fromIO,
+    fromTask,
+}
+
+export const MonadObservable: MonadObservable3<URI> = {
+    URI,
+    map: _map,
+    of,
+    ap: _ap,
+    chain: _chain,
+    fromIO,
+    fromObservable,
+    fromTask,
+}
 
 // -------------------------------------------------------------------------------------
 // type class members
@@ -178,101 +234,59 @@ export const flatten: <R, E, A>(
     mma: ReaderObservableResource<R, E, ReaderObservableResource<R, E, A>>
 ) => ReaderObservableResource<R, E, A> = chain(identity)
 
-export const of: Applicative3<URI>['of'] = done
-
 // -------------------------------------------------------------------------------------
-// instances
+// combinators
 // -------------------------------------------------------------------------------------
 
-/* istanbul ignore next */
-const map_: Functor3<URI>['map'] = (fa, f) => pipe(fa, map(f))
-/* istanbul ignore next */
-const ap_: Apply3<URI>['ap'] = (fab, fa) => pipe(fab, ap(fa))
-/* istanbul ignore next */
-const chain_: Monad3<URI>['chain'] = (ma, f) => pipe(ma, chain(f))
-/* istanbul ignore next */
-const bimap_: Bifunctor3<URI>['bimap'] = (fea, f, g) => pipe(fea, bimap(f, g))
-/* istanbul ignore next */
-const mapLeft_: Bifunctor3<URI>['mapLeft'] = (fea, f) => pipe(fea, mapLeft(f))
+export const local: <R2, R1>(
+    f: (d: R2) => R1
+) => <E, A>(ma: ReaderObservableResource<R1, E, A>) => ReaderObservableResource<R2, E, A> = R.local
 
-export const URI = 'ReaderObservableResource'
-
-export type URI = typeof URI
-
-declare module 'fp-ts/HKT' {
-    export interface URItoKind3<R, E, A> {
-        readonly [URI]: ReaderObservableResource<R, E, A>
-    }
+export function swap<R, E, A>(ma: ReaderObservableResource<R, E, A>): ReaderObservableResource<R, A, E> {
+    return flow(ma, OR.swap)
 }
 
-export const Functor: Functor3<URI> = {
-    URI,
-    map: map_,
+export const chainFirst: <R, E, A, B>(
+    f: (a: A) => ReaderObservableResource<R, E, B>
+) => (ma: ReaderObservableResource<R, E, A>) => ReaderObservableResource<R, E, A> = chainFirst_(Chain)
+
+export const chainFirstW: <R2, E2, A, B>(
+    f: (a: A) => ReaderObservableResource<R2, E2, B>
+) => <R1, E1>(
+    ma: ReaderObservableResource<R1, E1, A>
+) => ReaderObservableResource<R1 & R2, E1 | E2, A> = chainFirst as any
+
+export function orElseW<R, R1, E, M, A, B>(
+    onLeft: (e: E) => ReaderObservableResource<R1, M, B>
+): (ma: ReaderObservableResource<R, E, A>) => ReaderObservableResource<R & R1, M, A | B> {
+    return ma => r => OR.orElseW<E, M, A, B>(e => onLeft(e)(r))(ma(r))
 }
 
-export const Apply: Apply3<URI> = {
-    URI,
-    map: map_,
-    ap: ap_,
-}
+export const orElse: <R, E, A, M>(
+    onLeft: (e: E) => ReaderObservableResource<R, M, A>
+) => (ma: ReaderObservableResource<R, E, A>) => ReaderObservableResource<R, M, A> = orElseW
 
-export const Applicative: Applicative3<URI> = {
-    URI,
-    map: map_,
-    ap: ap_,
-    of,
-}
+export const filterOrElseW: {
+    <A, B extends A, E2>(refinement: Refinement<A, B>, onFalse: (a: A) => E2): <R, E1>(
+        ma: ReaderObservableResource<R, E1, A>
+    ) => ReaderObservableResource<R, E1 | E2, B>
+    <A, E2>(predicate: Predicate<A>, onFalse: (a: A) => E2): <R, E1>(
+        ma: ReaderObservableResource<R, E1, A>
+    ) => ReaderObservableResource<R, E1 | E2, A>
+} = <A, E2>(
+    predicate: Predicate<A>,
+    onFalse: (a: A) => E2
+): (<R, E1>(ma: ReaderObservableResource<R, E1, A>) => ReaderObservableResource<R, E1 | E2, A>) =>
+    chainW(a => (predicate(a) ? done(a) : fail(onFalse(a))))
 
-export const Monad: Monad3<URI> = {
-    URI,
-    map: map_,
-    ap: ap_,
-    of,
-    chain: chain_,
-}
-
-export const Bifunctor: Bifunctor3<URI> = {
-    URI,
-    bimap: bimap_,
-    mapLeft: mapLeft_,
-}
-
-export const MonadTask: MonadTask3<URI> = {
-    URI,
-    map: map_,
-    of,
-    ap: ap_,
-    chain: chain_,
-    fromIO,
-    fromTask,
-}
-
-export const MonadObservable: MonadObservable3<URI> = {
-    URI,
-    map: map_,
-    of,
-    ap: ap_,
-    chain: chain_,
-    fromIO,
-    fromObservable,
-    fromTask,
-}
-
-// -------------------------------------------------------------------------------------
-// destructors
-// -------------------------------------------------------------------------------------
-
-export const fetchToMutationEffectR = <
-    RORK extends (...i: P) => ReaderObservableResource<R, E, A>,
-    SS extends S,
-    S,
-    R = RORK extends (...i: any) => ReaderObservableResource<infer I, any, any> ? I : never,
-    E = RORK extends (...i: any) => ReaderObservableResource<any, infer I, any> ? I : never,
-    A = RORK extends (...i: any) => ReaderObservableResource<any, any, infer I> ? I : never,
-    P extends Array<any> = Parameters<RORK>
->(
-    mapTo: (s: SS) => (i: RES.Resource<E, A>) => S
-) => (rork: RORK) => (r: R) => (...i: P) => pipe(rork(...i)(r), o => (s: SS) => o.pipe(RXoP.map(mapTo(s))))
+export const filterOrElse: {
+    <E, A, B extends A>(refinement: Refinement<A, B>, onFalse: (a: A) => E): <R>(
+        ma: ReaderObservableResource<R, E, A>
+    ) => ReaderObservableResource<R, E, B>
+    <E, A>(predicate: Predicate<A>, onFalse: (a: A) => E): <R>(
+        ma: ReaderObservableResource<R, E, A>
+    ) => ReaderObservableResource<R, E, A>
+} = filterOrElseW
 
 // -------------------------------------------------------------------------------------
 // utils

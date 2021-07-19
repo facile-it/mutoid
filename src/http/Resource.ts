@@ -156,7 +156,6 @@ export const ajaxFail = <AE = never, A = never>(error: ResourceAjaxError<AE>): R
     error: error,
 })
 
-// TODO maybe wrong
 export const failAppError = <AE, A = never>(detail: AE): Resource<ResourceAjaxError<AE>, A> => ({
     _tag: 'fail',
     error: appError(detail) as any,
@@ -173,6 +172,8 @@ export const ajaxFailOnly = <AE = never>(error: ResourceAjaxError<AE>): Resource
 })
 
 export const fromEither: <E, A>(e: E.Either<E, A>) => Resource<E, A> = E.fold(e => fail(e), done)
+
+export const of: RES<URI>['of'] = done
 
 // -------------------------------------------------------------------------------------
 // Destructors
@@ -220,6 +221,102 @@ export const match_ = <E, D>(r: Resource<E, D>) => <R>(
     onDone: (r: D) => R,
     onFail: (r: E) => R
 ): R => pipe(r, match(onInit, onSubmitted, onDone, onFail))
+
+// -------------------------------------------------------------------------------------
+// instances
+// -------------------------------------------------------------------------------------
+
+/* istanbul ignore next */
+const _map: Monad2<URI>['map'] = (fa, f) => pipe(fa, map(f))
+/* istanbul ignore next */
+const _bimap: Bifunctor2<URI>['bimap'] = (fa, f, g) => pipe(fa, bimap(f, g))
+/* istanbul ignore next */
+const _mapLeft: Bifunctor2<URI>['mapLeft'] = (fa, f) => pipe(fa, mapLeft(f))
+/* istanbul ignore next */
+const _ap: Monad2<URI>['ap'] = (fa, f) => pipe(fa, ap(f))
+/* istanbul ignore next */
+const _chain: Monad2<URI>['chain'] = (fa, f) => pipe(fa, chain(f))
+
+export const URI = 'Resource'
+
+export type URI = typeof URI
+
+declare module 'fp-ts/HKT' {
+    interface URItoKind2<E, A> {
+        readonly [URI]: Resource<E, A>
+    }
+}
+
+export function getShow<E, A>(SE: Show<E>, SA: Show<A>): Show<Resource<E, A>> {
+    return {
+        show: ma => {
+            switch (ma._tag) {
+                case 'done':
+                    return `done(${SA.show(ma.data)})`
+                case 'fail':
+                    return `fail(${SE.show(ma.error)})`
+                case 'submitted':
+                    return 'submitted'
+                case 'init':
+                    return 'init'
+            }
+        },
+    }
+}
+
+export function getEq<E, A>(EE: Eq.Eq<E>, EA: Eq.Eq<A>): Eq.Eq<Resource<E, A>> {
+    return Eq.fromEquals((a, b) =>
+        pipe(
+            a,
+            match(
+                () => b._tag === 'init',
+                () => b._tag === 'submitted',
+                fa =>
+                    pipe(
+                        b,
+                        match(constFalse, constFalse, fb => EA.equals(fa, fb), constFalse)
+                    ),
+                sa =>
+                    pipe(
+                        b,
+                        match(constFalse, constFalse, constFalse, sb => EE.equals(sa, sb))
+                    )
+            )
+        )
+    )
+}
+
+export const Functor: Functor2<URI> = {
+    URI,
+    map: _map,
+}
+
+export const Apply: Apply2<URI> = {
+    URI,
+    map: _map,
+    ap: _ap,
+}
+
+export const Bifunctor: Bifunctor2<URI> = {
+    URI,
+    bimap: _bimap,
+    mapLeft: _mapLeft,
+}
+
+export const Applicative: RES<URI> = {
+    URI,
+    map: _map,
+    ap: _ap,
+    of,
+}
+
+export const Monad: Monad2<URI> = {
+    URI,
+    map: _map,
+    ap: _ap,
+    of,
+    chain: _chain,
+}
 
 // -------------------------------------------------------------------------------------
 // combinators
@@ -285,105 +382,7 @@ export const apW: <D, A>(
 
 export const ap: <E, A>(fa: Resource<E, A>) => <B>(fab: Resource<E, (a: A) => B>) => Resource<E, B> = apW
 
-export const of: RES<URI>['of'] = done
-
 export const chainW = <D, A, B>(f: (a: A) => Resource<D, B>) => <E>(ma: Resource<E, A>): Resource<D | E, B> =>
     isDone(ma) ? f(ma.data) : ma
 
 export const chain: <E, A, B>(f: (a: A) => Resource<E, B>) => (ma: Resource<E, A>) => Resource<E, B> = chainW
-
-// -------------------------------------------------------------------------------------
-// instances
-// -------------------------------------------------------------------------------------
-
-/* istanbul ignore next */
-const map_: Monad2<URI>['map'] = (fa, f) => pipe(fa, map(f))
-/* istanbul ignore next */
-const bimap_: Bifunctor2<URI>['bimap'] = (fa, f, g) => pipe(fa, bimap(f, g))
-/* istanbul ignore next */
-const mapLeft_: Bifunctor2<URI>['mapLeft'] = (fa, f) => pipe(fa, mapLeft(f))
-/* istanbul ignore next */
-const ap_: Monad2<URI>['ap'] = (fa, f) => pipe(fa, ap(f))
-/* istanbul ignore next */
-const chain_: Monad2<URI>['chain'] = (fa, f) => pipe(fa, chain(f))
-
-export const URI = 'Resource'
-
-export type URI = typeof URI
-
-declare module 'fp-ts/HKT' {
-    interface URItoKind2<E, A> {
-        readonly [URI]: Resource<E, A>
-    }
-}
-
-export function getShow<E, A>(SE: Show<E>, SA: Show<A>): Show<Resource<E, A>> {
-    return {
-        show: ma => {
-            switch (ma._tag) {
-                case 'done':
-                    return `done(${SA.show(ma.data)})`
-                case 'fail':
-                    return `fail(${SE.show(ma.error)})`
-                case 'submitted':
-                    return 'submitted'
-                case 'init':
-                    return 'init'
-            }
-        },
-    }
-}
-
-export function getEq<E, A>(EE: Eq.Eq<E>, EA: Eq.Eq<A>): Eq.Eq<Resource<E, A>> {
-    return Eq.fromEquals((a, b) =>
-        pipe(
-            a,
-            match(
-                () => b._tag === 'init',
-                () => b._tag === 'submitted',
-                fa =>
-                    pipe(
-                        b,
-                        match(constFalse, constFalse, fb => EA.equals(fa, fb), constFalse)
-                    ),
-                sa =>
-                    pipe(
-                        b,
-                        match(constFalse, constFalse, constFalse, sb => EE.equals(sa, sb))
-                    )
-            )
-        )
-    )
-}
-
-export const Functor: Functor2<URI> = {
-    URI,
-    map: map_,
-}
-
-export const Apply: Apply2<URI> = {
-    URI,
-    map: map_,
-    ap: ap_,
-}
-
-export const Bifunctor: Bifunctor2<URI> = {
-    URI,
-    bimap: bimap_,
-    mapLeft: mapLeft_,
-}
-
-export const Applicative: RES<URI> = {
-    URI,
-    map: map_,
-    ap: ap_,
-    of,
-}
-
-export const Monad: Monad2<URI> = {
-    URI,
-    map: map_,
-    ap: ap_,
-    of,
-    chain: chain_,
-}
