@@ -16,16 +16,11 @@ import type { StatusCode } from './statusCode'
 // Cache
 // -------------------------------------------------------------------------------------
 
-export interface CacheItem<D = unknown> {
-    validUntil: number
-    status: StatusCode
-    data: D
-}
+export type CacheItem<S = StatusCode, P = unknown> = RES.ResourceData<S, P>
 
 export interface CacheService {
-    setItem: (key: string, status: StatusCode, data: unknown, ttl?: number) => IO.IO<void>
-    deleteItem: (key: string) => IO.IO<void>
-    getItem: (key: string) => TO.TaskOption<CacheItem>
+    findItem: (key: string) => TO.TaskOption<CacheItem>
+    saveItem: (key: string, item: CacheItem, ttl: number) => IO.IO<void>
 }
 
 export interface CreateCacheKey {
@@ -158,17 +153,16 @@ export const fetchCacheableFactory = <DL, OL>(
 
     return pipe((deps: FetchFactoryDepsCacheable) => {
         return pipe(
-            deps.cache.getItem(createCacheKey(request)),
+            deps.cache.findItem(createCacheKey(request)),
             OR.fromTask,
             OR.chain(item => {
                 return pipe(
                     item,
                     O.bindTo('item'),
-                    O.bind('ttl', () => O.fromNullable(appCacheTtl)),
                     O.bind('decoder', i => O.fromNullable(decoderL()[i.item.status as SC])),
-                    O.map(ci => {
-                        return pipe(
-                            ci.decoder(ci.item.data),
+                    O.map(ci =>
+                        pipe(
+                            ci.decoder(ci.item.payload),
                             E.bimap(
                                 (e): ResourceBad => ({
                                     type: 'fail',
@@ -177,26 +171,21 @@ export const fetchCacheableFactory = <DL, OL>(
                                     statusCode: ci.item.status as number,
                                     detail: PathReporter.report(t.failures(e)).join('\n>> '),
                                 }),
-                                (d): RES.DecodersToResourceData<DS> => ({
+                                (payload): RES.DecodersToResourceData<DS> => ({
                                     status: ci.item.status as SC,
-                                    payload: d,
+                                    payload,
                                 })
                             ),
                             OR.fromEither,
                             OR_filterResponse(successCodes, request)
                         )
-                    }),
+                    ),
                     O.getOrElse(() =>
                         pipe(
                             runRequest(deps, request, decoderL),
-                            OR.chainFirstW(e =>
+                            OR.chainFirstW(r =>
                                 pipe(
-                                    deps.cache.setItem(
-                                        createCacheKey(request),
-                                        e.status as StatusCode,
-                                        e.payload,
-                                        appCacheTtl
-                                    ),
+                                    deps.cache.saveItem(createCacheKey(request), r as CacheItem, appCacheTtl),
                                     OR.rightIO
                                 )
                             ),
