@@ -27,7 +27,7 @@ export interface CreateCacheKey {
     (endpoint: EndpointRequest): string
 }
 
-const getEndpointAppCacheTtl = (endpoint: EndpointRequest) =>
+const getEndpointAppCacheTtl = (endpoint: EndpointRequestCacheable) =>
     endpoint.method === 'GET' && typeof endpoint.appCacheTtl !== 'undefined' && endpoint.appCacheTtl > 0
         ? endpoint.appCacheTtl
         : undefined
@@ -38,7 +38,7 @@ const getEndpointAppCacheTtl = (endpoint: EndpointRequest) =>
 
 export type FetchFactoryDeps = DepsAjax
 
-export type FetchFactoryDepsCacheable = FetchFactoryDeps & DepsCache
+export type FetchFactoryCacheableDeps = FetchFactoryDeps & DepsCache
 
 export interface DepsAjax {
     ajax: typeof ajax
@@ -100,15 +100,25 @@ interface EndpointRequestAjaxRequest extends AjaxRequest {
     headers?: Record<string, string>
 }
 
+interface EndpointRequestMethod {
+    method: 'HEAD' | 'PUT' | 'POST' | 'PATCH' | 'DELETE' | 'OPTIONS' | 'CONNECT'
+}
+
 export type EndpointRequest = EndpointRequestAjaxRequest &
+    (
+        | {
+              method: 'GET'
+          }
+        | EndpointRequestMethod
+    )
+
+export type EndpointRequestCacheable = EndpointRequestAjaxRequest &
     (
         | {
               method: 'GET'
               appCacheTtl?: number
           }
-        | {
-              method: 'HEAD' | 'PUT' | 'POST' | 'PATCH' | 'DELETE' | 'OPTIONS' | 'CONNECT'
-          }
+        | EndpointRequestMethod
     )
 
 export type FetchFactoryDecoders<K extends StatusCode> = {
@@ -138,10 +148,10 @@ export const fetchFactory = <DL, OL>(loggerFail: (e: ResourceBad) => R.Reader<DL
 }
 
 export const fetchCacheableFactory = <DL, OL>(
-    createCacheKey: CreateCacheKey,
-    loggerFail: (e: ResourceBad) => R.Reader<DL, OL>
+    loggerFail: (e: ResourceBad) => R.Reader<DL, OL>,
+    createCacheKey: CreateCacheKey
 ) => <K extends StatusCode, DS extends FetchFactoryDecoders<K>, SC extends keyof DS>(
-    request: EndpointRequest,
+    request: EndpointRequestCacheable,
     decoderL: Lazy<DS>,
     successCodes: Array<SC>
 ) => {
@@ -151,7 +161,7 @@ export const fetchCacheableFactory = <DL, OL>(
         return fetchFactory(loggerFail)(request, decoderL, successCodes)
     }
 
-    return pipe((deps: FetchFactoryDepsCacheable) => {
+    return pipe((deps: FetchFactoryCacheableDeps) => {
         return pipe(
             deps.cache.findItem(createCacheKey(request)),
             OR.fromTask,

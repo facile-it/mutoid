@@ -6,6 +6,9 @@ import { tap, map } from 'rxjs/operators'
 
 // operators
 
+/**
+ * @deprecated use chainFirst and fromIO from fp-ts-rxjs Observable module
+ */
 const runIOL = <T, R>(c: (t: T) => IO<R>) => (t: T): R => c(t)()
 
 /**

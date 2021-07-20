@@ -47,6 +47,19 @@ export const appFetchFactory = <K extends StatusCode, DS extends RESFF.FetchFact
         ROR.chainW(token => fetchWithErrorLog(doRequest(token), decoder, successCodes))
     )
 
+const fetchCacheableWithErrorLog = RESFF.fetchCacheableFactory(logError, () => '')
+
+export const appFetchCacheable = <K extends StatusCode, DS extends RESFF.FetchFactoryDecoders<K>, SC extends keyof DS>(
+    doRequest: (token: AccessToken) => RESFF.EndpointRequest,
+    decoder: Lazy<DS>,
+    successCodes: Array<SC>
+) =>
+    pipe(
+        tokenRetriever,
+        ROR.mapLeft(e => RESFF.resourceBadFail({ error: e.type, detail: e.detail })),
+        ROR.chainW(token => fetchCacheableWithErrorLog(doRequest(token), decoder, successCodes))
+    )
+
 // -------------------------------------------------------------------------------------
 // Utility
 // -------------------------------------------------------------------------------------
