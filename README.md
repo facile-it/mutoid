@@ -1,6 +1,6 @@
 # Mutoid
 
-Reactive library for state management, data fetching, caching (wip) with some utilities to use with _React_
+Reactive library for state management, data fetching, caching with some utilities to use with _React_
 
 ## Installation
 

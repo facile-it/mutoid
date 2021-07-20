@@ -6,10 +6,10 @@ import * as React from 'react'
 import { Subject } from 'rxjs'
 import { ajax } from 'rxjs/ajax'
 import * as RES from '../src/http/Resource'
+import type * as RESFF from '../src/http/resourceFetchFactory'
 import * as MR from '../src/react'
 import { useStore } from '../src/react/useStore'
 import * as MS from '../src/state'
-import type { ResourceBad } from './resources/fetchBuilder'
 import {
     fetchQuoteSeq,
     fetchQuoteSeqPar,
@@ -41,7 +41,7 @@ const renderQuoteResource = (quote: QuoteResource): React.ReactChild => {
     )
 }
 
-const renderQuotes = (quote: RES.Resource<ResourceBad, Array<string>>): React.ReactChild => {
+const renderQuotes = (quote: RES.Resource<RESFF.ResourceBad, Array<string>>): React.ReactChild => {
     return pipe(
         quote,
         RES.matchD({

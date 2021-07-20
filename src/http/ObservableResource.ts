@@ -348,7 +348,7 @@ const decodeResponse = <DS extends RES.ResourceDecoders>(decoders: DS) => <AE>(
     }
 
     return RES.fail({
-        type: 'unexpectedResponse',
+        type: response.status === 0 ? 'networkError' : 'unexpectedResponse',
         detail: response,
     }) as RES.ResourceTypeOfFail<DS, AE>
 }
