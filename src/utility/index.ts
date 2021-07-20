@@ -1,3 +1,3 @@
 /* istanbul ignore file */
 
-export * as hashString from './hashString'
+export * as hash from './hash'

@@ -5,6 +5,7 @@ import * as RES from '../../src/http/Resource'
 import * as DS from '../../src/http/dataSerializer'
 import * as RESFF from '../../src/http/resourceFetchFactory'
 import type { StatusCode } from '../../src/http/statusCode'
+import { hashString } from '../../src/utility/hash'
 import type { LoggerDeps } from '../logger'
 import { logError } from '../logger'
 import type { AccessToken, SessionStore } from '../stores/sessionStore'
@@ -47,7 +48,23 @@ export const appFetchFactory = <K extends StatusCode, DS extends RESFF.FetchFact
         ROR.chainW(token => fetchWithErrorLog(doRequest(token), decoder, successCodes))
     )
 
-const fetchCacheableWithErrorLog = RESFF.fetchCacheableFactory(logError, () => '')
+// -------------------------------------------------------------------------------------
+// Constructor cacheable
+// -------------------------------------------------------------------------------------
+
+export const appEndpointRequestCacheable = <E extends Record<string, string | number>>(e?: E) => (
+    accessToken: AccessToken
+): RESFF.EndpointRequestCacheable => ({
+    method: 'GET',
+    appCacheTtl: 900,
+    url: `https://ron-swanson-quotes.herokuapp.com/v2/quotes${pipe(
+        { token: accessToken, ...e },
+        DS.serializeUrl(new URLSearchParams()),
+        DS.toQueryString
+    )}`,
+})
+
+const fetchCacheableWithErrorLog = RESFF.fetchCacheableFactory(logError, e => hashString(e.url))
 
 export const appFetchCacheable = <K extends StatusCode, DS extends RESFF.FetchFactoryDecoders<K>, SC extends keyof DS>(
     doRequest: (token: AccessToken) => RESFF.EndpointRequest,

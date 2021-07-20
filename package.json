@@ -74,9 +74,13 @@
         "fp-ts": "^2.10.5",
         "fp-ts-rxjs": "^0.6.15",
         "react": "^16.8 || ^17.0",
+        "io-ts": "^2.2.10",
         "rxjs": "^6.6"
     },
     "peerDependenciesMeta": {
+        "io-ts": {
+            "optional": true
+        },
         "react": {
             "optional": true
         }

@@ -10,7 +10,9 @@ import type * as RESFF from '../src/http/resourceFetchFactory'
 import * as MR from '../src/react'
 import { useStore } from '../src/react/useStore'
 import * as MS from '../src/state'
+import { cacheService } from './cacheService'
 import {
+    fetchQuoteCached,
     fetchQuoteSeq,
     fetchQuoteSeqPar,
     fetchQuoteWithDelay,
@@ -31,6 +33,13 @@ const useResourceDeps = () => ({
     ajax: ajax,
     logger: console,
     store: useSessionStore(),
+})
+
+const useResourceCacheDeps = () => ({
+    ajax: ajax,
+    logger: console,
+    store: useSessionStore(),
+    cache: cacheService(window.sessionStorage),
 })
 
 const renderQuoteResource = (quote: QuoteResource): React.ReactChild => {
@@ -265,6 +274,26 @@ const QuoteWithFetchQuoteSeqPar: React.FC = () => {
     )
 }
 
+const QuoteWithFetchCache: React.FC = () => {
+    const [quote, quoteFetcher] = MR.useFetchReaderObservableResource(fetchQuoteCached, useResourceCacheDeps())
+
+    React.useEffect(() => {
+        quoteFetcher()
+    }, [quoteFetcher])
+
+    return (
+        <>
+            <h2>FetchQuoteCache</h2>
+            <em>{renderQuoteResource(quote)}</em>
+            <br />
+            <br />
+            <button type="button" onClick={quoteFetcher}>
+                Fetch new quote (cache)
+            </button>
+        </>
+    )
+}
+
 const App: React.FC<{ name: string }> = props => {
     const quoteStoreRef = useStore(quoteStore)
 
@@ -298,6 +327,9 @@ const App: React.FC<{ name: string }> = props => {
             </div>
             <div>
                 <QuoteWithFetchQuoteSeqPar />
+            </div>
+            <div>
+                <QuoteWithFetchCache />
             </div>
         </>
     )

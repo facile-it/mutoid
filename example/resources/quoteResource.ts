@@ -8,7 +8,7 @@ import * as OR from '../../src/http/ObservableResource'
 import * as ROR from '../../src/http/ReaderObservableResource'
 import type * as RES from '../../src/http/Resource'
 import type * as RESFF from '../../src/http/resourceFetchFactory'
-import { appEndpointRequest, appFetchFactory } from './appFetchFactory'
+import { appEndpointRequest, appEndpointRequestCacheable, appFetchCacheable, appFetchFactory } from './appFetchFactory'
 
 export const quoteDecoders = () => ({
     200: nonEmptyArray(t.string).decode,
@@ -20,7 +20,7 @@ export type QuoteResource = RES.Resource<
     Extract<RES.DecodersToResourceData<ReturnType<typeof quoteDecoders>>, { status: 200 }>
 >
 
-//  example: fetch with token but without params
+// example: fetch with token but without params
 
 export const fetchQuote = () => appFetchFactory(appEndpointRequest(), quoteDecoders, [200])
 
@@ -39,7 +39,7 @@ export const fetchSimple = (id: number, from: string) => (deps: { ajax: typeof a
 export const fetchQuoteWithDelay = () =>
     flow(appFetchFactory(appEndpointRequest(), quoteDecoders, [200]), o => o.pipe(delay(5_000)))
 
-//  fetch in series the quotes
+// example: fetch in series the quotes
 
 export const fetchQuoteSeq = () =>
     pipe(
@@ -51,7 +51,7 @@ export const fetchQuoteSeq = () =>
         ROR.map(c => [...c.firstFetch.payload, ...c.secondFetch.payload])
     )
 
-//  example: fetch in parallel the quotes
+// example: fetch in parallel the quotes
 
 export const fetchQuoteSeqPar = () =>
     pipe(
@@ -61,3 +61,7 @@ export const fetchQuoteSeqPar = () =>
         }),
         ROR.map(c => [...c.firstFetch.payload, ...c.secondFetch.payload])
     )
+
+// example: fetch with cache
+
+export const fetchQuoteCached = () => appFetchCacheable(appEndpointRequestCacheable(), quoteDecoders, [200])

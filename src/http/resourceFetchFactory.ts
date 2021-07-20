@@ -10,6 +10,7 @@ import type { ajax, AjaxRequest } from 'rxjs/ajax'
 import * as OR from './ObservableResource'
 import * as ROR from './ReaderObservableResource'
 import type * as RES from './Resource'
+import type { resourceBadFailT, resourceBadRejectedT, resourceBadT } from './io-types/resourceBadT'
 import type { StatusCode } from './statusCode'
 
 // -------------------------------------------------------------------------------------
@@ -56,16 +57,10 @@ interface ResourceBadCtor<R extends ResourceBadRejected | ResourceBadFail> {
     error: R['error']
     detail: unknown
     errorMessage?: string
-    statusCode?: number
+    statusCode?: StatusCode | 0
 }
 
-export interface ResourceBadRejected {
-    type: 'rejected'
-    error: 'notFound' | 'clientError'
-    errorMessage: string
-    statusCode: number
-    detail: unknown
-}
+export type ResourceBadRejected = t.TypeOf<typeof resourceBadRejectedT>
 export const resourceBadRejected = (d: ResourceBadCtor<ResourceBadRejected>): ResourceBad => ({
     type: 'rejected',
     error: d.error,
@@ -74,13 +69,7 @@ export const resourceBadRejected = (d: ResourceBadCtor<ResourceBadRejected>): Re
     errorMessage: d.errorMessage ?? d.error,
 })
 
-export interface ResourceBadFail {
-    type: 'fail'
-    error: 'fail' | 'unexpectedResponse' | 'unknownError' | 'networkError' | 'decodeError' | 'appError'
-    errorMessage: string
-    statusCode: number
-    detail: unknown
-}
+export type ResourceBadFail = t.TypeOf<typeof resourceBadFailT>
 export const resourceBadFail = (d: ResourceBadCtor<ResourceBadFail>): ResourceBad => ({
     type: 'fail',
     error: d.error,
@@ -89,7 +78,7 @@ export const resourceBadFail = (d: ResourceBadCtor<ResourceBadFail>): ResourceBa
     errorMessage: d.errorMessage ?? d.error,
 })
 
-export type ResourceBad = ResourceBadRejected | ResourceBadFail
+export type ResourceBad = t.TypeOf<typeof resourceBadT>
 
 // -------------------------------------------------------------------------------------
 // Request
@@ -178,7 +167,7 @@ export const fetchCacheableFactory = <DL, OL>(
                                     type: 'fail',
                                     error: 'decodeError',
                                     errorMessage: errorMessage(request, 'decodeError'),
-                                    statusCode: ci.item.status as number,
+                                    statusCode: ci.item.status,
                                     detail: PathReporter.report(t.failures(e)).join('\n>> '),
                                 }),
                                 (payload): RES.DecodersToResourceData<DS> => ({
