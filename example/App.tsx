@@ -291,7 +291,7 @@ const QuoteWithFetchCache: React.FC = () => {
             <br />
             <br />
             <button type="button" onClick={quoteFetcher}>
-                Fetch new quote (cache)
+                Fetch new quote (cache 30seconds)
             </button>
         </>
     )

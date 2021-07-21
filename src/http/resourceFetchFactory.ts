@@ -1,7 +1,7 @@
 import * as E from 'fp-ts/Either'
-import type * as IO from 'fp-ts/IO'
 import * as O from 'fp-ts/Option'
 import type * as R from 'fp-ts/Reader'
+import type * as T from 'fp-ts/Task'
 import type * as TO from 'fp-ts/TaskOption'
 import { Lazy, pipe } from 'fp-ts/function'
 import * as t from 'io-ts'
@@ -21,7 +21,7 @@ export type CacheItem<S = StatusCode, P = unknown> = RES.ResourceData<S, P>
 
 export interface CachePool {
     findItem: (key: string) => TO.TaskOption<CacheItem>
-    addItem: (key: string, item: CacheItem, ttl: number) => IO.IO<void>
+    addItem: (key: string, item: CacheItem, ttl: number) => T.Task<void>
 }
 
 export interface CreateCacheKey {
@@ -185,7 +185,7 @@ export const fetchCacheableFactory = <DL, OL>(
                             OR.chainFirstW(r =>
                                 pipe(
                                     deps.cachePool.addItem(createCacheKey(request), r as CacheItem, appCacheTtl),
-                                    OR.rightIO
+                                    OR.doneTask
                                 )
                             ),
                             OR_filterResponse(successCodes, request)

@@ -80,9 +80,9 @@ export const fromAjax = <DS extends RES.ResourceDecoders, AE = never>(
         )
     ).pipe(RXoP.take(2))
 
-export const rightIO: <E = never, A = never>(ma: IO<A>) => ObservableResource<E, A> = flow(R.fromIO, doneObservable)
+export const doneIO: <E = never, A = never>(ma: IO<A>) => ObservableResource<E, A> = flow(R.fromIO, doneObservable)
 
-export const fromIO: MonadIO2<URI>['fromIO'] = rightIO
+export const fromIO: MonadIO2<URI>['fromIO'] = doneIO
 
 export const fromObservable: MonadObservable2<URI>['fromObservable'] = doneObservable
 
@@ -93,7 +93,12 @@ export const fromObservableEither = <E, A>(oe: ObservableEither<E, A>): Observab
 
 export const fromTaskResource: <E, A>(t: T.Task<RES.Resource<E, A>>) => ObservableResource<E, A> = R.fromTask
 
-export const fromTask: MonadTask2<URI>['fromTask'] = flow(R.fromTask, doneObservable)
+export const doneTask: <E = never, A = never>(ma: T.Task<A>) => ObservableResource<E, A> = flow(
+    R.fromTask,
+    doneObservable
+)
+
+export const fromTask: MonadTask2<URI>['fromTask'] = doneTask
 
 export const fromTaskEither: <E, A>(fa: TE.TaskEither<E, A>) => ObservableResource<E, A> = flow(
     R.fromTask,

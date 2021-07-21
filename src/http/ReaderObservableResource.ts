@@ -83,7 +83,7 @@ export const fromReaderObservableEither = <R, E, A>(
     e: ReaderObservableEither<R, E, A>
 ): ReaderObservableResource<R, E, A> => flow(e, OR.fromObservableEither)
 
-export const fromIO: MonadIO3<URI>['fromIO'] = ma => () => OR.rightIO(ma)
+export const fromIO: MonadIO3<URI>['fromIO'] = ma => () => OR.doneIO(ma)
 
 export const fromAjax = flow(OR.fromAjax, fromObservableResource)
 
