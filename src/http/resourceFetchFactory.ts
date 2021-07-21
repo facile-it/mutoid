@@ -19,9 +19,9 @@ import type { StatusCode } from './statusCode'
 
 export type CacheItem<S = StatusCode, P = unknown> = RES.ResourceData<S, P>
 
-export interface CacheService {
+export interface CachePool {
     findItem: (key: string) => TO.TaskOption<CacheItem>
-    saveItem: (key: string, item: CacheItem, ttl: number) => IO.IO<void>
+    addItem: (key: string, item: CacheItem, ttl: number) => IO.IO<void>
 }
 
 export interface CreateCacheKey {
@@ -46,7 +46,7 @@ export interface DepsAjax {
 }
 
 export interface DepsCache {
-    cache: CacheService
+    cachePool: CachePool
 }
 
 // -------------------------------------------------------------------------------------
@@ -152,7 +152,7 @@ export const fetchCacheableFactory = <DL, OL>(
 
     return pipe((deps: FetchFactoryCacheableDeps) => {
         return pipe(
-            deps.cache.findItem(createCacheKey(request)),
+            deps.cachePool.findItem(createCacheKey(request)),
             OR.fromTask,
             OR.chain(item => {
                 return pipe(
@@ -184,7 +184,7 @@ export const fetchCacheableFactory = <DL, OL>(
                             runRequest(deps, request, decoderL),
                             OR.chainFirstW(r =>
                                 pipe(
-                                    deps.cache.saveItem(createCacheKey(request), r as CacheItem, appCacheTtl),
+                                    deps.cachePool.addItem(createCacheKey(request), r as CacheItem, appCacheTtl),
                                     OR.rightIO
                                 )
                             ),

@@ -56,7 +56,7 @@ export const appEndpointRequestCacheable = <E extends Record<string, string | nu
     accessToken: AccessToken
 ): RESFF.EndpointRequestCacheable => ({
     method: 'GET',
-    appCacheTtl: 900,
+    appCacheTtl: 30,
     url: `https://ron-swanson-quotes.herokuapp.com/v2/quotes${pipe(
         { token: accessToken, ...e },
         DS.serializeUrl(new URLSearchParams()),

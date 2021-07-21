@@ -6,11 +6,11 @@ import * as React from 'react'
 import { Subject } from 'rxjs'
 import { ajax } from 'rxjs/ajax'
 import * as RES from '../src/http/Resource'
+import { cachePoolWebStorage } from '../src/http/cachePoolAdapters/cachePoolWebStorage'
 import type * as RESFF from '../src/http/resourceFetchFactory'
 import * as MR from '../src/react'
 import { useStore } from '../src/react/useStore'
 import * as MS from '../src/state'
-import { cacheService } from './cacheService'
 import {
     fetchQuoteCached,
     fetchQuoteSeq,
@@ -39,7 +39,10 @@ const useResourceCacheDeps = () => ({
     ajax: ajax,
     logger: console,
     store: useSessionStore(),
-    cache: cacheService(window.sessionStorage),
+    cachePool: cachePoolWebStorage({
+        storage: window.sessionStorage,
+        namespace: 'app_quote',
+    }),
 })
 
 const renderQuoteResource = (quote: QuoteResource): React.ReactChild => {
