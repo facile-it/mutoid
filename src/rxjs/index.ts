@@ -1,3 +1,5 @@
+/* istanbul ignore file */
+
 import * as E from 'fp-ts/Either'
 import type { IO } from 'fp-ts/IO'
 import { identity } from 'fp-ts/function'
