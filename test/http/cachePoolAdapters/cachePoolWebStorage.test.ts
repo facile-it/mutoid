@@ -1,9 +1,10 @@
 import { none, some } from 'fp-ts/Option'
-import MockDate from 'mockdate'
 import { cachePoolWebStorage } from '../../../src/http/cachePoolAdapters/cachePoolWebStorage'
 import { MockWebStorage } from '../../_mock/MockWebStorage'
 
 describe('cachePoolWebStorage', () => {
+    const systemTime = new Date('2021-01-01').getTime()
+
     test('deleteItem', async () => {
         const storage = new MockWebStorage()
 
@@ -48,12 +49,12 @@ describe('cachePoolWebStorage', () => {
     test('findItem', async () => {
         const storage = new MockWebStorage()
 
-        MockDate.set(10)
+        jest.useFakeTimers('modern').setSystemTime(systemTime)
 
         storage.setItem(
             'findItem_good',
             JSON.stringify({
-                validUntil: 10 + 20 * 1000,
+                validUntil: systemTime + 20 * 1000,
                 item: {
                     status: 200,
                     payload: 'hei',
@@ -96,7 +97,7 @@ describe('cachePoolWebStorage', () => {
             namespace: 'addItem',
         })
 
-        MockDate.set(10)
+        jest.useFakeTimers('modern').setSystemTime(systemTime)
 
         await pool.addItem(
             'hei',
@@ -109,7 +110,7 @@ describe('cachePoolWebStorage', () => {
 
         expect(storage.length).toBe(1)
         expect(JSON.parse(storage.getItem('addItem_hei') ?? '{}')).toStrictEqual({
-            validUntil: 10 + 3 * 1000,
+            validUntil: systemTime + 3 * 1000,
             item: {
                 status: 200,
                 payload: 'hei',
@@ -166,6 +167,6 @@ describe('cachePoolWebStorage', () => {
     })
 
     afterAll(() => {
-        MockDate.reset()
+        jest.clearAllTimers()
     })
 })
