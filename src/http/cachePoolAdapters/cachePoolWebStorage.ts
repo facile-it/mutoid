@@ -28,7 +28,7 @@ export const cachePoolWebStorage = (deps: CachePoolWebStorageDeps): CachePoolAda
         clear: pipe(
             Object.keys(deps.storage)
                 .filter((key: string) => key.indexOf(`${deps.namespace}_`) === 0)
-                .map(k => deleteItem(k)),
+                .map(k => deleteItem(k.split('_')[1] as string)),
             T.sequenceArray
         ),
         findItem: (key: string): TO.TaskOption<RESFF.CacheItem> =>

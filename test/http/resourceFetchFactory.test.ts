@@ -11,6 +11,50 @@ function logError<E extends { error: string }>(e: E): R.Reader<{ logger: (e: str
     })
 }
 
+describe('resourceFetchFactory ResourceBad', () => {
+    test('resourceBadRejected', () => {
+        const result = {
+            type: 'rejected',
+            error: 'clientError',
+            detail: 'hei',
+            statusCode: 0,
+            errorMessage: 'clientError',
+        }
+
+        const r1 = RESFF.resourceBadRejected({ error: 'clientError', detail: 'hei' })
+        expect(r1).toStrictEqual(result)
+
+        const r2 = RESFF.resourceBadRejected({
+            error: 'clientError',
+            detail: 'hei',
+            statusCode: 0,
+            errorMessage: 'clientError',
+        })
+        expect(r2).toStrictEqual(result)
+    })
+
+    test('resourceBadRejected', () => {
+        const result = {
+            type: 'fail',
+            error: 'decodeError',
+            detail: 'hei',
+            statusCode: 0,
+            errorMessage: 'decodeError',
+        }
+
+        const r1 = RESFF.resourceBadFail({ error: 'decodeError', detail: 'hei' })
+        expect(r1).toStrictEqual(result)
+
+        const r2 = RESFF.resourceBadFail({
+            error: 'decodeError',
+            detail: 'hei',
+            statusCode: 0,
+            errorMessage: 'decodeError',
+        })
+        expect(r2).toStrictEqual(result)
+    })
+})
+
 describe('resourceFetchFactory', () => {
     const ff = RESFF.fetchFactory(logError)
     const ROR = ff(
