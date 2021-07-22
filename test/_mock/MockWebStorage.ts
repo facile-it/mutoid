@@ -1,4 +1,4 @@
-const handler: ProxyHandler<MockStorage> = {
+const handler: ProxyHandler<MockWebStorage> = {
     get(target: any, prop: string) {
         return ['getItem', 'removeItem', 'clear', 'setItem', 'key', 'length'].includes(prop)
             ? target[prop]
@@ -15,7 +15,7 @@ const handler: ProxyHandler<MockStorage> = {
     },
 }
 
-export class MockStorage {
+export class MockWebStorage {
     constructor() {
         return new Proxy(this, handler)
     }
@@ -38,7 +38,9 @@ export class MockStorage {
         this.store[key] = value
     }
 
-    key = jest.fn()
+    key = (i: number) => {
+        return Object.keys(this.store)[i] ?? null
+    }
 
     get length() {
         return Object.keys(this.store).length

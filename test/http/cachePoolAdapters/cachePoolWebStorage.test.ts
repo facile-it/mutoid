@@ -1,11 +1,11 @@
 import { none, some } from 'fp-ts/Option'
 import MockDate from 'mockdate'
 import { cachePoolWebStorage } from '../../../src/http/cachePoolAdapters/cachePoolWebStorage'
-import { MockStorage } from '../../mock/MockWebStorage'
+import { MockWebStorage } from '../../_mock/MockWebStorage'
 
 describe('cachePoolWebStorage', () => {
     test('deleteItem', async () => {
-        const storage = new MockStorage()
+        const storage = new MockWebStorage()
 
         storage.setItem('deleteItem_hei', 'hei')
         storage.setItem('deleteItem_hei2', 'hei2')
@@ -25,7 +25,7 @@ describe('cachePoolWebStorage', () => {
     })
 
     test('clear', async () => {
-        const storage = new MockStorage()
+        const storage = new MockWebStorage()
 
         storage.setItem('notDeleted', 'hei')
         storage.setItem('clear_hei', 'hei')
@@ -46,7 +46,7 @@ describe('cachePoolWebStorage', () => {
     })
 
     test('findItem', async () => {
-        const storage = new MockStorage()
+        const storage = new MockWebStorage()
 
         MockDate.set(10)
 
@@ -90,7 +90,7 @@ describe('cachePoolWebStorage', () => {
     })
 
     test('addItem', async () => {
-        const storage = new MockStorage()
+        const storage = new MockWebStorage()
         const pool = cachePoolWebStorage({
             storage: storage,
             namespace: 'addItem',
@@ -115,6 +115,54 @@ describe('cachePoolWebStorage', () => {
                 payload: 'hei',
             },
         })
+    })
+
+    test('addItem errorOnStringify', async () => {
+        const storage = new MockWebStorage()
+        const pool = cachePoolWebStorage({
+            storage: storage,
+            namespace: 'addItem_errorOnStringify',
+        })
+
+        const circular: any = { ref: null }
+        circular.ref = circular
+
+        await pool.addItem(
+            'hei',
+            {
+                status: 200,
+                payload: circular,
+            },
+            3
+        )()
+
+        expect(storage.length).toBe(0)
+    })
+
+    test('addItem errorOnSave', async () => {
+        const storage = new MockWebStorage()
+
+        Object.defineProperty(storage, 'setItem', {
+            value: () => {
+                throw new Error()
+            },
+        })
+
+        const pool = cachePoolWebStorage({
+            storage: storage,
+            namespace: 'addItem_errorOnSave',
+        })
+
+        await pool.addItem(
+            'hei',
+            {
+                status: 200,
+                payload: 'hello',
+            },
+            3
+        )()
+
+        expect(storage.length).toBe(0)
     })
 
     afterAll(() => {
