@@ -2,7 +2,7 @@ import { pipe } from 'fp-ts/function'
 import * as _ from '../../src/http/ReaderObservableResource'
 import * as RES from '../../src/http/Resource'
 
-describe('Resource', () => {
+describe('ReaderObservableResource', () => {
     describe('type class members', () => {
         const length = (s: string): number => s.length
         const lengthR = (s: string): _.ReaderObservableResource<never, string, number> => _.done(s.length)
@@ -38,5 +38,15 @@ describe('Resource', () => {
                 RES.fail('maError')
             )
         })
+    })
+
+    test('do notation', async () => {
+        expect(
+            await pipe(
+                _.done<string, string, number>(1),
+                _.bindTo('a'),
+                _.bind('b', () => _.done('b'))
+            )('hello').toPromise()
+        ).toStrictEqual(RES.done({ a: 1, b: 'b' }))
     })
 })

@@ -158,24 +158,22 @@ export const fetchCacheableFactory = <DL, OL>(
                 return pipe(
                     item,
                     O.bindTo('item'),
-                    O.bind('decoder', i => O.fromNullable(decoderL()[i.item.status as SC])),
-                    O.map(ci =>
+                    O.bind('decoder', x => O.fromNullable(decoderL()[x.item.status as SC])),
+                    O.bind('payload', x =>
                         pipe(
-                            ci.decoder(ci.item.payload),
-                            E.bimap(
-                                (e): ResourceBad => ({
-                                    type: 'fail',
-                                    error: 'decodeError',
-                                    errorMessage: errorMessage(request, 'decodeError'),
-                                    statusCode: ci.item.status,
-                                    detail: PathReporter.report(t.failures(e)).join('\n>> '),
-                                }),
-                                (payload): RES.DecodersToResourceData<DS> => ({
-                                    status: ci.item.status as SC,
-                                    payload,
-                                })
-                            ),
-                            OR.fromEither,
+                            x.decoder(x.item.payload),
+                            // when decode fail don't delete item, but run new request and overwrite it
+                            E.fold(() => O.none, O.some)
+                        )
+                    ),
+                    O.map(x =>
+                        pipe(
+                            x.payload,
+                            (payload): RES.DecodersToResourceData<DS> => ({
+                                status: x.item.status as SC,
+                                payload,
+                            }),
+                            OR.done,
                             OR_filterResponse(successCodes, request)
                         )
                     ),

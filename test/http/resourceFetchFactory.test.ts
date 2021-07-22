@@ -3,7 +3,9 @@ import * as R from 'fp-ts/Reader'
 import * as t from 'io-ts'
 import { of, throwError } from 'rxjs'
 import type { ajax } from 'rxjs/ajax'
+import { cachePoolWebStorage } from '../../src/http/cachePoolAdapters/cachePoolWebStorage'
 import * as RESFF from '../../src/http/resourceFetchFactory'
+import { MockWebStorage } from '../_mock/MockWebStorage'
 
 function logError<E extends { error: string }>(e: E): R.Reader<{ logger: (e: string) => void }, void> {
     return R.asks<{ logger: (e: string) => void }, void>(({ logger }) => {
@@ -55,14 +57,14 @@ describe('resourceFetchFactory ResourceBad', () => {
     })
 })
 
-describe('resourceFetchFactory', () => {
+describe('resourceFetchFactory fetchFactory', () => {
     const ff = RESFF.fetchFactory(logError)
     const ROR = ff(
         {
             method: 'GET',
             url: 'http://url',
         },
-        () => ({ 200: t.string.decode, 400: E.right }),
+        () => ({ 200: t.string.decode, 400: E.right, 404: E.right, 301: E.right }),
         [200]
     )
 
@@ -76,6 +78,54 @@ describe('resourceFetchFactory', () => {
         const r = await ROR({ ajax: ajaxMock, logger }).toPromise()
         expect(r).toStrictEqual({ _tag: 'done', data: { status: 200, payload: 'hello' } })
         expect(logger.mock.calls.length).toBe(0)
+    })
+
+    test('fetchFactory 404', async () => {
+        const logger = jest.fn()
+
+        const ajaxMock = ((() =>
+            of({
+                status: 404,
+                response: 'any response',
+            })) as any) as typeof ajax
+        const r = await ROR({ ajax: ajaxMock, logger }).toPromise()
+
+        expect(r).toStrictEqual({
+            _tag: 'fail',
+            error: {
+                type: 'rejected',
+                error: 'notFound',
+                errorMessage: '[fetchFactory] notFound http://url',
+                statusCode: 404,
+                detail: 'any response',
+            },
+        })
+        expect(logger.mock.calls.length).toBe(1)
+        expect(logger.mock.calls[0][0]).toBe('notFound')
+    })
+
+    test('fetchFactory 301', async () => {
+        const logger = jest.fn()
+
+        const ajaxMock = ((() =>
+            of({
+                status: 301,
+                response: 'any response',
+            })) as any) as typeof ajax
+        const r = await ROR({ ajax: ajaxMock, logger }).toPromise()
+
+        expect(r).toStrictEqual({
+            _tag: 'fail',
+            error: {
+                type: 'fail',
+                error: 'fail',
+                errorMessage: '[fetchFactory] fail http://url',
+                statusCode: 301,
+                detail: 'any response',
+            },
+        })
+        expect(logger.mock.calls.length).toBe(1)
+        expect(logger.mock.calls[0][0]).toBe('fail')
     })
 
     test('fetchFactory 400 ', async () => {
@@ -191,5 +241,158 @@ describe('resourceFetchFactory', () => {
         })
         expect(logger.mock.calls.length).toBe(1)
         expect(logger.mock.calls[0][0]).toBe('decodeError')
+    })
+})
+
+describe('resourceFetchFactory fetchCacheableFactory', () => {
+    const systemTime = new Date('2021-01-01').getTime()
+
+    const ff = RESFF.fetchCacheableFactory(logError, () => 'key')
+    const ROR = ff(
+        {
+            method: 'GET',
+            url: 'http://url',
+            appCacheTtl: 900,
+        },
+        () => ({ 200: t.string.decode, 400: E.right }),
+        [200]
+    )
+
+    const storage = new MockWebStorage()
+
+    const cachePool = cachePoolWebStorage({
+        storage: storage,
+        namespace: 'fetchCacheableFactory',
+    })
+
+    afterAll(() => {
+        storage.clear()
+        jest.clearAllTimers()
+    })
+
+    test('fetchCacheableFactory 200 no in cache', async () => {
+        const logger = jest.fn()
+        const ajaxMock = ((() =>
+            of({
+                status: 200,
+                response: 'hello',
+            })) as any) as typeof ajax
+
+        const r = await ROR({ ajax: ajaxMock, logger, cachePool }).toPromise()
+
+        expect(r).toStrictEqual({ _tag: 'done', data: { status: 200, payload: 'hello' } })
+
+        expect(storage.length).toBe(1)
+        expect(storage.getItem('fetchCacheableFactory_key')).not.toBeNull()
+        expect(logger.mock.calls.length).toBe(0)
+    })
+
+    test('fetchCacheableFactory 200 in cache', async () => {
+        jest.useFakeTimers('modern').setSystemTime(systemTime)
+
+        storage.setItem(
+            'fetchCacheableFactory_key',
+            JSON.stringify({
+                validUntil: systemTime + 20 * 1000,
+                item: {
+                    status: 200,
+                    payload: 'hello',
+                },
+            })
+        )
+
+        const logger = jest.fn()
+        const ajaxMock = ((() =>
+            of({
+                status: 200,
+                response: 'hello',
+            })) as any) as typeof ajax
+
+        const r = await ROR({ ajax: ajaxMock, logger, cachePool }).toPromise()
+
+        expect(r).toStrictEqual({ _tag: 'done', data: { status: 200, payload: 'hello' } })
+
+        expect(storage.length).toBe(1)
+        expect(storage.getItem('fetchCacheableFactory_key')).not.toBeNull()
+        expect(logger.mock.calls.length).toBe(0)
+    })
+
+    test('fetchCacheableFactory 200 in cache decode fail', async () => {
+        jest.useFakeTimers('modern').setSystemTime(systemTime)
+
+        storage.setItem(
+            'fetchCacheableFactory_key',
+            JSON.stringify({
+                validUntil: systemTime + 20 * 1000,
+                item: {
+                    status: 200,
+                    payload: 1,
+                },
+            })
+        )
+
+        const logger = jest.fn()
+        const ajaxMock = ((() =>
+            of({
+                status: 200,
+                response: 'hello',
+            })) as any) as typeof ajax
+
+        const r = await ROR({ ajax: ajaxMock, logger, cachePool }).toPromise()
+
+        expect(r).toStrictEqual({ _tag: 'done', data: { status: 200, payload: 'hello' } })
+
+        expect(storage.length).toBe(1)
+        expect(storage.getItem('fetchCacheableFactory_key')).not.toBeNull()
+        expect(storage.getItem('fetchCacheableFactory_key')).toStrictEqual(
+            JSON.stringify({
+                validUntil: systemTime + 900 * 1000,
+                item: {
+                    status: 200,
+                    payload: 'hello',
+                },
+            })
+        )
+        expect(logger.mock.calls.length).toBe(0)
+    })
+})
+
+describe('resourceFetchFactory fetchCacheableFactory with no appCacheTtl', () => {
+    const ff = RESFF.fetchCacheableFactory(logError, () => 'key')
+    const ROR = ff(
+        {
+            method: 'GET',
+            url: 'http://url',
+        },
+        () => ({ 200: t.string.decode, 400: E.right }),
+        [200]
+    )
+
+    const storage = new MockWebStorage()
+
+    const cachePool = cachePoolWebStorage({
+        storage: storage,
+        namespace: 'fetchCacheableFactory',
+    })
+
+    afterAll(() => {
+        storage.clear()
+    })
+
+    test('fetchCacheableFactory 200 no in cache', async () => {
+        const logger = jest.fn()
+        const ajaxMock = ((() =>
+            of({
+                status: 200,
+                response: 'hello',
+            })) as any) as typeof ajax
+
+        const r = await ROR({ ajax: ajaxMock, logger, cachePool }).toPromise()
+
+        expect(r).toStrictEqual({ _tag: 'done', data: { status: 200, payload: 'hello' } })
+
+        expect(storage.length).toBe(0)
+        expect(storage.getItem('fetchCacheableFactory_key')).toBeNull()
+        expect(logger.mock.calls.length).toBe(0)
     })
 })
