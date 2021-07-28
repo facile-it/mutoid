@@ -4,6 +4,8 @@
 
 -   Added in http module `resourceFetchFactory`, `io-types`, `cachePoolAdapters`
 
+-   Upgraded `peerDependencies` requirement `fp-ts@2.10.5`
+
 ## 0.4.2 (2021-06-08)
 
 -   Remove key engines from builded package json
