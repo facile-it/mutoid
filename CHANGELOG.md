@@ -18,9 +18,9 @@
 ## 0.4.0 (2021-05-01)
 
 -   deprecated module `rxjs` use `fp-ts-rxjs`
--   split http module in `ReaderObservableResource`, `ObservableResource` and `Resource` [BREAKING CHANGE] (see [upgrade-to-0.4 guide](https://github.com/facile-it/mutoid/blob/master/docs/guides/upgrade-to-0.4.md))
+-   split http module in `ReaderObservableResource`, `ObservableResource` and `Resource` [BREAKING CHANGE] (see [upgrade-to-0.4 guide](https://engineering.facile.it/mutoid/docs/migration/upgrade-to-0.4))
 -   added `dataSerializer` in http module
--   added `mutoid/state/stores` and removed memoization in ctor [BREAKING CHANGE] (see [upgrade-to-0.4 guide](https://github.com/facile-it/mutoid/blob/master/docs/guides/upgrade-to-0.4.md))
+-   added `mutoid/state/stores` and removed memoization in ctor [BREAKING CHANGE] (see [upgrade-to-0.4 guide](https://engineering.facile.it/mutoid/docs/migration/upgrade-to-0.4))
 -   removed fast-memoize dependency
 -   added hooks in react module: `useStore`, `useFetchReaderObservableResource`, `useFetchObservableResource`
 -   deprecated `useResourceFetcher` hook in react module
