@@ -120,7 +120,7 @@ export type FetchFactoryDecoders<K extends StatusCode> = {
 
 const errorMessagePrefix = '[fetchFactory]'
 
-export const fetchFactory = <DL, OL>(loggerFail: (e: ResourceBad) => R.Reader<DL, OL>) => <
+export const fetchFactory = <DL, OL>(env: { loggerFail: (e: ResourceBad) => R.Reader<DL, OL> }) => <
     K extends StatusCode,
     DS extends FetchFactoryDecoders<K>,
     SC extends keyof DS
@@ -132,14 +132,14 @@ export const fetchFactory = <DL, OL>(loggerFail: (e: ResourceBad) => R.Reader<DL
     return pipe(
         (deps: FetchFactoryDeps) => runRequest(deps, request, decoderL),
         ROR_filterResponse(successCodes, request),
-        logFail(loggerFail)
+        logFail(env.loggerFail)
     )
 }
 
-export const fetchCacheableFactory = <DL, OL>(
-    loggerFail: (e: ResourceBad) => R.Reader<DL, OL>,
+export const fetchCacheableFactory = <DL, OL>(env: {
+    loggerFail: (e: ResourceBad) => R.Reader<DL, OL>
     createCacheKey: CreateCacheKey
-) => <K extends StatusCode, DS extends FetchFactoryDecoders<K>, SC extends keyof DS>(
+}) => <K extends StatusCode, DS extends FetchFactoryDecoders<K>, SC extends keyof DS>(
     request: EndpointRequestCacheable,
     decoderL: Lazy<DS>,
     successCodes: Array<SC>
@@ -147,12 +147,12 @@ export const fetchCacheableFactory = <DL, OL>(
     const appCacheTtl = getEndpointAppCacheTtl(request)
 
     if (typeof appCacheTtl === 'undefined') {
-        return fetchFactory(loggerFail)(request, decoderL, successCodes)
+        return fetchFactory(env)(request, decoderL, successCodes)
     }
 
     return pipe((deps: FetchFactoryCacheableDeps) => {
         return pipe(
-            deps.cachePool.findItem(createCacheKey(request)),
+            deps.cachePool.findItem(env.createCacheKey(request)),
             OR.fromTask,
             OR.chain(item => {
                 return pipe(
@@ -182,7 +182,7 @@ export const fetchCacheableFactory = <DL, OL>(
                             runRequest(deps, request, decoderL),
                             OR.chainFirstW(r =>
                                 pipe(
-                                    deps.cachePool.addItem(createCacheKey(request), r as CacheItem, appCacheTtl),
+                                    deps.cachePool.addItem(env.createCacheKey(request), r as CacheItem, appCacheTtl),
                                     OR.doneTask
                                 )
                             ),
@@ -192,7 +192,7 @@ export const fetchCacheableFactory = <DL, OL>(
                 )
             })
         )
-    }, logFail(loggerFail))
+    }, logFail(env.loggerFail))
 }
 
 const runRequest = <K extends StatusCode, DS extends FetchFactoryDecoders<K>>(

@@ -58,7 +58,7 @@ describe('resourceFetchFactory ResourceBad', () => {
 })
 
 describe('resourceFetchFactory fetchFactory', () => {
-    const ff = RESFF.fetchFactory(logError)
+    const ff = RESFF.fetchFactory({ loggerFail: logError })
     const ROR = ff(
         {
             method: 'GET',
@@ -247,7 +247,7 @@ describe('resourceFetchFactory fetchFactory', () => {
 describe('resourceFetchFactory fetchCacheableFactory', () => {
     const systemTime = new Date('2021-01-01').getTime()
 
-    const ff = RESFF.fetchCacheableFactory(logError, () => 'key')
+    const ff = RESFF.fetchCacheableFactory({ loggerFail: logError, createCacheKey: () => 'key' })
     const ROR = ff(
         {
             method: 'GET',
@@ -358,7 +358,7 @@ describe('resourceFetchFactory fetchCacheableFactory', () => {
 })
 
 describe('resourceFetchFactory fetchCacheableFactory with no appCacheTtl', () => {
-    const ff = RESFF.fetchCacheableFactory(logError, () => 'key')
+    const ff = RESFF.fetchCacheableFactory({ loggerFail: logError, createCacheKey: () => 'key' })
     const ROR = ff(
         {
             method: 'GET',

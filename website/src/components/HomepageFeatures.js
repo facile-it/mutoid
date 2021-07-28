@@ -4,27 +4,31 @@ import styles from './HomepageFeatures.module.css'
 
 const FeatureList = [
     {
-        title: 'Reactive',
-        img: 'https://raw.githubusercontent.com/ReactiveX/rxjs/master/docs_app/assets/Rx_Logo_S.png',
-        description: (
-            <>
-                We like reactive programming, <b>RxJs</b> particularly: composing asynchronous code is gonna be easier
-            </>
-        ),
-    },
-    {
         title: 'Functional',
         img: 'https://raw.githubusercontent.com/gcanti/fp-ts/master/docs/fp-ts-logo.png',
         description: (
             <>
-                The whole library uses <b>fp-ts</b> modules and it is compatible with them
+                The whole library uses <b>fp-ts</b> modules and it is combinable with them
+            </>
+        ),
+    },
+    {
+        title: 'Reactive',
+        img: 'https://raw.githubusercontent.com/ReactiveX/rxjs/master/docs_app/assets/Rx_Logo_S.png',
+        description: (
+            <>
+                Reactive programming, <b>RxJs</b> particularly: asynchronous code is gonna be easier
             </>
         ),
     },
     {
         title: 'Static typing',
         img: 'https://upload.wikimedia.org/wikipedia/commons/4/4c/Typescript_logo_2020.svg',
-        description: <>We believe that the best way to govern the complexity of the domain is to explicit it</>,
+        description: (
+            <>
+                The best way to govern the complexity of the domain is to explicit it and <b>TypeScript</b> can help
+            </>
+        ),
     },
 ]
 

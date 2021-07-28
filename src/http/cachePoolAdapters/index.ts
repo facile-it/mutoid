@@ -9,3 +9,5 @@ export interface CachePoolAdapter extends RESFF.CachePool {
 }
 
 export type CachePoolItem = t.TypeOf<typeof cachePoolItemT>
+
+export * from './cachePoolWebStorage'

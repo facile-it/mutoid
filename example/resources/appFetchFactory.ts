@@ -35,7 +35,7 @@ export const appEndpointRequest = <E extends Record<string, string | number>>(e?
     )}`,
 })
 
-const fetchWithErrorLog = RESFF.fetchFactory(logError)
+const fetchWithErrorLog = RESFF.fetchFactory({ loggerFail: logError })
 
 export const appFetchFactory = <K extends StatusCode, DS extends RESFF.FetchFactoryDecoders<K>, SC extends keyof DS>(
     doRequest: (token: AccessToken) => RESFF.EndpointRequest,
@@ -64,7 +64,10 @@ export const appEndpointRequestCacheable = <E extends Record<string, string | nu
     )}`,
 })
 
-const fetchCacheableWithErrorLog = RESFF.fetchCacheableFactory(logError, e => hashString(e.url))
+const fetchCacheableWithErrorLog = RESFF.fetchCacheableFactory({
+    loggerFail: logError,
+    createCacheKey: e => hashString(e.url),
+})
 
 export const appFetchCacheable = <K extends StatusCode, DS extends RESFF.FetchFactoryDecoders<K>, SC extends keyof DS>(
     doRequest: (token: AccessToken) => RESFF.EndpointRequest,

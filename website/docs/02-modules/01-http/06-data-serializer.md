@@ -1,6 +1,6 @@
 ---
 sidebar_label: 'Data serializer'
-sidebar_position: 4
+sidebar_position: 6
 ---
 
 # Data serializer

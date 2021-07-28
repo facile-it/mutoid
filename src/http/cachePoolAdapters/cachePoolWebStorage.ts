@@ -5,36 +5,36 @@ import * as TO from 'fp-ts/TaskOption'
 import { flow, pipe } from 'fp-ts/function'
 import { cachePoolItemT } from '../io-types'
 import type * as RESFF from '../resourceFetchFactory'
-import type { CachePoolAdapter } from './cachePoolAdapter'
+import type { CachePoolAdapter } from '.'
 
-interface CachePoolWebStorageDeps {
+export interface CachePoolWebStorageEnvironment {
     storage: Storage
     namespace: string
 }
 
 const namespacedKey = (namespace: string, key: string) => `${namespace}_${key}`
 
-const deleteItemFactory = (deps: CachePoolWebStorageDeps) => (key: string): T.Task<void> => () => {
-    deps.storage.removeItem(namespacedKey(deps.namespace, key))
+const deleteItemFactory = (env: CachePoolWebStorageEnvironment) => (key: string): T.Task<void> => () => {
+    env.storage.removeItem(namespacedKey(env.namespace, key))
 
     return Promise.resolve()
 }
 
-export const cachePoolWebStorage = (deps: CachePoolWebStorageDeps): CachePoolAdapter => {
-    const deleteItem = deleteItemFactory(deps)
+export const cachePoolWebStorage = (env: CachePoolWebStorageEnvironment): CachePoolAdapter => {
+    const deleteItem = deleteItemFactory(env)
 
     return {
         deleteItem,
         clear: pipe(
-            Object.keys(deps.storage)
-                .filter((key: string) => key.indexOf(`${deps.namespace}_`) === 0)
-                .map(k => k.slice(deps.namespace.length + 1))
+            Object.keys(env.storage)
+                .filter((key: string) => key.indexOf(`${env.namespace}_`) === 0)
+                .map(k => k.slice(env.namespace.length + 1))
                 .map(k => deleteItem(k)),
             T.sequenceArray
         ),
         findItem: (key: string): TO.TaskOption<RESFF.CacheItem> =>
             pipe(
-                deps.storage.getItem(namespacedKey(deps.namespace, key)),
+                env.storage.getItem(namespacedKey(env.namespace, key)),
                 TO.fromNullable,
                 TO.chain(
                     flow(
@@ -63,7 +63,7 @@ export const cachePoolWebStorage = (deps: CachePoolWebStorageDeps): CachePoolAda
                 E.mapLeft(() => 'errorOnStringify'),
                 E.chain(
                     E.tryCatchK(
-                        v => deps.storage.setItem(namespacedKey(deps.namespace, key), v),
+                        v => env.storage.setItem(namespacedKey(env.namespace, key), v),
                         () => 'errorOnSave'
                     )
                 )

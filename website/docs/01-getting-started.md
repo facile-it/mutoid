@@ -26,6 +26,6 @@ npm install mutoid
 
 :::tip Strictness
 
-This library is conceived, tested and is supposed to be consumed by TypeScript with the strict flag turned on.
+This library is conceived, tested and supposed to be consumed by TypeScript with the `strict` flag turned on.
 
 :::
