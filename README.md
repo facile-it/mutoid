@@ -29,7 +29,7 @@ Instead [`react`](https://github.com/facebook/react) and [`io-ts`](https://githu
 
 ## Docs
 
-[Docs](https://engineering.facile.it/mutoid)
+[https://engineering.facile.it/mutoid](https://engineering.facile.it/mutoid)
 
 ## Example
 

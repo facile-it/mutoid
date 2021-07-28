@@ -30,7 +30,7 @@
     "bugs": {
         "url": "https://github.com/facile-it/mutoid/issues"
     },
-    "homepage": "https://github.com/facile-it/mutoid",
+    "homepage": "https://engineering.facile.it/mutoid",
     "main": "index.js",
     "module": "index.js",
     "typings": "index.d.ts",
