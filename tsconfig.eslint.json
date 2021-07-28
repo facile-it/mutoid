@@ -1,10 +1,14 @@
 {
     "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "allowJs": true
+    },
     "include": [
         "./example",
         "./src",
         "./test",
         "./scripts",
-        "./dtslint"
+        "./dtslint",
+        "./website"
     ]
 }

@@ -1,8 +1,17 @@
-# Mutoid - Data fetching
+---
+sidebar_label: 'Resource'
+sidebar_position: 2
+---
 
-## ReaderObservableResource, ObservableResource, Resource
+# Resource
 
-Three data structures that implement an instance of `Functor`, `Apply`, `Bifunctor`, `Applicative`, `Monad` (and `MonadObservable` for `ObservableResource` and `ReaderObservableResource`)
+```ts
+import * as RES from 'mutoid/http/Resource'
+import * as OR from 'mutoid/http/ObservableResource'
+import * as ROR from 'mutoid/http/ReaderObservableResource'
+```
+
+**ReaderObservableResource**, **ObservableResource**, **Resource** are three data structures that implement an instance of _Functor_, _Apply_, _Bifunctor_, _Applicative_, _Monad_ (and _MonadObservable_ for _ObservableResource_ and _ReaderObservableResource_)
 
 All modules have the same structure (more or less) as a fp-ts module:
 
@@ -12,7 +21,7 @@ All modules have the same structure (more or less) as a fp-ts module:
 -   type class members
 -   instances
 
-### Resource
+## Resource
 
 Resource, that is the basic data structures, is a sum type that represents all possible cases of async provisioning of data.
 
@@ -21,11 +30,11 @@ Resource, that is the basic data structures, is a sum type that represents all p
 -   _ResourceDone_: the asynchronous request **has** terminated in an **expected state**
 -   _ResourceFail_: the asynchronous request **hasn't** terminated in an **expected state**
 
-### Constructors
+## Constructors
 
 There are some classic constructors and some helper constructors from data structure `IO`, `Task`, `Either`, etc..
 
-#### fromAjax
+### fromAjax
 
 One of the most important and (hopefully) useful constructor implemented in ReaderObservableResource and ObservableResource
 
@@ -57,7 +66,7 @@ type ResourceDecoders = { [k in StatusCode]?: (i: unknown) => Either<unknown, un
 
 You can use `io-ts` to build easily the decoders
 
-##### Example
+#### Example
 
 ```typescript
 import * as t from 'io-ts'
@@ -122,13 +131,13 @@ If you want to see some examples:
 2 - fetch in series: [example](https://github.com/facile-it/mutoid/blob/pre_release_04/example/resources/quoteResource.ts#L42)  
 3 - fetch in parallel: [example](https://github.com/facile-it/mutoid/blob/pre_release_04/example/resources/quoteResource.ts#L54)
 
-### Destructors
+## Destructors
 
-#### match (Resource)
+### match (Resource)
 
 Take 4 functions for each case: `onInit`, `onSubmitted`, `onDone`, `onFail`
 
-#### matchD (Resource)
+### matchD (Resource)
 
 Same of `match` but with different input
 
@@ -149,7 +158,7 @@ Same of `match` but with different input
 }
 ```
 
-#### toMutationEffect (ReaderObservableResource, ObservableResource)
+### toMutationEffect (ReaderObservableResource, ObservableResource)
 
 This destructor is useful when you want to update a store after an asynchronous request.
 Implemented in ReaderObservableResource and ObservableResource
@@ -192,25 +201,3 @@ export const fetchQuoteMutationWithParams = pipe(
     MS.ctorMutationCR('fetchSomethingMutation')
 )
 ```
-
-## Data serializer
-
-Module for serialize data (nullable or Option) to URLSearchParams or FormData
-
-```typescript
-import * as DS from 'mutoid/http/dataSerializer'
-import { pipe } from 'fp-ts/function'
-
-const queryString = pipe({ page: 2, id: 5 }, DS.serializeUrl(new URLSearchParams()), DS.toQueryString)
-```
-
-You can use URLSearchParams on browser and NodeJs
-
-```typescript
-import * as DS from 'mutoid/http/dataSerializer'
-import { pipe } from 'fp-ts/function'
-
-const formData = pipe({ name: 'iacopo' }, DS.serializeForm(new FormData()))
-```
-
-You can use FormData only in browser, for NodeJs you can use something like [form-data](https://www.npmjs.com/package/form-data)

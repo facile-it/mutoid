@@ -1,3 +1,5 @@
+/* istanbul ignore file */
+
 import * as E from 'fp-ts/Either'
 import type { IO } from 'fp-ts/IO'
 import { identity } from 'fp-ts/function'
@@ -6,6 +8,9 @@ import { tap, map } from 'rxjs/operators'
 
 // operators
 
+/**
+ * @deprecated use chainFirst and fromIO from fp-ts-rxjs Observable module
+ */
 const runIOL = <T, R>(c: (t: T) => IO<R>) => (t: T): R => c(t)()
 
 /**

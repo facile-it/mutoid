@@ -1,4 +1,13 @@
-# Mutoid - React hooks
+---
+sidebar_label: 'React'
+sidebar_position: 3
+---
+
+# React hooks
+
+```ts
+import * as MR from 'mutoid/react'
+```
 
 ## useSelector
 

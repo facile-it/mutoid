@@ -6,11 +6,13 @@ import * as React from 'react'
 import { Subject } from 'rxjs'
 import { ajax } from 'rxjs/ajax'
 import * as RES from '../src/http/Resource'
+import { cachePoolWebStorage } from '../src/http/cachePoolAdapters'
+import type * as RESFF from '../src/http/resourceFetchFactory'
 import * as MR from '../src/react'
 import { useStore } from '../src/react/useStore'
 import * as MS from '../src/state'
-import type { ResourceBad } from './resources/fetchBuilder'
 import {
+    fetchQuoteCached,
     fetchQuoteSeq,
     fetchQuoteSeqPar,
     fetchQuoteWithDelay,
@@ -33,6 +35,16 @@ const useResourceDeps = () => ({
     store: useSessionStore(),
 })
 
+const useResourceCacheDeps = () => ({
+    ajax: ajax,
+    logger: console,
+    store: useSessionStore(),
+    cachePool: cachePoolWebStorage({
+        storage: window.sessionStorage,
+        namespace: 'app_quote',
+    }),
+})
+
 const renderQuoteResource = (quote: QuoteResource): React.ReactChild => {
     return pipe(
         quote,
@@ -41,7 +53,7 @@ const renderQuoteResource = (quote: QuoteResource): React.ReactChild => {
     )
 }
 
-const renderQuotes = (quote: RES.Resource<ResourceBad, Array<string>>): React.ReactChild => {
+const renderQuotes = (quote: RES.Resource<RESFF.ResourceBad, Array<string>>): React.ReactChild => {
     return pipe(
         quote,
         RES.matchD({
@@ -265,6 +277,26 @@ const QuoteWithFetchQuoteSeqPar: React.FC = () => {
     )
 }
 
+const QuoteWithFetchCache: React.FC = () => {
+    const [quote, quoteFetcher] = MR.useFetchReaderObservableResource(fetchQuoteCached, useResourceCacheDeps())
+
+    React.useEffect(() => {
+        quoteFetcher()
+    }, [quoteFetcher])
+
+    return (
+        <>
+            <h2>FetchQuoteCache</h2>
+            <em>{renderQuoteResource(quote)}</em>
+            <br />
+            <br />
+            <button type="button" onClick={quoteFetcher}>
+                Fetch new quote (cache 30seconds)
+            </button>
+        </>
+    )
+}
+
 const App: React.FC<{ name: string }> = props => {
     const quoteStoreRef = useStore(quoteStore)
 
@@ -298,6 +330,9 @@ const App: React.FC<{ name: string }> = props => {
             </div>
             <div>
                 <QuoteWithFetchQuoteSeqPar />
+            </div>
+            <div>
+                <QuoteWithFetchCache />
             </div>
         </>
     )

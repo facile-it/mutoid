@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.3
+
+-   Added in http module `resourceFetchFactory`, `io-types`, `cachePoolAdapters`
+
 ## 0.4.2 (2021-06-08)
 
 -   Remove key engines from builded package json

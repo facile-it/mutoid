@@ -20,7 +20,7 @@
     },
     "name": "mutoid",
     "version": "0.4.2",
-    "description": "Reactive library for state management, data fetching, caching",
+    "description": "Reactive library for state management, data fetching, caching for isomorphic applications",
     "repository": {
         "type": "git",
         "url": "https://github.com/facile-it/mutoid.git"
@@ -30,7 +30,7 @@
     "bugs": {
         "url": "https://github.com/facile-it/mutoid/issues"
     },
-    "homepage": "https://github.com/facile-it/mutoid",
+    "homepage": "https://engineering.facile.it/mutoid",
     "main": "index.js",
     "module": "index.js",
     "typings": "index.d.ts",
@@ -49,7 +49,7 @@
         "eslint-config-facile": "^0.4.1",
         "fast-check": "^2.12.0",
         "fork-ts-checker-webpack-plugin": "^6.2.0",
-        "fp-ts": "^2.9.3",
+        "fp-ts": "2.10.5",
         "fp-ts-laws": "^0.3.0",
         "fp-ts-rxjs": "^0.6",
         "html-webpack-plugin": "^5.3.1",
@@ -71,12 +71,16 @@
         "webpack-dev-server": "^3.11.2"
     },
     "peerDependencies": {
-        "fp-ts": "^2.8",
+        "fp-ts": "^2.10.5",
         "fp-ts-rxjs": "^0.6.15",
+        "io-ts": "^2.2.10",
         "react": "^16.8 || ^17.0",
         "rxjs": "^6.6"
     },
     "peerDependenciesMeta": {
+        "io-ts": {
+            "optional": true
+        },
         "react": {
             "optional": true
         }
@@ -101,6 +105,7 @@
         "fp-ts",
         "fp-ts-rxjs",
         "io-ts",
-        "react"
+        "react",
+        "isomorphic"
     ]
 }

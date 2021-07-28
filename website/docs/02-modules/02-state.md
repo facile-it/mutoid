@@ -1,6 +1,13 @@
-# Mutoid - State management
+---
+sidebar_label: 'State'
+sidebar_position: 2
+---
 
-`import * as MS from 'mutoid/state'`
+# State management
+
+```ts
+import * as MS from 'mutoid/state'
+```
 
 ## Create store
 
@@ -17,7 +24,6 @@ const appStore = () => MS.ctor({ name: 'appStore', initState: { userName: 'Marco
 You can choose to use a singleton store or a lazy store. In some cases, to use a lazy store it's a better choice  
 If you declare the store name and the mutation names with module augmentation, the notifier can inference the mutation name in the subject  
 In any case, if you don't declare anything there is a fallback to string
-
 
 ## Read the status from anywhere
 

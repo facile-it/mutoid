@@ -4,6 +4,7 @@ import type { ObservableEither } from 'fp-ts-rxjs/lib/ObservableEither'
 import type { Applicative2 } from 'fp-ts/Applicative'
 import type { Apply2 } from 'fp-ts/Apply'
 import type { Bifunctor2 } from 'fp-ts/Bifunctor'
+import { Chain2, chainFirst as chainFirst_ } from 'fp-ts/Chain'
 import * as E from 'fp-ts/Either'
 import type { Functor2 } from 'fp-ts/Functor'
 import type { IO } from 'fp-ts/IO'
@@ -45,7 +46,6 @@ export const doneObservable: <E = never, A = never>(oa: Observable<A>) => Observ
 export const fail: <E = never, A = never>(e: E) => ObservableResource<E, A> = flow(RES.fail, R.of)
 export const failObservable: <E = never, A = never>(oe: Observable<E>) => ObservableResource<E, A> = R.map(RES.fail)
 
-// TODO maybe wrong
 export const failAppError: <AE = never, A = never>(ae: AE) => ObservableResource<RES.ResourceAjaxError<AE>, A> = flow(
     RES.failAppError,
     R.of
@@ -80,9 +80,9 @@ export const fromAjax = <DS extends RES.ResourceDecoders, AE = never>(
         )
     ).pipe(RXoP.take(2))
 
-export const rightIO: <E = never, A = never>(ma: IO<A>) => ObservableResource<E, A> = flow(R.fromIO, doneObservable)
+export const doneIO: <E = never, A = never>(ma: IO<A>) => ObservableResource<E, A> = flow(R.fromIO, doneObservable)
 
-export const fromIO: MonadIO2<URI>['fromIO'] = rightIO
+export const fromIO: MonadIO2<URI>['fromIO'] = doneIO
 
 export const fromObservable: MonadObservable2<URI>['fromObservable'] = doneObservable
 
@@ -93,12 +93,19 @@ export const fromObservableEither = <E, A>(oe: ObservableEither<E, A>): Observab
 
 export const fromTaskResource: <E, A>(t: T.Task<RES.Resource<E, A>>) => ObservableResource<E, A> = R.fromTask
 
-export const fromTask: MonadTask2<URI>['fromTask'] = flow(R.fromTask, doneObservable)
+export const doneTask: <E = never, A = never>(ma: T.Task<A>) => ObservableResource<E, A> = flow(
+    R.fromTask,
+    doneObservable
+)
+
+export const fromTask: MonadTask2<URI>['fromTask'] = doneTask
 
 export const fromTaskEither: <E, A>(fa: TE.TaskEither<E, A>) => ObservableResource<E, A> = flow(
     R.fromTask,
     fromObservableEither
 )
+
+export const of: Applicative2<URI>['of'] = done
 
 // -------------------------------------------------------------------------------------
 // destructors
@@ -122,57 +129,79 @@ export const fetchToMutationEffect = <
 ) => (ax: AX) => flow(ax, o => (s: SS) => o.pipe(RXoP.map(mapTo(s))))
 
 // -------------------------------------------------------------------------------------
-// combinators
+// instances
 // -------------------------------------------------------------------------------------
 
-export function swap<E, A>(ma: ObservableResource<E, A>): ObservableResource<A, E> {
-    return pipe(
-        ma,
-        match(
-            () => init,
-            () => submitted,
-            a => fail<A, E>(a),
-            done
-        )
-    )
+/* istanbul ignore next */
+const _map_: Functor2<URI>['map'] = (fa, f) => pipe(fa, map(f))
+/* istanbul ignore next */
+const _bimap: Bifunctor2<URI>['bimap'] = (fea, f, g) => pipe(fea, bimap(f, g))
+/* istanbul ignore next */
+const _mapLeft: Bifunctor2<URI>['mapLeft'] = (fea, f) => pipe(fea, mapLeft(f))
+/* istanbul ignore next */
+const _ap: Apply2<URI>['ap'] = (fab, fa) => pipe(fab, ap(fa))
+/* istanbul ignore next */
+const _chain: Monad2<URI>['chain'] = (ma, f) => pipe(ma, chain(f))
+
+export const URI = 'ObservableResource'
+
+export type URI = typeof URI
+
+declare module 'fp-ts/HKT' {
+    interface URItoKind2<E, A> {
+        readonly [URI]: ObservableResource<E, A>
+    }
 }
 
-export function orElseW<E, M, A, B>(
-    onFail: (e: E) => ObservableResource<M, B>
-): (ma: ObservableResource<E, A>) => ObservableResource<M, A | B> {
-    return R.chain(
-        RES.match(
-            () => init,
-            () => submitted,
-            a => done<M, A | B>(a),
-            onFail
-        )
-    )
+export const Functor: Functor2<URI> = {
+    URI,
+    map: _map_,
 }
 
-export const orElse: <E, A, M>(
-    onFail: (e: E) => ObservableResource<M, A>
-) => (ma: ObservableResource<E, A>) => ObservableResource<M, A> = orElseW
+export const Apply: Apply2<URI> = {
+    URI,
+    map: _map_,
+    ap: _ap,
+}
 
-export const filterOrElseW: {
-    <A, B extends A, E2>(refinement: Refinement<A, B>, onFalse: (a: A) => E2): <E1>(
-        ma: ObservableResource<E1, A>
-    ) => ObservableResource<E1 | E2, B>
-    <A, E2>(predicate: Predicate<A>, onFalse: (a: A) => E2): <E1>(
-        ma: ObservableResource<E1, A>
-    ) => ObservableResource<E1 | E2, A>
-} = <A, E2>(
-    predicate: Predicate<A>,
-    onFalse: (a: A) => E2
-): (<E1>(ma: ObservableResource<E1, A>) => ObservableResource<E1 | E2, A>) =>
-    chainW(a => (predicate(a) ? done(a) : fail(onFalse(a))))
+export const Bifunctor: Bifunctor2<URI> = {
+    URI,
+    bimap: _bimap,
+    mapLeft: _mapLeft,
+}
 
-export const filterOrElse: {
-    <E, A, B extends A>(refinement: Refinement<A, B>, onFalse: (a: A) => E): (
-        ma: ObservableResource<E, A>
-    ) => ObservableResource<E, B>
-    <E, A>(predicate: Predicate<A>, onFalse: (a: A) => E): (ma: ObservableResource<E, A>) => ObservableResource<E, A>
-} = filterOrElseW
+export const Applicative: Applicative2<URI> = {
+    URI,
+    map: _map_,
+    ap: _ap,
+    of,
+}
+
+export const Chain: Chain2<URI> = {
+    URI,
+    map: _map_,
+    ap: _ap,
+    chain: _chain,
+}
+
+export const Monad: Monad2<URI> = {
+    URI,
+    map: _map_,
+    ap: _ap,
+    of,
+    chain: _chain,
+}
+
+export const MonadObservable: MonadObservable2<URI> = {
+    URI,
+    map: _map_,
+    ap: _ap,
+    of,
+    chain: _chain,
+    fromIO,
+    fromTask,
+    fromObservable,
+}
 
 // -------------------------------------------------------------------------------------
 // type class members
@@ -220,75 +249,66 @@ export const flatten: <E, A>(mma: ObservableResource<E, ObservableResource<E, A>
     identity
 )
 
-export const of: Applicative2<URI>['of'] = done
-
 // -------------------------------------------------------------------------------------
-// instances
+// combinators
 // -------------------------------------------------------------------------------------
 
-/* istanbul ignore next */
-const map_: Functor2<URI>['map'] = (fa, f) => pipe(fa, map(f))
-/* istanbul ignore next */
-const bimap_: Bifunctor2<URI>['bimap'] = (fea, f, g) => pipe(fea, bimap(f, g))
-/* istanbul ignore next */
-const mapLeft_: Bifunctor2<URI>['mapLeft'] = (fea, f) => pipe(fea, mapLeft(f))
-/* istanbul ignore next */
-const ap_: Apply2<URI>['ap'] = (fab, fa) => pipe(fab, ap(fa))
-/* istanbul ignore next */
-const chain_: Monad2<URI>['chain'] = (ma, f) => pipe(ma, chain(f))
-
-export const URI = 'ObservableResource'
-
-export type URI = typeof URI
-
-declare module 'fp-ts/HKT' {
-    interface URItoKind2<E, A> {
-        readonly [URI]: ObservableResource<E, A>
-    }
+export function swap<E, A>(ma: ObservableResource<E, A>): ObservableResource<A, E> {
+    return pipe(
+        ma,
+        match(
+            () => init,
+            () => submitted,
+            a => fail<A, E>(a),
+            done
+        )
+    )
 }
 
-export const Functor: Functor2<URI> = {
-    URI,
-    map: map_,
+export const chainFirst: <E, A, B>(
+    f: (a: A) => ObservableResource<E, B>
+) => (ma: ObservableResource<E, A>) => ObservableResource<E, A> = chainFirst_(Chain)
+
+export const chainFirstW: <E2, A, B>(
+    f: (a: A) => ObservableResource<E2, B>
+) => <E1>(ma: ObservableResource<E1, A>) => ObservableResource<E1 | E2, A> = chainFirst as any
+
+export function orElseW<E, M, A, B>(
+    onFail: (e: E) => ObservableResource<M, B>
+): (ma: ObservableResource<E, A>) => ObservableResource<M, A | B> {
+    return R.chain(
+        RES.match(
+            () => init,
+            () => submitted,
+            a => done<M, A | B>(a),
+            onFail
+        )
+    )
 }
 
-export const Apply: Apply2<URI> = {
-    URI,
-    map: map_,
-    ap: ap_,
-}
+export const orElse: <E, A, M>(
+    onFail: (e: E) => ObservableResource<M, A>
+) => (ma: ObservableResource<E, A>) => ObservableResource<M, A> = orElseW
 
-export const Bifunctor: Bifunctor2<URI> = {
-    URI,
-    bimap: bimap_,
-    mapLeft: mapLeft_,
-}
+export const filterOrElseW: {
+    <A, B extends A, E2>(refinement: Refinement<A, B>, onFalse: (a: A) => E2): <E1>(
+        ma: ObservableResource<E1, A>
+    ) => ObservableResource<E1 | E2, B>
+    <A, E2>(predicate: Predicate<A>, onFalse: (a: A) => E2): <E1>(
+        ma: ObservableResource<E1, A>
+    ) => ObservableResource<E1 | E2, A>
+} = <A, E2>(
+    predicate: Predicate<A>,
+    onFalse: (a: A) => E2
+): (<E1>(ma: ObservableResource<E1, A>) => ObservableResource<E1 | E2, A>) =>
+    chainW(a => (predicate(a) ? done(a) : fail(onFalse(a))))
 
-export const Applicative: Applicative2<URI> = {
-    URI,
-    map: map_,
-    ap: ap_,
-    of,
-}
-
-export const Monad: Monad2<URI> = {
-    URI,
-    map: map_,
-    ap: ap_,
-    of,
-    chain: chain_,
-}
-
-export const MonadObservable: MonadObservable2<URI> = {
-    URI,
-    map: map_,
-    ap: ap_,
-    of,
-    chain: chain_,
-    fromIO,
-    fromTask,
-    fromObservable,
-}
+export const filterOrElse: {
+    <E, A, B extends A>(refinement: Refinement<A, B>, onFalse: (a: A) => E): (
+        ma: ObservableResource<E, A>
+    ) => ObservableResource<E, B>
+    <E, A>(predicate: Predicate<A>, onFalse: (a: A) => E): (ma: ObservableResource<E, A>) => ObservableResource<E, A>
+} = filterOrElseW
 
 // -------------------------------------------------------------------------------------
 // utils
@@ -333,7 +353,7 @@ const decodeResponse = <DS extends RES.ResourceDecoders>(decoders: DS) => <AE>(
     }
 
     return RES.fail({
-        type: 'unexpectedResponse',
+        type: response.status === 0 ? 'networkError' : 'unexpectedResponse',
         detail: response,
     }) as RES.ResourceTypeOfFail<DS, AE>
 }
