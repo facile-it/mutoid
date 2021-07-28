@@ -20,7 +20,7 @@
     },
     "name": "mutoid",
     "version": "0.4.2",
-    "description": "Reactive library for state management, data fetching, caching",
+    "description": "Reactive library for state management, data fetching, caching for isomorphic applications",
     "repository": {
         "type": "git",
         "url": "https://github.com/facile-it/mutoid.git"
@@ -105,6 +105,7 @@
         "fp-ts",
         "fp-ts-rxjs",
         "io-ts",
-        "react"
+        "react",
+        "isomorphic"
     ]
 }

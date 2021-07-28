@@ -1,17 +1,20 @@
+/* eslint-disable no-undef */
+/* eslint-disable @typescript-eslint/no-var-requires */
 const darkCodeTheme = require('prism-react-renderer/themes/dracula')
 const lightCodeTheme = require('prism-react-renderer/themes/github')
 
 /** @type {import('@docusaurus/types').DocusaurusConfig} */
 module.exports = {
     title: 'Mutoid',
-    tagline: 'Reactive library for state management, data fetching, caching with some utilities to use with React',
-    url: 'https://facile-it.github.io/mutoid',
-    baseUrl: '/',
+    tagline: 'Reactive library for state management, data fetching, caching for isomorphic applications',
+    url: 'https://engineering.facile.it',
+    baseUrl: '/mutoid/',
     onBrokenLinks: 'throw',
     onBrokenMarkdownLinks: 'warn',
     favicon: 'img/favicon.ico',
-    organizationName: 'facile.it', // Usually your GitHub org/user name.
-    projectName: 'mutoid', // Usually your repo name.
+    organizationName: 'facile-it',
+    projectName: 'mutoid',
+    trailingSlash: false,
     themeConfig: {
         navbar: {
             title: 'Mutoid',
@@ -103,12 +106,10 @@ module.exports = {
             {
                 docs: {
                     sidebarPath: require.resolve('./sidebars.js'),
-                    // Please change this to your repo.
                     editUrl: 'https://github.com/facile-it/mutoid/edit/master/website',
                 },
                 blog: {
                     showReadingTime: true,
-                    // Please change this to your repo.
                     editUrl: 'https://github.com/facebook/docusaurus/edit/master/website/blog/',
                 },
                 theme: {

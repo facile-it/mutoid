@@ -1,6 +1,6 @@
 # Mutoid
 
-Reactive library for state management, data fetching, caching with some utilities to use with _React_
+Reactive library for state management, data fetching, caching for isomorphic applications
 
 ## Installation
 
@@ -27,14 +27,9 @@ npm install react
 **Note** [`rxjs`](https://github.com/ReactiveX/rxjs), [`fp-ts`](https://github.com/gcanti/fp-ts),[`fp-ts-rxjs`](https://github.com/gcanti/fp-ts-rxjs) are required peer dependencies.
 Instead [`react`](https://github.com/facebook/react) and [`io-ts`](https://github.com/gcanti/io-ts) are an optional peer dependencies.
 
-## Modules
+## Docs
 
-| Module           |                                                                                         |
-| ---------------- | --------------------------------------------------------------------------------------- |
-| State management | [README](https://github.com/facile-it/mutoid/tree/master/src/state/README.md)           |
-| Data fetching    | [README](https://github.com/facile-it/mutoid/tree/master/src/http/README.md)            |
-| React bindings   | [README](https://github.com/facile-it/mutoid/tree/master/src/react/README.md)           |
-| RxJs             | Deprecated [README](https://github.com/facile-it/mutoid/tree/master/src/rxjs/README.md) |
+[Docs](https://engineering.facile.it/mutoid)
 
 ## Example
 
