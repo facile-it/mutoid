@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.3
+## 0.5.0
 
 -   Added in http module `resourceFetchFactory`, `io-types`, `cachePoolAdapters`
 
