@@ -6,7 +6,7 @@ const lightCodeTheme = require('prism-react-renderer/themes/github')
 /** @type {import('@docusaurus/types').DocusaurusConfig} */
 module.exports = {
     title: 'Mutoid',
-    tagline: 'Reactive library for state management, data fetching, caching for isomorphic applications',
+    tagline: 'Reactive library for data fetching, caching, state management (also) for isomorphic applications',
     url: 'https://engineering.facile.it',
     baseUrl: '/mutoid/',
     onBrokenLinks: 'throw',
@@ -19,7 +19,7 @@ module.exports = {
         navbar: {
             title: 'Mutoid',
             logo: {
-                alt: 'Mutoid: Reactive library for state management, data fetching, caching',
+                alt: 'Mutoid: Reactive library for data fetching, caching, state management',
                 src: 'img/logo.svg',
             },
             items: [
@@ -93,7 +93,7 @@ module.exports = {
                     ],
                 },
             ],
-            copyright: `Copyright © ${new Date().getFullYear()} Facile.it Engineering, Inc. Built with Docusaurus.`,
+            copyright: `Copyright © ${new Date().getFullYear()} Facile.it Engineering, Built with Docusaurus.`,
         },
         prism: {
             theme: lightCodeTheme,
