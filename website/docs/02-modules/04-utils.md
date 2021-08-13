@@ -10,5 +10,4 @@ sidebar_position: 4
 ```ts
 import { hash } from 'mutoid/utils'
 ```
-
-A small module that contains a function `hashString` useful to create a cache key
+A small module that contains a `hashString` function, useful to create a cache key.

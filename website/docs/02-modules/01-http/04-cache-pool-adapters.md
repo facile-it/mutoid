@@ -11,4 +11,4 @@ sidebar_position: 4
 import { cachePoolWebStorage } from 'mutoid/http/cachePoolAdapters'
 ```
 
-You can use this adapter with `window.sessionStorage` or `window.localStorage`
+You can use this adapter with `window.sessionStorage` or `window.localStorage`.

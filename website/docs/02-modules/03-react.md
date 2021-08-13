@@ -23,7 +23,7 @@ const m = useMutation(store, mutation)
 
 ## useResourceFetcher
 
-Deprecated use `useFetchObservableResource` or better `useFetchReaderObservableResource`
+Deprecated. Use instead `useFetchReaderObservableResource`. You can also use `useFetchObservableResource`, but `useFetchReaderObservableResource` is a better solution.
 
 ## useFetchReaderObservableResource
 
@@ -76,11 +76,11 @@ const App: React.FC<{ id: number }> = ({ id }) => {
 
 ## useFetchObservableResource
 
-Same as `useFetchReaderObservableResource`, the only difference is the input `ObservableResource` instead of `ReaderObservableResource`
+Same as `useFetchReaderObservableResource`, the only difference is the input `ObservableResource` instead of `ReaderObservableResource`.
 
 ## useStore
 
-If you have a lazy store, you can use this hook to maintain the ref over the renders
+If you have a lazy store, you can use the following hook to maintain the `ref` over the renders:
 
 ```ts
 const appStore = () => MS.ctor({ name: 'appStore', initState: { userName: 'Marco' } })
