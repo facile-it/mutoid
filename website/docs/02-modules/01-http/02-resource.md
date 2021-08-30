@@ -11,9 +11,9 @@ import * as OR from 'mutoid/http/ObservableResource'
 import * as ROR from 'mutoid/http/ReaderObservableResource'
 ```
 
-**ReaderObservableResource**, **ObservableResource**, **Resource** are three data structures that implement an instance of _Functor_, _Apply_, _Bifunctor_, _Applicative_, _Monad_ (and _MonadObservable_ for _ObservableResource_ and _ReaderObservableResource_)
+**ReaderObservableResource**, **ObservableResource**, **Resource** are three data structures that implement an instance of _Functor_, _Apply_, _Bifunctor_, _Applicative_, _Monad_ (and _MonadObservable_ for _ObservableResource_ and _ReaderObservableResource_).
 
-All modules have the same structure (more or less) as a fp-ts module:
+All modules have the same structure (more or less) as a `fp-ts` module:
 
 -   constructor
 -   destructors
@@ -36,9 +36,9 @@ There are some classic constructors and some helper constructors from data struc
 
 ### fromAjax
 
-One of the most important and (hopefully) useful constructor implemented in ReaderObservableResource and ObservableResource
+One of the most important and (hopefully) useful constructor implemented in _ReaderObservableResource_ and _ObservableResource_.
 
-The inputs are: **ObservableAjax** and **ResourceDecoders**
+The inputs are **ObservableAjax** and **ResourceDecoders**.
 
 \>> `ObservableAjax`
 
@@ -52,8 +52,8 @@ type ObservableAjax<AE = never> = Observable<AjaxResponse | RES.ResourceAjaxFail
 
 Where:
 
--   `AjaxResponse` is A normalized response from an AJAX request [defined in rxjs](https://rxjs-dev.firebaseapp.com/api/ajax/AjaxResponse)
--   `ResourceAjaxFail` is a sum type defined with two cases `unknownError` and `appError` (you can find a constructor in Resource)
+-   `AjaxResponse` is a normalized response from an AJAX request [defined in rxjs](https://rxjs-dev.firebaseapp.com/api/ajax/AjaxResponse)
+-   `ResourceAjaxFail` is a sum type defined with two cases `unknownError` and `appError` (you can find a constructor in _Resource_)
 
 \>> `ResourceDecoders`
 
@@ -64,7 +64,7 @@ import { StatusCode } from 'mutoid/http/statusCode'
 type ResourceDecoders = { [k in StatusCode]?: (i: unknown) => Either<unknown, unknown> }
 ```
 
-You can use `io-ts` to build easily the decoders
+You can use `io-ts` to easily build the decoders.
 
 #### Example
 
@@ -104,9 +104,9 @@ export const fetchSomething = (id: number, from: string) =>
     )
 ```
 
-When you use `fromAjax`, we consider all status code in the decoder dictionary as a `Done` case.
+When you use `fromAjax`, you consider every status code in the decoder dictionary as a `Done` case.
 
-In that case the done resource data is described by a sum type
+In that case, the `Done` resource data is described by a sum type:
 
 ```ts
 interface ResourceData<S, P> {
@@ -115,9 +115,9 @@ interface ResourceData<S, P> {
 }
 ```
 
-where status and payload are inferred from your decoder dictionary
+where _status_ and _payload_ are inferred from your decoder dictionary.
 
-Instead the fail resource data is described by a sum type that has (4+1) cases:
+The fail resource data, instead, is described by a sum type that has (4+1) cases:
 
 -   `unknownError`
 -   `decodeError` errors are inferred from your decoder dictionary
@@ -125,7 +125,7 @@ Instead the fail resource data is described by a sum type that has (4+1) cases:
 -   `unexpectedResponse` all status code that you don't specify in decoder dictionary
 -   `appError` inferred if you specify that
 
-If you want to see some examples:
+Here are some examples:
 
 1 - simple fetch with token in store: [example](https://github.com/facile-it/mutoid/blob/pre_release_04/example/resources/quoteResource.ts#L23)  
 2 - fetch in series: [example](https://github.com/facile-it/mutoid/blob/pre_release_04/example/resources/quoteResource.ts#L42)  
@@ -135,11 +135,11 @@ If you want to see some examples:
 
 ### match (Resource)
 
-Take 4 functions for each case: `onInit`, `onSubmitted`, `onDone`, `onFail`
+This destructor takes 4 functions for each case: `onInit`, `onSubmitted`, `onDone`, `onFail`.
 
 ### matchD (Resource)
 
-Same of `match` but with different input
+This destructor is very similar to `match`, but it works with different inputs:
 
 ```ts
 {
@@ -161,9 +161,9 @@ Same of `match` but with different input
 ### toMutationEffect (ReaderObservableResource, ObservableResource)
 
 This destructor is useful when you want to update a store after an asynchronous request.
-Implemented in ReaderObservableResource and ObservableResource
+It can be implemented in _ReaderObservableResource_ and _ObservableResource_.
 
-In ObservableResource
+In _ObservableResource_:
 
 ```typescript
 import { map } from 'rxjs/operators'
@@ -184,7 +184,7 @@ export const fetchQuoteMutationWithParams = pipe(
 )
 ```
 
-In ReaderObservableResource
+In _ReaderObservableResource_:
 
 ```typescript
 import { map } from 'rxjs/operators'

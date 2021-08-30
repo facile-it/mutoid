@@ -6,15 +6,15 @@ Now `fp-ts-rxjs` is a peer dependency
 
 ## State management
 
-We removed the memoization in store ctor.
+We removed the memoization in store `ctor`.
 
-Now we recommend to use a lazy store like
+Now we recommend to use a lazy store like the following one:
 
 ```ts
 const appStore = () => MS.ctor({ name: 'appStore', initState: { userName: 'Marco' } })
 ```
 
-In any case you can still use a singleton store. The only difference is the ctor first argument
+In any case you can still use a singleton store. The only difference is the `ctor` first argument:
 
 ```ts
 // before
@@ -34,7 +34,7 @@ store().state$.pipe(take(1), map(s => ...))
 store.state$.pipe(take(1), map(s => ...))
 ```
 
-We added `mutoid/state/stores` to populate the stores and mutations names using the module augmentation feature
+We added `mutoid/state/stores` to populate the stores and mutations names, using the module augmentation feature:
 
 ```typescript
 declare module 'mutoid/state/stores' {
@@ -54,16 +54,16 @@ const mutation = MS.ctorMutation(
 )
 ```
 
-This is useful to have the correct inference in the store notifier
-In any case, if you don't declare anything there is a fallback to string
+This is useful to have the correct inference in the store notifier.
+In any case, if you don't declare anything there is a fallback to string.
 
 ## Data fetching
 
-The http module has been splitted into 3 modules: `ReaderObservableResource`, `ObservableResource` and `Resource`. Three data structures that implement an instance of `Functor`, `Apply`, `Bifunctor`, `Applicative`, `Monad` (and `MonadObservable` for `ObservableResource` and `ReaderObservableResource`)
+The HTTP module has been splitted into 3 modules: `ReaderObservableResource`, `ObservableResource` and `Resource`. Three data structures that implement an instance of `Functor`, `Apply`, `Bifunctor`, `Applicative`, `Monad` (and `MonadObservable` for `ObservableResource` and `ReaderObservableResource`).
 
 ### Extract resource type form decoders
 
-Before
+Before:
 
 ```ts
 import * as t from 'io-ts'
@@ -77,7 +77,7 @@ export const somethingDecoders = {
 type somethingResource = MH.Resource<typeof somethingDecoders>
 ```
 
-After
+After:
 
 ```ts
 import * as t from 'io-ts'
@@ -93,7 +93,7 @@ type somethingResource = RES.ResourceTypeOf<typeof somethingDecoders>
 
 ### Create Observable resource from ajax
 
-Before
+Before:
 
 ```ts
 import * as t from 'io-ts'
@@ -111,7 +111,7 @@ const fetchSomething = (id: number, from: string) =>
     MH.ajaxToResource(ajax(`https://api.io?id=${id}&from=${from}`), somethingDecoders)
 ```
 
-After
+After:
 
 ```ts
 import * as t from 'io-ts'
@@ -150,7 +150,7 @@ export const fetchSomething = (id: number, from: string) =>
 
 ### Fetcher to mutation effect
 
-Before
+Before:
 
 ```ts
 import { map } from 'rxjs/operators'
@@ -164,7 +164,7 @@ const fetchSomethingMutation = () =>
     )
 ```
 
-After
+After:
 
 ```ts
 import * as OR from 'mutoid/http/ObservableResource'
@@ -194,7 +194,7 @@ const fetchSomethingMutation = () =>
 
 ### Resource fold
 
-Before
+Before:
 
 ```ts
 import * as MH from 'mutoid/http'
@@ -211,7 +211,7 @@ const result = pipe(
 )
 ```
 
-After
+After:
 
 ```ts
 import * as RES from 'mutoid/http/Resource'
@@ -243,9 +243,9 @@ const result = pipe(
 const result = pipe(userResource, RES.match(onInit, onSubmitted, onDone, onFail))
 ```
 
-The `ResourceDone` internal structure has been changed
+The `ResourceDone` internal structure has been changed.
 
-Before
+Before:
 
 ```ts
 export interface ResourceDone<S, P> {
@@ -255,7 +255,7 @@ export interface ResourceDone<S, P> {
 }
 ```
 
-After
+After:
 
 ```ts
 export interface ResourceData<S, P> {
@@ -269,4 +269,4 @@ export interface ResourceDone<D> {
 }
 ```
 
-The discriminator now is `_tag`
+The discriminator now is `_tag`.

@@ -9,7 +9,9 @@ sidebar_position: 6
 import * as DS from 'mutoid/http/dataSerializer'
 ```
 
-Helper for serialize data (nullable or Option) to URLSearchParams or FormData
+Helper for serialize data (nullable or Option) to `URLSearchParams` or `FormData`.
+
+You can use `URLSearchParams` for both browser and Node.js:
 
 ```typescript
 import * as DS from 'mutoid/http/dataSerializer'
@@ -18,7 +20,7 @@ import { pipe } from 'fp-ts/function'
 const queryString = pipe({ page: 2, id: 5 }, DS.serializeUrl(new URLSearchParams()), DS.toQueryString)
 ```
 
-You can use URLSearchParams on browser and NodeJs
+You can use `FormData` only for browser. For Node.js you can use [form-data](https://www.npmjs.com/package/form-data) or similar libraries.
 
 ```typescript
 import * as DS from 'mutoid/http/dataSerializer'
@@ -26,5 +28,3 @@ import { pipe } from 'fp-ts/function'
 
 const formData = pipe({ name: 'iacopo' }, DS.serializeForm(new FormData()))
 ```
-
-You can use FormData only in browser, for NodeJs you can use something like [form-data](https://www.npmjs.com/package/form-data)
