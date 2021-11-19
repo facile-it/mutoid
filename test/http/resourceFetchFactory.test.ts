@@ -247,7 +247,14 @@ describe('resourceFetchFactory fetchFactory', () => {
 describe('resourceFetchFactory fetchCacheableFactory', () => {
     const systemTime = new Date('2021-01-01').getTime()
 
-    const ff = RESFF.fetchCacheableFactory({ loggerFail: logError, createCacheKey: () => 'key' })
+    interface cacheDeps {
+        session: string
+    }
+
+    const ff = RESFF.fetchCacheableFactory({
+        loggerFail: logError,
+        createCacheKey: () => (d: cacheDeps) => `${d.session}_key`,
+    })
     const ROR = ff(
         {
             method: 'GET',
@@ -278,12 +285,12 @@ describe('resourceFetchFactory fetchCacheableFactory', () => {
                 response: 'hello',
             })) as any) as typeof ajax
 
-        const r = await ROR({ ajax: ajaxMock, logger, cachePool }).toPromise()
+        const r = await ROR({ ajax: ajaxMock, logger, cachePool, cacheDeps: { session: 'session' } }).toPromise()
 
         expect(r).toStrictEqual({ _tag: 'done', data: { status: 200, payload: 'hello' } })
 
         expect(storage.length).toBe(1)
-        expect(storage.getItem('fetchCacheableFactory_key')).not.toBeNull()
+        expect(storage.getItem('fetchCacheableFactory_session_key')).not.toBeNull()
         expect(logger.mock.calls.length).toBe(0)
     })
 
@@ -291,7 +298,7 @@ describe('resourceFetchFactory fetchCacheableFactory', () => {
         jest.useFakeTimers('modern').setSystemTime(systemTime)
 
         storage.setItem(
-            'fetchCacheableFactory_key',
+            'fetchCacheableFactory_session_key',
             JSON.stringify({
                 validUntil: systemTime + 20 * 1000,
                 item: {
@@ -308,12 +315,12 @@ describe('resourceFetchFactory fetchCacheableFactory', () => {
                 response: 'hello',
             })) as any) as typeof ajax
 
-        const r = await ROR({ ajax: ajaxMock, logger, cachePool }).toPromise()
+        const r = await ROR({ ajax: ajaxMock, logger, cachePool, cacheDeps: { session: 'session' } }).toPromise()
 
         expect(r).toStrictEqual({ _tag: 'done', data: { status: 200, payload: 'hello' } })
 
         expect(storage.length).toBe(1)
-        expect(storage.getItem('fetchCacheableFactory_key')).not.toBeNull()
+        expect(storage.getItem('fetchCacheableFactory_session_key')).not.toBeNull()
         expect(logger.mock.calls.length).toBe(0)
     })
 
@@ -321,7 +328,7 @@ describe('resourceFetchFactory fetchCacheableFactory', () => {
         jest.useFakeTimers('modern').setSystemTime(systemTime)
 
         storage.setItem(
-            'fetchCacheableFactory_key',
+            'fetchCacheableFactory_session_key',
             JSON.stringify({
                 validUntil: systemTime + 20 * 1000,
                 item: {
@@ -338,13 +345,13 @@ describe('resourceFetchFactory fetchCacheableFactory', () => {
                 response: 'hello',
             })) as any) as typeof ajax
 
-        const r = await ROR({ ajax: ajaxMock, logger, cachePool }).toPromise()
+        const r = await ROR({ ajax: ajaxMock, logger, cachePool, cacheDeps: { session: 'session' } }).toPromise()
 
         expect(r).toStrictEqual({ _tag: 'done', data: { status: 200, payload: 'hello' } })
 
         expect(storage.length).toBe(1)
-        expect(storage.getItem('fetchCacheableFactory_key')).not.toBeNull()
-        expect(storage.getItem('fetchCacheableFactory_key')).toStrictEqual(
+        expect(storage.getItem('fetchCacheableFactory_session_key')).not.toBeNull()
+        expect(storage.getItem('fetchCacheableFactory_session_key')).toStrictEqual(
             JSON.stringify({
                 validUntil: systemTime + 900 * 1000,
                 item: {
@@ -358,7 +365,14 @@ describe('resourceFetchFactory fetchCacheableFactory', () => {
 })
 
 describe('resourceFetchFactory fetchCacheableFactory with no appCacheTtl', () => {
-    const ff = RESFF.fetchCacheableFactory({ loggerFail: logError, createCacheKey: () => 'key' })
+    interface cacheDeps {
+        session: string
+    }
+
+    const ff = RESFF.fetchCacheableFactory({
+        loggerFail: logError,
+        createCacheKey: () => (d: cacheDeps) => `${d.session}_key`,
+    })
     const ROR = ff(
         {
             method: 'GET',
@@ -387,7 +401,7 @@ describe('resourceFetchFactory fetchCacheableFactory with no appCacheTtl', () =>
                 response: 'hello',
             })) as any) as typeof ajax
 
-        const r = await ROR({ ajax: ajaxMock, logger, cachePool }).toPromise()
+        const r = await ROR({ ajax: ajaxMock, logger, cachePool, cacheDeps: { session: 'session' } }).toPromise()
 
         expect(r).toStrictEqual({ _tag: 'done', data: { status: 200, payload: 'hello' } })
 
