@@ -24,8 +24,8 @@ export interface CachePool {
     addItem: (key: string, item: CacheItem, ttl: number) => T.Task<void>
 }
 
-export interface CreateCacheKey {
-    (endpoint: EndpointRequest): string
+export interface CreateCacheKey<DC> {
+    (endpoint: EndpointRequest): R.Reader<DC, string>
 }
 
 const getEndpointAppCacheTtl = (endpoint: EndpointRequestCacheable) =>
@@ -39,13 +39,14 @@ const getEndpointAppCacheTtl = (endpoint: EndpointRequestCacheable) =>
 
 export type FetchFactoryDeps = DepsAjax
 
-export type FetchFactoryCacheableDeps = FetchFactoryDeps & DepsCache
+export type FetchFactoryCacheableDeps<DC> = FetchFactoryDeps & DepsCache<DC>
 
 export interface DepsAjax {
     ajax: typeof ajax
 }
 
-export interface DepsCache {
+export interface DepsCache<DC> {
+    cacheDeps: DC
     cachePool: CachePool
 }
 
@@ -136,9 +137,9 @@ export const fetchFactory = <DL, OL>(env: { loggerFail: (e: ResourceBad) => R.Re
     )
 }
 
-export const fetchCacheableFactory = <DL, OL>(env: {
+export const fetchCacheableFactory = <DL, OL, DC>(env: {
     loggerFail: (e: ResourceBad) => R.Reader<DL, OL>
-    createCacheKey: CreateCacheKey
+    createCacheKey: CreateCacheKey<DC>
 }) => <K extends StatusCode, DS extends FetchFactoryDecoders<K>, SC extends keyof DS>(
     request: EndpointRequestCacheable,
     decoderL: Lazy<DS>,
@@ -150,9 +151,9 @@ export const fetchCacheableFactory = <DL, OL>(env: {
         return fetchFactory(env)(request, decoderL, successCodes)
     }
 
-    return pipe((deps: FetchFactoryCacheableDeps) => {
+    return pipe((deps: FetchFactoryCacheableDeps<DC>) => {
         return pipe(
-            deps.cachePool.findItem(env.createCacheKey(request)),
+            deps.cachePool.findItem(env.createCacheKey(request)(deps.cacheDeps)),
             OR.fromTask,
             OR.chain(item => {
                 return pipe(
@@ -182,7 +183,11 @@ export const fetchCacheableFactory = <DL, OL>(env: {
                             runRequest(deps, request, decoderL),
                             OR.chainFirstW(r =>
                                 pipe(
-                                    deps.cachePool.addItem(env.createCacheKey(request), r as CacheItem, appCacheTtl),
+                                    deps.cachePool.addItem(
+                                        env.createCacheKey(request)(deps.cacheDeps),
+                                        r as CacheItem,
+                                        appCacheTtl
+                                    ),
                                     OR.doneTask
                                 )
                             ),

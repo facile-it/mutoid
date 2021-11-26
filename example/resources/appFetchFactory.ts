@@ -66,7 +66,7 @@ export const appEndpointRequestCacheable = <E extends Record<string, string | nu
 
 const fetchCacheableWithErrorLog = RESFF.fetchCacheableFactory({
     loggerFail: logError,
-    createCacheKey: e => hashString(e.url),
+    createCacheKey: e => () => hashString(e.url),
 })
 
 export const appFetchCacheable = <K extends StatusCode, DS extends RESFF.FetchFactoryDecoders<K>, SC extends keyof DS>(
