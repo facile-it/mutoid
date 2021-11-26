@@ -10,7 +10,6 @@ const config = (_: unknown, argv: { mode: string }): webpack.Configuration & { d
         extensions: ['.tsx', '.ts', '.js'],
     },
     devServer: {
-        contentBase: path.join(__dirname, 'dist'),
         compress: true,
         port: 9000,
     },

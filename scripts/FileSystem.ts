@@ -13,7 +13,7 @@ export interface FileSystem {
     readonly moveFile: (from: string, to: string) => TE.TaskEither<Error, void>
 }
 
-const readFile = TE.taskify<fs.PathLike, string, NodeJS.ErrnoException, string>(fs.readFile)
+const readFile = TE.taskify<fs.PathLike, BufferEncoding, NodeJS.ErrnoException, string>(fs.readFile)
 const writeFile = TE.taskify<fs.PathLike, string, NodeJS.ErrnoException, void>(fs.writeFile)
 const unlink = TE.taskify<fs.PathLike, NodeJS.ErrnoException, void>(fs.unlink)
 const copyFile = TE.taskify<fs.PathLike, fs.PathLike, NodeJS.ErrnoException, void>(fs.copyFile)
