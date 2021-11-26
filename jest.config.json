@@ -6,5 +6,5 @@
     },
     "testRegex": "test\\/.*\\.test\\.tsx?$",
 
-    "collectCoverageFrom": ["**/src/**"]
+    "collectCoverageFrom": ["src/**"]
 }

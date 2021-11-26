@@ -1,3 +1,5 @@
+/* istanbul ignore file */
+
 import type * as T from 'fp-ts/Task'
 import type * as t from 'io-ts'
 import type { cachePoolItemT } from '../io-types'
