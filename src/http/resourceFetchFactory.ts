@@ -24,6 +24,10 @@ export interface CachePool {
     addItem: (key: string, item: CacheItem, ttl: number) => T.Task<void>
 }
 
+export interface LoggerFail<DL, OL> {
+    (e: ResourceBad): R.Reader<DL, OL>
+}
+
 export interface CreateCacheKey<DC> {
     (endpoint: EndpointRequest): R.Reader<DC, string>
 }
@@ -39,14 +43,13 @@ const getEndpointAppCacheTtl = (endpoint: EndpointRequestCacheable) =>
 
 export type FetchFactoryDeps = DepsAjax
 
-export type FetchFactoryCacheableDeps<DC> = FetchFactoryDeps & DepsCache<DC>
+export type FetchFactoryCacheableDeps = FetchFactoryDeps & DepsCache
 
 export interface DepsAjax {
     ajax: typeof ajax
 }
 
-export interface DepsCache<DC> {
-    cacheDeps: DC
+export interface DepsCache {
     cachePool: CachePool
 }
 
@@ -138,7 +141,7 @@ export const fetchFactory = <DL, OL>(env: { loggerFail: (e: ResourceBad) => R.Re
 }
 
 export const fetchCacheableFactory = <DL, OL, DC>(env: {
-    loggerFail: (e: ResourceBad) => R.Reader<DL, OL>
+    loggerFail: LoggerFail<DL, OL>
     createCacheKey: CreateCacheKey<DC>
 }) => <K extends StatusCode, DS extends FetchFactoryDecoders<K>, SC extends keyof DS>(
     request: EndpointRequestCacheable,
@@ -151,53 +154,51 @@ export const fetchCacheableFactory = <DL, OL, DC>(env: {
         return fetchFactory(env)(request, decoderL, successCodes)
     }
 
-    return pipe((deps: FetchFactoryCacheableDeps<DC>) => {
-        return pipe(
-            deps.cachePool.findItem(env.createCacheKey(request)(deps.cacheDeps)),
-            OR.fromTask,
-            OR.chain(item => {
-                return pipe(
-                    item,
-                    O.bindTo('item'),
-                    O.bind('decoder', x => O.fromNullable(decoderL()[x.item.status as SC])),
-                    O.bind('payload', x =>
-                        pipe(
-                            x.decoder(x.item.payload),
-                            // when decode fail don't delete item, but run new request and overwrite it
-                            E.fold(() => O.none, O.some)
-                        )
-                    ),
-                    O.map(x =>
-                        pipe(
-                            x.payload,
-                            (payload): RES.DecodersToResourceData<DS> => ({
-                                status: x.item.status as SC,
-                                payload,
-                            }),
-                            OR.done,
-                            OR_filterResponse(successCodes, request)
-                        )
-                    ),
-                    O.getOrElse(() =>
-                        pipe(
-                            runRequest(deps, request, decoderL),
-                            OR.chainFirstW(r =>
-                                pipe(
-                                    deps.cachePool.addItem(
-                                        env.createCacheKey(request)(deps.cacheDeps),
-                                        r as CacheItem,
-                                        appCacheTtl
-                                    ),
-                                    OR.doneTask
-                                )
-                            ),
-                            OR_filterResponse(successCodes, request)
+    return pipe(
+        env.createCacheKey(request),
+        ROR.fromReader,
+        ROR.chainW(cacheKey => (deps: FetchFactoryCacheableDeps) => {
+            return pipe(
+                deps.cachePool.findItem(cacheKey),
+                OR.fromTask,
+                OR.chain(item => {
+                    return pipe(
+                        item,
+                        O.bindTo('item'),
+                        O.bind('decoder', x => O.fromNullable(decoderL()[x.item.status as SC])),
+                        O.bind('payload', x =>
+                            pipe(
+                                x.decoder(x.item.payload),
+                                // when decode fail don't delete item, but run new request and overwrite it
+                                E.fold(() => O.none, O.some)
+                            )
+                        ),
+                        O.map(x =>
+                            pipe(
+                                x.payload,
+                                (payload): RES.DecodersToResourceData<DS> => ({
+                                    status: x.item.status as SC,
+                                    payload,
+                                }),
+                                OR.done,
+                                OR_filterResponse(successCodes, request)
+                            )
+                        ),
+                        O.getOrElse(() =>
+                            pipe(
+                                runRequest(deps, request, decoderL),
+                                OR.chainFirstW(r =>
+                                    pipe(deps.cachePool.addItem(cacheKey, r as CacheItem, appCacheTtl), OR.doneTask)
+                                ),
+                                OR_filterResponse(successCodes, request)
+                            )
                         )
                     )
-                )
-            })
-        )
-    }, logFail(env.loggerFail))
+                })
+            )
+        }),
+        logFail(env.loggerFail)
+    )
 }
 
 const runRequest = <K extends StatusCode, DS extends FetchFactoryDecoders<K>>(

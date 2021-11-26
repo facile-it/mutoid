@@ -285,7 +285,7 @@ describe('resourceFetchFactory fetchCacheableFactory', () => {
                 response: 'hello',
             })) as any) as typeof ajax
 
-        const r = await ROR({ ajax: ajaxMock, logger, cachePool, cacheDeps: { session: 'session' } }).toPromise()
+        const r = await ROR({ ajax: ajaxMock, logger, cachePool, session: 'session' }).toPromise()
 
         expect(r).toStrictEqual({ _tag: 'done', data: { status: 200, payload: 'hello' } })
 
@@ -315,7 +315,7 @@ describe('resourceFetchFactory fetchCacheableFactory', () => {
                 response: 'hello',
             })) as any) as typeof ajax
 
-        const r = await ROR({ ajax: ajaxMock, logger, cachePool, cacheDeps: { session: 'session' } }).toPromise()
+        const r = await ROR({ ajax: ajaxMock, logger, cachePool, session: 'session' }).toPromise()
 
         expect(r).toStrictEqual({ _tag: 'done', data: { status: 200, payload: 'hello' } })
 
@@ -345,7 +345,7 @@ describe('resourceFetchFactory fetchCacheableFactory', () => {
                 response: 'hello',
             })) as any) as typeof ajax
 
-        const r = await ROR({ ajax: ajaxMock, logger, cachePool, cacheDeps: { session: 'session' } }).toPromise()
+        const r = await ROR({ ajax: ajaxMock, logger, cachePool, session: 'session' }).toPromise()
 
         expect(r).toStrictEqual({ _tag: 'done', data: { status: 200, payload: 'hello' } })
 
@@ -401,7 +401,7 @@ describe('resourceFetchFactory fetchCacheableFactory with no appCacheTtl', () =>
                 response: 'hello',
             })) as any) as typeof ajax
 
-        const r = await ROR({ ajax: ajaxMock, logger, cachePool, cacheDeps: { session: 'session' } }).toPromise()
+        const r = await ROR({ ajax: ajaxMock, logger, cachePool, session: 'session' }).toPromise()
 
         expect(r).toStrictEqual({ _tag: 'done', data: { status: 200, payload: 'hello' } })
 

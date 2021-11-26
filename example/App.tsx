@@ -43,7 +43,6 @@ const useResourceCacheDeps = () => ({
         storage: window.sessionStorage,
         namespace: 'app_quote',
     }),
-    cacheDeps: {},
 })
 
 const renderQuoteResource = (quote: QuoteResource): React.ReactChild => {
