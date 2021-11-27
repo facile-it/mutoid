@@ -7,7 +7,9 @@ import type * as RESFF from '../resourceFetchFactory'
 
 export interface CachePoolAdapter extends RESFF.CachePool {
     deleteItem: (key: string) => T.Task<void>
+    deleteItemS: (key: string) => void
     clear: T.Task<void | readonly void[]>
+    clearS: () => void | readonly void[]
 }
 
 export type CachePoolItem = t.TypeOf<typeof cachePoolItemT>

@@ -21,7 +21,9 @@ export type CacheItem<S = StatusCode, P = unknown> = RES.ResourceData<S, P>
 
 export interface CachePool {
     findItem: (key: string) => TO.TaskOption<CacheItem>
+    findItemS: (key: string) => O.Option<CacheItem>
     addItem: (key: string, item: CacheItem, ttl: number) => T.Task<void>
+    addItemS: (key: string, item: CacheItem, ttl: number) => void
 }
 
 export interface LoggerFail<DL, OL> {
