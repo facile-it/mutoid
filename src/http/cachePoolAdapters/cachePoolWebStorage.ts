@@ -5,7 +5,7 @@ import * as O from 'fp-ts/Option'
 import { flow, pipe } from 'fp-ts/function'
 import { cachePoolItemT } from '../io-types'
 import type * as RESFF from '../resourceFetchFactory'
-import type { CachePoolAdapter } from '.'
+import type { CachePoolAdapterSync } from '.'
 
 export interface CachePoolWebStorageEnvironment {
     storage: Storage
@@ -21,7 +21,7 @@ const deleteItemFactory =
         env.storage.removeItem(namespacedKey(env.namespace, key))
     }
 
-export const cachePoolWebStorage = (env: CachePoolWebStorageEnvironment): CachePoolAdapter => {
+export const cachePoolWebStorage = (env: CachePoolWebStorageEnvironment): CachePoolAdapterSync => {
     const deleteItem = deleteItemFactory(env)
 
     return {
