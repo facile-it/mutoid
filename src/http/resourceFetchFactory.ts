@@ -57,8 +57,8 @@ export interface DepsCache {
 // ResourceBad
 // -------------------------------------------------------------------------------------
 
-interface ResourceBadCtor<R extends ResourceBadRejected | ResourceBadFail> {
-    error: R['error']
+interface ResourceBadCtor<RB extends ResourceBadRejected | ResourceBadFail> {
+    error: RB['error']
     detail: unknown
     errorMessage?: string
     statusCode?: StatusCode | 0
@@ -124,82 +124,79 @@ export type FetchFactoryDecoders<K extends StatusCode> = {
 
 const errorMessagePrefix = '[fetchFactory]'
 
-export const fetchFactory = <DL, OL>(env: { loggerFail: (e: ResourceBad) => R.Reader<DL, OL> }) => <
-    K extends StatusCode,
-    DS extends FetchFactoryDecoders<K>,
-    SC extends keyof DS
->(
-    request: EndpointRequest,
-    decoderL: Lazy<DS>,
-    successCodes: Array<SC>
-) => {
-    return pipe(
-        (deps: FetchFactoryDeps) => runRequest(deps, request, decoderL),
-        ROR_filterResponse(successCodes, request),
-        logFail(env.loggerFail)
-    )
-}
-
-export const fetchCacheableFactory = <DL, OL, DC>(env: {
-    loggerFail: LoggerFail<DL, OL>
-    createCacheKey: CreateCacheKey<DC>
-}) => <K extends StatusCode, DS extends FetchFactoryDecoders<K>, SC extends keyof DS>(
-    request: EndpointRequestCacheable,
-    decoderL: Lazy<DS>,
-    successCodes: Array<SC>
-) => {
-    const appCacheTtl = getEndpointAppCacheTtl(request)
-
-    if (typeof appCacheTtl === 'undefined') {
-        return fetchFactory(env)(request, decoderL, successCodes)
+export const fetchFactory =
+    <DL, OL>(env: { loggerFail: (e: ResourceBad) => R.Reader<DL, OL> }) =>
+    <K extends StatusCode, DS extends FetchFactoryDecoders<K>, SC extends keyof DS>(
+        request: EndpointRequest,
+        decoderL: Lazy<DS>,
+        successCodes: Array<SC>
+    ) => {
+        return pipe(
+            (deps: FetchFactoryDeps) => runRequest(deps, request, decoderL),
+            ROR_filterResponse(successCodes, request),
+            logFail(env.loggerFail)
+        )
     }
 
-    return pipe(
-        env.createCacheKey(request),
-        ROR.fromReader,
-        ROR.chainW(cacheKey => (deps: FetchFactoryCacheableDeps) => {
-            return pipe(
-                deps.cachePool.findItem(cacheKey),
-                OR.fromTask,
-                OR.chain(item => {
-                    return pipe(
-                        item,
-                        O.bindTo('item'),
-                        O.bind('decoder', x => O.fromNullable(decoderL()[x.item.status as SC])),
-                        O.bind('payload', x =>
-                            pipe(
-                                x.decoder(x.item.payload),
-                                // when decode fail don't delete item, but run new request and overwrite it
-                                E.fold(() => O.none, O.some)
-                            )
-                        ),
-                        O.map(x =>
-                            pipe(
-                                x.payload,
-                                (payload): RES.DecodersToResourceData<DS> => ({
-                                    status: x.item.status as SC,
-                                    payload,
-                                }),
-                                OR.done,
-                                OR_filterResponse(successCodes, request)
-                            )
-                        ),
-                        O.getOrElse(() =>
-                            pipe(
-                                runRequest(deps, request, decoderL),
-                                OR.chainFirstW(r =>
-                                    pipe(deps.cachePool.addItem(cacheKey, r as CacheItem, appCacheTtl), OR.doneTask)
-                                ),
-                                OR_filterResponse(successCodes, request)
+export const fetchCacheableFactory =
+    <DL, OL, DC>(env: { loggerFail: LoggerFail<DL, OL>; createCacheKey: CreateCacheKey<DC> }) =>
+    <K extends StatusCode, DS extends FetchFactoryDecoders<K>, SC extends keyof DS>(
+        request: EndpointRequestCacheable,
+        decoderL: Lazy<DS>,
+        successCodes: Array<SC>
+    ) => {
+        const appCacheTtl = getEndpointAppCacheTtl(request)
+
+        if (typeof appCacheTtl === 'undefined') {
+            return fetchFactory(env)(request, decoderL, successCodes)
+        }
+
+        return pipe(
+            env.createCacheKey(request),
+            ROR.fromReader,
+            ROR.chainW(cacheKey => (deps: FetchFactoryCacheableDeps) => {
+                return pipe(
+                    deps.cachePool.findItem(cacheKey),
+                    OR.fromTask,
+                    OR.chain(item => {
+                        return pipe(
+                            item,
+                            O.bindTo('item'),
+                            O.bind('decoder', x => O.fromNullable(decoderL()[x.item.status as SC])),
+                            O.bind('payload', x =>
+                                pipe(
+                                    x.decoder(x.item.payload),
+                                    // when decode fail don't delete item, but run new request and overwrite it
+                                    E.fold(() => O.none, O.some)
+                                )
+                            ),
+                            O.map(x =>
+                                pipe(
+                                    x.payload,
+                                    (payload): RES.DecodersToResourceData<DS> => ({
+                                        status: x.item.status as SC,
+                                        payload,
+                                    }),
+                                    OR.done,
+                                    OR_filterResponse(successCodes, request)
+                                )
+                            ),
+                            O.getOrElse(() =>
+                                pipe(
+                                    runRequest(deps, request, decoderL),
+                                    OR.chainFirstW(r =>
+                                        pipe(deps.cachePool.addItem(cacheKey, r as CacheItem, appCacheTtl), OR.doneTask)
+                                    ),
+                                    OR_filterResponse(successCodes, request)
+                                )
                             )
                         )
-                    )
-                })
-            )
-        }),
-        logFail(env.loggerFail)
-    )
-}
+                    })
+                )
+            }),
+            logFail(env.loggerFail)
+        )
+    }
 
 const runRequest = <K extends StatusCode, DS extends FetchFactoryDecoders<K>>(
     deps: FetchFactoryDeps,
@@ -208,80 +205,80 @@ const runRequest = <K extends StatusCode, DS extends FetchFactoryDecoders<K>>(
 ) =>
     pipe(
         OR.fromAjax(deps.ajax(request), decoder()),
-        OR.mapLeft(
-            (e): ResourceBad => {
-                switch (e.type) {
-                    case 'networkError':
-                    case 'unexpectedResponse':
-                        return {
-                            type: 'fail',
-                            statusCode: e.detail.status as StatusCode,
-                            error: e.type,
-                            errorMessage: errorMessage(request, e.type),
-                            detail: e.detail,
-                        }
-                    case 'unknownError':
-                        return {
-                            type: 'fail',
-                            statusCode: 0,
-                            error: e.type,
-                            errorMessage: errorMessage(request, e.type),
-                            detail: e.detail,
-                        }
-                    case 'decodeError':
-                        return {
-                            type: 'fail',
-                            error: e.type,
-                            errorMessage: errorMessage(request, e.type),
-                            statusCode: e.statusCode,
-                            detail: PathReporter.report(t.failures(e.detail)).join('\n>> '),
-                        }
-                }
+        OR.mapLeft((e): ResourceBad => {
+            switch (e.type) {
+                case 'networkError':
+                case 'unexpectedResponse':
+                    return {
+                        type: 'fail',
+                        statusCode: e.detail.status as StatusCode,
+                        error: e.type,
+                        errorMessage: errorMessage(request, e.type),
+                        detail: e.detail,
+                    }
+                case 'unknownError':
+                    return {
+                        type: 'fail',
+                        statusCode: 0,
+                        error: e.type,
+                        errorMessage: errorMessage(request, e.type),
+                        detail: e.detail,
+                    }
+                case 'decodeError':
+                    return {
+                        type: 'fail',
+                        error: e.type,
+                        errorMessage: errorMessage(request, e.type),
+                        statusCode: e.statusCode,
+                        detail: PathReporter.report(t.failures(e.detail)).join('\n>> '),
+                    }
             }
-        )
+        })
     )
 
-const filterPredicate = <K extends StatusCode, DS extends FetchFactoryDecoders<K>, SC extends keyof DS>(
-    successCodes: Array<SC>
-) => (r: RES.DecodersToResourceData<DS>): r is Extract<typeof r, { status: SC }> =>
-    successCodes.includes(r.status as SC)
+const filterPredicate =
+    <K extends StatusCode, DS extends FetchFactoryDecoders<K>, SC extends keyof DS>(successCodes: Array<SC>) =>
+    (r: RES.DecodersToResourceData<DS>): r is Extract<typeof r, { status: SC }> =>
+        successCodes.includes(r.status as SC)
 
-const filterOnFalse = <
-    K extends StatusCode,
-    DS extends {
-        [k in K]?: (i: unknown) => E.Either<t.Errors, any>
-    }
->(
-    request: EndpointRequest
-) => (r: RES.DecodersToResourceData<DS>): ResourceBad => {
-    if (r.status === 404) {
+const filterOnFalse =
+    <
+        K extends StatusCode,
+        DS extends {
+            [k in K]?: (i: unknown) => E.Either<t.Errors, any>
+        }
+    >(
+        request: EndpointRequest
+    ) =>
+    (r: RES.DecodersToResourceData<DS>): ResourceBad => {
+        if (r.status === 404) {
+            return {
+                type: 'rejected',
+                error: 'notFound',
+                errorMessage: errorMessage(request, 'notFound'),
+                statusCode: r.status as StatusCode,
+                detail: r.payload,
+            }
+        }
+
+        if (r.status >= 400 && r.status <= 499) {
+            return {
+                type: 'rejected',
+                error: 'clientError',
+                errorMessage: errorMessage(request, 'clientError'),
+                statusCode: r.status as StatusCode,
+                detail: r.payload,
+            }
+        }
+
         return {
-            type: 'rejected',
-            error: 'notFound',
-            errorMessage: errorMessage(request, 'notFound'),
+            type: 'fail',
+            error: 'fail',
+            errorMessage: errorMessage(request, 'fail'),
             statusCode: r.status as StatusCode,
             detail: r.payload,
         }
     }
-
-    if (r.status >= 400 && r.status <= 499) {
-        return {
-            type: 'rejected',
-            error: 'clientError',
-            errorMessage: errorMessage(request, 'clientError'),
-            statusCode: r.status as StatusCode,
-            detail: r.payload,
-        }
-    }
-
-    return {
-        type: 'fail',
-        error: 'fail',
-        errorMessage: errorMessage(request, 'fail'),
-        statusCode: r.status as StatusCode,
-        detail: r.payload,
-    }
-}
 
 const ROR_filterResponse = <K extends StatusCode, DS extends FetchFactoryDecoders<K>, SC extends keyof DS>(
     successCodes: Array<SC>,
@@ -302,18 +299,20 @@ const OR_filterResponse = <
 export const errorMessage = (endpoint: EndpointRequest, error: ResourceBad['error']) =>
     `${errorMessagePrefix} ${error} ${endpoint.url}`
 
-export const logFail = <R1, B>(loggerFail: (e: ResourceBad) => R.Reader<R1, B>) => <R, A>(
-    ma: ROR.ReaderObservableResource<R, ResourceBad, A>
-): ROR.ReaderObservableResource<R & R1, ResourceBad, A> => {
-    return pipe(
-        ma,
-        ROR.orElseW((e: ResourceBad) => {
-            return pipe(
-                loggerFail(e),
-                ROR.fromReader,
-                ROR.map(() => e),
-                ROR.swap
-            )
-        })
-    )
-}
+export const logFail =
+    <R1, B>(loggerFail: (e: ResourceBad) => R.Reader<R1, B>) =>
+    <R2, A>(
+        ma: ROR.ReaderObservableResource<R2, ResourceBad, A>
+    ): ROR.ReaderObservableResource<R2 & R1, ResourceBad, A> => {
+        return pipe(
+            ma,
+            ROR.orElseW((e: ResourceBad) => {
+                return pipe(
+                    loggerFail(e),
+                    ROR.fromReader,
+                    ROR.map(() => e),
+                    ROR.swap
+                )
+            })
+        )
+    }

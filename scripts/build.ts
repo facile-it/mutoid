@@ -1,8 +1,9 @@
 import * as E from 'fp-ts/Either'
+import * as J from 'fp-ts/Json'
 import * as RTE from 'fp-ts/ReaderTaskEither'
 import * as A from 'fp-ts/ReadonlyArray'
 import * as TE from 'fp-ts/TaskEither'
-import { pipe } from 'fp-ts/function'
+import { flow, pipe } from 'fp-ts/function'
 import * as path from 'path'
 import { FileSystem, fileSystem } from './FileSystem'
 import { run } from './run'
@@ -15,7 +16,7 @@ const PKG = 'package.json'
 const copyPackageJson: Build<void> = C =>
     pipe(
         C.readFile(PKG),
-        TE.chain(s => TE.fromEither(E.parseJSON(s, E.toError))),
+        TE.chain(flow(J.parse, E.mapLeft(E.toError), TE.fromEither)),
         TE.map(v => {
             const clone = Object.assign({}, v as any)
 
@@ -33,7 +34,7 @@ const FILES: ReadonlyArray<string> = ['README.md', 'CHANGELOG.md']
 const copyFiles: Build<ReadonlyArray<void>> = D =>
     pipe(
         FILES,
-        A.traverse(TE.taskEither)(from => D.copyFile(from, path.resolve(OUTPUT_FOLDER, from)))
+        A.traverse(TE.ApplicativePar)(from => D.copyFile(from, path.resolve(OUTPUT_FOLDER, from)))
     )
 
 const cleanStores: Build<void> = D => {

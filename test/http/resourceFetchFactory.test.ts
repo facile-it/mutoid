@@ -70,11 +70,11 @@ describe('resourceFetchFactory fetchFactory', () => {
 
     test('fetchFactory 200 ', async () => {
         const logger = jest.fn()
-        const ajaxMock = ((() =>
+        const ajaxMock = (() =>
             of({
                 status: 200,
                 response: 'hello',
-            })) as any) as typeof ajax
+            })) as any as typeof ajax
         const r = await ROR({ ajax: ajaxMock, logger }).toPromise()
         expect(r).toStrictEqual({ _tag: 'done', data: { status: 200, payload: 'hello' } })
         expect(logger.mock.calls.length).toBe(0)
@@ -83,11 +83,11 @@ describe('resourceFetchFactory fetchFactory', () => {
     test('fetchFactory 404', async () => {
         const logger = jest.fn()
 
-        const ajaxMock = ((() =>
+        const ajaxMock = (() =>
             of({
                 status: 404,
                 response: 'any response',
-            })) as any) as typeof ajax
+            })) as any as typeof ajax
         const r = await ROR({ ajax: ajaxMock, logger }).toPromise()
 
         expect(r).toStrictEqual({
@@ -107,11 +107,11 @@ describe('resourceFetchFactory fetchFactory', () => {
     test('fetchFactory 301', async () => {
         const logger = jest.fn()
 
-        const ajaxMock = ((() =>
+        const ajaxMock = (() =>
             of({
                 status: 301,
                 response: 'any response',
-            })) as any) as typeof ajax
+            })) as any as typeof ajax
         const r = await ROR({ ajax: ajaxMock, logger }).toPromise()
 
         expect(r).toStrictEqual({
@@ -131,11 +131,11 @@ describe('resourceFetchFactory fetchFactory', () => {
     test('fetchFactory 400 ', async () => {
         const logger = jest.fn()
 
-        const ajaxMock = ((() =>
+        const ajaxMock = (() =>
             of({
                 status: 400,
                 response: 'any response',
-            })) as any) as typeof ajax
+            })) as any as typeof ajax
         const r = await ROR({ ajax: ajaxMock, logger }).toPromise()
 
         expect(r).toStrictEqual({
@@ -155,11 +155,11 @@ describe('resourceFetchFactory fetchFactory', () => {
     test('fetchFactory 500', async () => {
         const logger = jest.fn()
 
-        const ajaxMock = ((() =>
+        const ajaxMock = (() =>
             of({
                 status: 500,
                 response: 'any response',
-            })) as any) as typeof ajax
+            })) as any as typeof ajax
         const r = await ROR({ ajax: ajaxMock, logger }).toPromise()
 
         expect(r).toStrictEqual({
@@ -179,11 +179,11 @@ describe('resourceFetchFactory fetchFactory', () => {
     test('fetchFactory 0 networkError', async () => {
         const logger = jest.fn()
 
-        const ajaxMock = ((() =>
+        const ajaxMock = (() =>
             of({
                 status: 0,
                 response: 'any response',
-            })) as any) as typeof ajax
+            })) as any as typeof ajax
         const r = await ROR({ ajax: ajaxMock, logger }).toPromise()
 
         expect(r).toStrictEqual({
@@ -203,7 +203,7 @@ describe('resourceFetchFactory fetchFactory', () => {
     test('fetchFactory 0 unknownError', async () => {
         const logger = jest.fn()
 
-        const ajaxMock = ((() => throwError('hello error')) as any) as typeof ajax
+        const ajaxMock = (() => throwError('hello error')) as any as typeof ajax
         const r = await ROR({ ajax: ajaxMock, logger }).toPromise()
 
         expect(r).toStrictEqual({
@@ -222,11 +222,11 @@ describe('resourceFetchFactory fetchFactory', () => {
 
     test('fetchFactory 200 decodeError', async () => {
         const logger = jest.fn()
-        const ajaxMock = ((() =>
+        const ajaxMock = (() =>
             of({
                 status: 200,
                 response: 1,
-            })) as any) as typeof ajax
+            })) as any as typeof ajax
         const r = await ROR({ ajax: ajaxMock, logger }).toPromise()
 
         expect(r).toStrictEqual({
@@ -279,11 +279,11 @@ describe('resourceFetchFactory fetchCacheableFactory', () => {
 
     test('fetchCacheableFactory 200 no in cache', async () => {
         const logger = jest.fn()
-        const ajaxMock = ((() =>
+        const ajaxMock = (() =>
             of({
                 status: 200,
                 response: 'hello',
-            })) as any) as typeof ajax
+            })) as any as typeof ajax
 
         const r = await ROR({ ajax: ajaxMock, logger, cachePool, session: 'session' }).toPromise()
 
@@ -309,11 +309,11 @@ describe('resourceFetchFactory fetchCacheableFactory', () => {
         )
 
         const logger = jest.fn()
-        const ajaxMock = ((() =>
+        const ajaxMock = (() =>
             of({
                 status: 200,
                 response: 'hello',
-            })) as any) as typeof ajax
+            })) as any as typeof ajax
 
         const r = await ROR({ ajax: ajaxMock, logger, cachePool, session: 'session' }).toPromise()
 
@@ -339,11 +339,11 @@ describe('resourceFetchFactory fetchCacheableFactory', () => {
         )
 
         const logger = jest.fn()
-        const ajaxMock = ((() =>
+        const ajaxMock = (() =>
             of({
                 status: 200,
                 response: 'hello',
-            })) as any) as typeof ajax
+            })) as any as typeof ajax
 
         const r = await ROR({ ajax: ajaxMock, logger, cachePool, session: 'session' }).toPromise()
 
@@ -395,11 +395,11 @@ describe('resourceFetchFactory fetchCacheableFactory with no appCacheTtl', () =>
 
     test('fetchCacheableFactory 200 no in cache', async () => {
         const logger = jest.fn()
-        const ajaxMock = ((() =>
+        const ajaxMock = (() =>
             of({
                 status: 200,
                 response: 'hello',
-            })) as any) as typeof ajax
+            })) as any as typeof ajax
 
         const r = await ROR({ ajax: ajaxMock, logger, cachePool, session: 'session' }).toPromise()
 

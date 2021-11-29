@@ -179,20 +179,20 @@ export const of: RES<URI>['of'] = done
 // Destructors
 // -------------------------------------------------------------------------------------
 
-export const match = <E, A, R>(onInit: () => R, onSubmitted: () => R, onDone: (r: A) => R, onFail: (r: E) => R) => (
-    r: Resource<E, A>
-) => {
-    switch (r._tag) {
-        case 'init':
-            return onInit()
-        case 'submitted':
-            return onSubmitted()
-        case 'done':
-            return onDone(r.data)
-        case 'fail':
-            return onFail(r.error)
+export const match =
+    <E, A, R>(onInit: () => R, onSubmitted: () => R, onDone: (r: A) => R, onFail: (r: E) => R) =>
+    (r: Resource<E, A>) => {
+        switch (r._tag) {
+            case 'init':
+                return onInit()
+            case 'submitted':
+                return onSubmitted()
+            case 'done':
+                return onDone(r.data)
+            case 'fail':
+                return onFail(r.error)
+        }
     }
-}
 
 export const matchD = <E, A, R>(
     dodo:
@@ -215,12 +215,10 @@ export const matchD = <E, A, R>(
         dodo.onFail
     )
 
-export const match_ = <E, D>(r: Resource<E, D>) => <R>(
-    onInit: () => R,
-    onSubmitted: () => R,
-    onDone: (r: D) => R,
-    onFail: (r: E) => R
-): R => pipe(r, match(onInit, onSubmitted, onDone, onFail))
+export const match_ =
+    <E, D>(r: Resource<E, D>) =>
+    <R>(onInit: () => R, onSubmitted: () => R, onDone: (r: D) => R, onFail: (r: E) => R): R =>
+        pipe(r, match(onInit, onSubmitted, onDone, onFail))
 
 // -------------------------------------------------------------------------------------
 // instances
@@ -360,29 +358,32 @@ export const filterOrElse: {
 export const map: <A, B>(f: (a: A) => B) => <E>(fa: Resource<E, A>) => Resource<E, B> = f => fa =>
     isDone(fa) ? done(f(fa.data)) : fa
 
-export const bimap = <E, G, A, B>(f: (e: E) => G, g: (a: A) => B) => (fa: Resource<E, A>): Resource<G, B> =>
-    pipe(
-        fa,
-        match(
-            (): Resource<G, B> => init,
-            (): Resource<G, B> => submitted,
-            flow(g, done),
-            flow(f, fail)
+export const bimap =
+    <E, G, A, B>(f: (e: E) => G, g: (a: A) => B) =>
+    (fa: Resource<E, A>): Resource<G, B> =>
+        pipe(
+            fa,
+            match(
+                (): Resource<G, B> => init,
+                (): Resource<G, B> => submitted,
+                flow(g, done),
+                flow(f, fail)
+            )
         )
-    )
 
 export const mapLeft: <E, G>(f: (e: E) => G) => <A>(fa: Resource<E, A>) => Resource<G, A> = f => fa =>
     isFail(fa) ? fail(f(fa.error)) : fa
 
-export const apW: <D, A>(
-    fa: Resource<D, A>
-) => <E, B>(fab: Resource<E, (a: A) => B>) => Resource<D | E, B> = fa => fab =>
-    // eslint-disable-next-line no-nested-ternary
-    isDone(fab) ? (isDone(fa) ? done(fab.data(fa.data)) : fa) : fab
+export const apW: <D, A>(fa: Resource<D, A>) => <E, B>(fab: Resource<E, (a: A) => B>) => Resource<D | E, B> =
+    fa => fab =>
+        // eslint-disable-next-line no-nested-ternary
+        isDone(fab) ? (isDone(fa) ? done(fab.data(fa.data)) : fa) : fab
 
 export const ap: <E, A>(fa: Resource<E, A>) => <B>(fab: Resource<E, (a: A) => B>) => Resource<E, B> = apW
 
-export const chainW = <D, A, B>(f: (a: A) => Resource<D, B>) => <E>(ma: Resource<E, A>): Resource<D | E, B> =>
-    isDone(ma) ? f(ma.data) : ma
+export const chainW =
+    <D, A, B>(f: (a: A) => Resource<D, B>) =>
+    <E>(ma: Resource<E, A>): Resource<D | E, B> =>
+        isDone(ma) ? f(ma.data) : ma
 
 export const chain: <E, A, B>(f: (a: A) => Resource<E, B>) => (ma: Resource<E, A>) => Resource<E, B> = chainW

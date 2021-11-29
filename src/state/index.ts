@@ -41,11 +41,11 @@ export interface Mutation<NM, P extends Array<unknown>, S, SS extends S> extends
 
 // constructor
 
-export const ctor = <N extends StoreName, T>(c: { name: N; initState: T }): Store<N, T> => {
+export const ctor = <N extends StoreName, S>(c: { name: N; initState: S }): Store<N, S> => {
     return {
         name: c.name,
-        state$: new BehaviorSubject<T>(c.initState),
-        notifier$: new BehaviorSubject<NotifySubject<N, T>>({ type: 'initStore', name: c.name }),
+        state$: new BehaviorSubject<S>(c.initState),
+        notifier$: new BehaviorSubject<NotifySubject<N, S>>({ type: 'initStore', name: c.name }),
         initState: c.initState,
     }
 }
@@ -57,13 +57,16 @@ export const ctorMutation = <NM extends AllMutationName, P extends Array<unknown
     effect: MutationEffect<P, S, S>
 ): Mutation<NM, P, S, S> => ({ name, effect })
 
-export const ctorMutationC = <NM extends AllMutationName, P extends Array<unknown>, S>(name: NM) => (
-    effect: MutationEffect<P, S, S>
-): Mutation<NM, P, S, S> => ctorMutation(name, effect)
+export const ctorMutationC =
+    <NM extends AllMutationName, P extends Array<unknown>, S>(name: NM) =>
+    (effect: MutationEffect<P, S, S>): Mutation<NM, P, S, S> =>
+        ctorMutation(name, effect)
 
-export const ctorMutationCR = <NM extends AllMutationName, P extends Array<unknown>, S, R>(name: NM) => (
-    effectR: (r: R) => MutationEffect<P, S, S>
-): ((r: R) => Mutation<NM, P, S, S>) => r => ctorMutation(name, effectR(r))
+export const ctorMutationCR =
+    <NM extends AllMutationName, P extends Array<unknown>, S, R>(name: NM) =>
+    (effectR: (r: R) => MutationEffect<P, S, S>): ((r: R) => Mutation<NM, P, S, S>) =>
+    r =>
+        ctorMutation(name, effectR(r))
 
 // partialMutation
 
@@ -73,21 +76,29 @@ export const ctorPartialMutation = <NM extends AllMutationName, P extends Array<
     effect: MutationEffect<P, S, SS>
 ): Mutation<NM, P, S, SS> => ({ name, filterPredicate, effect })
 
-export const ctorPartialMutationC = <NM extends AllMutationName, P extends Array<unknown>, S, SS extends S>(
-    name: NM,
-    filterPredicate: (s: S) => s is SS
-) => (effect: MutationEffect<P, S, SS>): Mutation<NM, P, S, SS> => ctorPartialMutation(name, filterPredicate, effect)
+export const ctorPartialMutationC =
+    <NM extends AllMutationName, P extends Array<unknown>, S, SS extends S>(
+        name: NM,
+        filterPredicate: (s: S) => s is SS
+    ) =>
+    (effect: MutationEffect<P, S, SS>): Mutation<NM, P, S, SS> =>
+        ctorPartialMutation(name, filterPredicate, effect)
 
-export const ctorPartialMutationCR = <NM extends AllMutationName, P extends Array<unknown>, S, SS extends S, R>(
-    name: NM,
-    filterPredicate: (s: S) => s is SS
-) => (effectR: (r: R) => MutationEffect<P, S, SS>): ((r: R) => Mutation<NM, P, S, SS>) => (r: R) =>
-    ctorPartialMutation(name, filterPredicate, effectR(r))
+export const ctorPartialMutationCR =
+    <NM extends AllMutationName, P extends Array<unknown>, S, SS extends S, R>(
+        name: NM,
+        filterPredicate: (s: S) => s is SS
+    ) =>
+    (effectR: (r: R) => MutationEffect<P, S, SS>): ((r: R) => Mutation<NM, P, S, SS>) =>
+    (r: R) =>
+        ctorPartialMutation(name, filterPredicate, effectR(r))
 
 // runner
 
-export const toTask = <N extends StoreName, S>(store: Store<N, S>): T.Task<S> => () =>
-    store.state$.pipe(take(1)).toPromise()
+export const toTask =
+    <N extends StoreName, S>(store: Store<N, S>): T.Task<S> =>
+    () =>
+        store.state$.pipe(take(1)).toPromise()
 
 export interface BaseOptions {
     notifierTakeUntil?: Observable<unknown>

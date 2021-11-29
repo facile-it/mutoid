@@ -24,16 +24,16 @@ export interface DepsStore {
 // Constructor
 // -------------------------------------------------------------------------------------
 
-export const appEndpointRequest = <E extends Record<string, string | number>>(e?: E) => (
-    accessToken: AccessToken
-): RESFF.EndpointRequest => ({
-    method: 'GET',
-    url: `https://ron-swanson-quotes.herokuapp.com/v2/quotes${pipe(
-        { token: accessToken, ...e },
-        DS.serializeUrl(new URLSearchParams()),
-        DS.toQueryString
-    )}`,
-})
+export const appEndpointRequest =
+    <E extends Record<string, string | number>>(e?: E) =>
+    (accessToken: AccessToken): RESFF.EndpointRequest => ({
+        method: 'GET',
+        url: `https://ron-swanson-quotes.herokuapp.com/v2/quotes${pipe(
+            { token: accessToken, ...e },
+            DS.serializeUrl(new URLSearchParams()),
+            DS.toQueryString
+        )}`,
+    })
 
 const fetchWithErrorLog = RESFF.fetchFactory({ loggerFail: logError })
 
@@ -52,17 +52,17 @@ export const appFetchFactory = <K extends StatusCode, DS extends RESFF.FetchFact
 // Constructor cacheable
 // -------------------------------------------------------------------------------------
 
-export const appEndpointRequestCacheable = <E extends Record<string, string | number>>(e?: E) => (
-    accessToken: AccessToken
-): RESFF.EndpointRequestCacheable => ({
-    method: 'GET',
-    appCacheTtl: 30,
-    url: `https://ron-swanson-quotes.herokuapp.com/v2/quotes${pipe(
-        { token: accessToken, ...e },
-        DS.serializeUrl(new URLSearchParams()),
-        DS.toQueryString
-    )}`,
-})
+export const appEndpointRequestCacheable =
+    <E extends Record<string, string | number>>(e?: E) =>
+    (accessToken: AccessToken): RESFF.EndpointRequestCacheable => ({
+        method: 'GET',
+        appCacheTtl: 30,
+        url: `https://ron-swanson-quotes.herokuapp.com/v2/quotes${pipe(
+            { token: accessToken, ...e },
+            DS.serializeUrl(new URLSearchParams()),
+            DS.toQueryString
+        )}`,
+    })
 
 const fetchCacheableWithErrorLog = RESFF.fetchCacheableFactory({
     loggerFail: logError,

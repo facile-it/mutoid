@@ -60,49 +60,49 @@ const isOption = <A>(oi: OptionItem<A> | Item<A>): oi is O.Option<Item<A>> => {
 // null -> to Option
 // -------------------------------------------------------------------------------------
 
-const convertNullableArray = <A>(noNeedRecursion: (a: NullableItemRecord<A> | NullableItemArray<A> | A) => a is A) => (
-    data: NullableItemArray<A>
-): OptionItemArray<A> => {
-    return pipe(
-        data,
-        A.map(O.fromNullable),
-        A.map(
-            O.map(d => {
-                if (noNeedRecursion(d)) {
-                    return d
-                }
+const convertNullableArray =
+    <A>(noNeedRecursion: (a: NullableItemRecord<A> | NullableItemArray<A> | A) => a is A) =>
+    (data: NullableItemArray<A>): OptionItemArray<A> => {
+        return pipe(
+            data,
+            A.map(O.fromNullable),
+            A.map(
+                O.map(d => {
+                    if (noNeedRecursion(d)) {
+                        return d
+                    }
 
-                if (Array.isArray(d)) {
-                    return convertNullableArray(noNeedRecursion)(d)
-                }
+                    if (Array.isArray(d)) {
+                        return convertNullableArray(noNeedRecursion)(d)
+                    }
 
-                return convertNullableObject(noNeedRecursion)(d)
-            })
+                    return convertNullableObject(noNeedRecursion)(d)
+                })
+            )
         )
-    )
-}
+    }
 
-const convertNullableObject = <A>(noNeedRecursion: (a: NullableItemRecord<A> | NullableItemArray<A> | A) => a is A) => (
-    data: NullableItemRecord<A>
-): OptionItemRecord<A> => {
-    return pipe(
-        data,
-        RE.map(O.fromNullable),
-        RE.map(
-            O.map(d => {
-                if (noNeedRecursion(d)) {
-                    return d
-                }
+const convertNullableObject =
+    <A>(noNeedRecursion: (a: NullableItemRecord<A> | NullableItemArray<A> | A) => a is A) =>
+    (data: NullableItemRecord<A>): OptionItemRecord<A> => {
+        return pipe(
+            data,
+            RE.map(O.fromNullable),
+            RE.map(
+                O.map(d => {
+                    if (noNeedRecursion(d)) {
+                        return d
+                    }
 
-                if (Array.isArray(d)) {
-                    return convertNullableArray(noNeedRecursion)(d)
-                }
+                    if (Array.isArray(d)) {
+                        return convertNullableArray(noNeedRecursion)(d)
+                    }
 
-                return convertNullableObject(noNeedRecursion)(d)
-            })
+                    return convertNullableObject(noNeedRecursion)(d)
+                })
+            )
         )
-    )
-}
+    }
 
 // -------------------------------------------------------------------------------------
 // map input to DataRecord
@@ -110,82 +110,82 @@ const convertNullableObject = <A>(noNeedRecursion: (a: NullableItemRecord<A> | N
 
 const generateKey = (key: string, root?: string): string => (root ? `${root}[${key}]` : key)
 
-const mapArray = <A>(noNeedRecursion: (a: A | OptionItemArray<A> | OptionItemRecord<A>) => a is A) => (
-    data: OptionItemArray<A>,
-    root: string
-): DataRecord<A>[] => {
-    return pipe(
-        data,
-        A.map(oi => (isOption(oi) ? oi : O.some(oi))),
-        A.filter(O.isSome),
-        A.map(d => d.value),
-        A.mapWithIndex((i, d) => {
-            if (noNeedRecursion(d)) {
-                return { [`${root}[]`]: d }
-            }
-
-            if (Array.isArray(d)) {
-                return {
-                    [generateKey(i.toString(), root)]: mapArray(noNeedRecursion)(d, generateKey(i.toString(), root)),
+const mapArray =
+    <A>(noNeedRecursion: (a: A | OptionItemArray<A> | OptionItemRecord<A>) => a is A) =>
+    (data: OptionItemArray<A>, root: string): DataRecord<A>[] => {
+        return pipe(
+            data,
+            A.map(oi => (isOption(oi) ? oi : O.some(oi))),
+            A.filter(O.isSome),
+            A.map(d => d.value),
+            A.mapWithIndex((i, d) => {
+                if (noNeedRecursion(d)) {
+                    return { [`${root}[]`]: d }
                 }
-            }
 
-            return mapObject(noNeedRecursion)(d, generateKey(i.toString(), root))
-        })
-    )
-}
+                if (Array.isArray(d)) {
+                    return {
+                        [generateKey(i.toString(), root)]: mapArray(noNeedRecursion)(
+                            d,
+                            generateKey(i.toString(), root)
+                        ),
+                    }
+                }
 
-const mapObject = <A>(noNeedRecursion: (a: A | OptionItemArray<A> | OptionItemRecord<A>) => a is A) => (
-    data: OptionItemRecord<A>,
-    root?: string
-): DataRecord<A> => {
-    return pipe(
-        data,
-        RE.map(oi => (isOption(oi) ? oi : O.some(oi))),
-        RE.filter(O.isSome),
-        RE.map(d => d.value),
-        RE.mapWithIndex((k, d) => {
-            if (noNeedRecursion(d)) {
-                return { [generateKey(k, root)]: d }
-            }
+                return mapObject(noNeedRecursion)(d, generateKey(i.toString(), root))
+            })
+        )
+    }
 
-            if (Array.isArray(d)) {
-                return mapArray(noNeedRecursion)(d, generateKey(k, root))
-            }
+const mapObject =
+    <A>(noNeedRecursion: (a: A | OptionItemArray<A> | OptionItemRecord<A>) => a is A) =>
+    (data: OptionItemRecord<A>, root?: string): DataRecord<A> => {
+        return pipe(
+            data,
+            RE.map(oi => (isOption(oi) ? oi : O.some(oi))),
+            RE.filter(O.isSome),
+            RE.map(d => d.value),
+            RE.mapWithIndex((k, d) => {
+                if (noNeedRecursion(d)) {
+                    return { [generateKey(k, root)]: d }
+                }
 
-            return mapObject(noNeedRecursion)(d, generateKey(k, root))
-        })
-    )
-}
+                if (Array.isArray(d)) {
+                    return mapArray(noNeedRecursion)(d, generateKey(k, root))
+                }
+
+                return mapObject(noNeedRecursion)(d, generateKey(k, root))
+            })
+        )
+    }
 
 // -------------------------------------------------------------------------------------
 // append DataRecord to collector
 // -------------------------------------------------------------------------------------
 
-const appendToFormData = <A>(noNeedRecursion: (a: A | OptionItemArray<A> | OptionItemRecord<A>) => a is A) => <
-    C extends { append: (k: string, value: A) => void }
->(
-    collector: C
-) => (data: DataRecord<A>): C => {
-    return pipe(
-        data,
-        RE.reduceWithIndex(collector, (k, fd, d) => {
-            if (noNeedRecursion(d)) {
-                fd.append(k, d)
-                return fd
-            }
+const appendToFormData =
+    <A>(noNeedRecursion: (a: A | OptionItemArray<A> | OptionItemRecord<A>) => a is A) =>
+    <C extends { append: (k: string, value: A) => void }>(collector: C) =>
+    (data: DataRecord<A>): C => {
+        return pipe(
+            data,
+            RE.reduceWithIndex(collector, (k, fd, d) => {
+                if (noNeedRecursion(d)) {
+                    fd.append(k, d)
+                    return fd
+                }
 
-            if (Array.isArray(d)) {
-                return pipe(
-                    d,
-                    A.reduce(fd, (ffd, dr) => appendToFormData(noNeedRecursion)(ffd)(dr))
-                )
-            }
+                if (Array.isArray(d)) {
+                    return pipe(
+                        d,
+                        A.reduce(fd, (ffd, dr) => appendToFormData(noNeedRecursion)(ffd)(dr))
+                    )
+                }
 
-            return appendToFormData(noNeedRecursion)(fd)(d)
-        })
-    )
-}
+                return appendToFormData(noNeedRecursion)(fd)(d)
+            })
+        )
+    }
 
 export const serializeNullable = <C extends { append: (k: string, value: any) => void }, A>(
     collector: C,
@@ -218,29 +218,29 @@ export const serialize = <C extends { append: (k: string, value: any) => void },
 // entry point
 // -------------------------------------------------------------------------------------
 
-export const serializeNullableForm = <C extends { append: (k: string, value: any) => void }>(collector: C) => (
-    data: NullableItemRecord<FormItem> | undefined
-): C => {
-    return serializeNullable(collector, noNeeRehashForm, data)
-}
+export const serializeNullableForm =
+    <C extends { append: (k: string, value: any) => void }>(collector: C) =>
+    (data: NullableItemRecord<FormItem> | undefined): C => {
+        return serializeNullable(collector, noNeeRehashForm, data)
+    }
 
-export const serializeForm = <C extends { append: (k: string, value: any) => void }>(collector: C) => (
-    data: OptionItemRecord<FormItem>
-): C => {
-    return serialize(collector, noNeeRehashForm, data)
-}
+export const serializeForm =
+    <C extends { append: (k: string, value: any) => void }>(collector: C) =>
+    (data: OptionItemRecord<FormItem>): C => {
+        return serialize(collector, noNeeRehashForm, data)
+    }
 
-export const serializeNullableUrl = <C extends { append: (k: string, value: any) => void }>(collector: C) => (
-    data: NullableItemRecord<UrlItem> | undefined
-): C => {
-    return serializeNullable(collector, noNeeRehashUrl, data)
-}
+export const serializeNullableUrl =
+    <C extends { append: (k: string, value: any) => void }>(collector: C) =>
+    (data: NullableItemRecord<UrlItem> | undefined): C => {
+        return serializeNullable(collector, noNeeRehashUrl, data)
+    }
 
-export const serializeUrl = <C extends { append: (k: string, value: any) => void }>(collector: C) => (
-    data: OptionItemRecord<UrlItem>
-): C => {
-    return serialize(collector, noNeeRehashUrl, data)
-}
+export const serializeUrl =
+    <C extends { append: (k: string, value: any) => void }>(collector: C) =>
+    (data: OptionItemRecord<UrlItem>): C => {
+        return serialize(collector, noNeeRehashUrl, data)
+    }
 
 export const toQueryString = <C extends { toString: () => string }>(c: C): string => {
     return pipe(c.toString(), s => (s.length > 0 ? `?${s}` : ''))

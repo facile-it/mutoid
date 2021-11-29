@@ -14,11 +14,14 @@ export interface CachePoolWebStorageEnvironment {
 
 const namespacedKey = (namespace: string, key: string) => `${namespace}_${key}`
 
-const deleteItemFactory = (env: CachePoolWebStorageEnvironment) => (key: string): T.Task<void> => () => {
-    env.storage.removeItem(namespacedKey(env.namespace, key))
+const deleteItemFactory =
+    (env: CachePoolWebStorageEnvironment) =>
+    (key: string): T.Task<void> =>
+    () => {
+        env.storage.removeItem(namespacedKey(env.namespace, key))
 
-    return Promise.resolve()
-}
+        return Promise.resolve()
+    }
 
 export const cachePoolWebStorage = (env: CachePoolWebStorageEnvironment): CachePoolAdapter => {
     const deleteItem = deleteItemFactory(env)
@@ -53,23 +56,25 @@ export const cachePoolWebStorage = (env: CachePoolWebStorageEnvironment): CacheP
                     )
                 )
             ),
-        addItem: (key: string, item: RESFF.CacheItem, ttl: number): T.Task<void> => () => {
-            pipe(
-                cachePoolItemT.encode({
-                    validUntil: new Date().getTime() + ttl * 1000,
-                    item,
-                }),
-                J.stringify,
-                E.mapLeft(() => 'errorOnStringify'),
-                E.chain(
-                    E.tryCatchK(
-                        v => env.storage.setItem(namespacedKey(env.namespace, key), v),
-                        () => 'errorOnSave'
+        addItem:
+            (key: string, item: RESFF.CacheItem, ttl: number): T.Task<void> =>
+            () => {
+                pipe(
+                    cachePoolItemT.encode({
+                        validUntil: new Date().getTime() + ttl * 1000,
+                        item,
+                    }),
+                    J.stringify,
+                    E.mapLeft(() => 'errorOnStringify'),
+                    E.chain(
+                        E.tryCatchK(
+                            v => env.storage.setItem(namespacedKey(env.namespace, key), v),
+                            () => 'errorOnSave'
+                        )
                     )
                 )
-            )
 
-            return Promise.resolve()
-        },
+                return Promise.resolve()
+            },
     }
 }

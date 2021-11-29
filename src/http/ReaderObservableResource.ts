@@ -93,21 +93,27 @@ export const of: Applicative3<URI>['of'] = done
 // destructors
 // -------------------------------------------------------------------------------------
 
-export const toMutation = <R, E, A, S, SS extends S>(mapTo: (r: RES.Resource<E, A>) => (s: SS) => S) => (
-    ros: ReaderObservableResource<R, E, A>
-) => flow(ros, c => c.pipe(RXoP.map(mapTo)))
+export const toMutation =
+    <R, E, A, S, SS extends S>(mapTo: (r: RES.Resource<E, A>) => (s: SS) => S) =>
+    (ros: ReaderObservableResource<R, E, A>) =>
+        flow(ros, c => c.pipe(RXoP.map(mapTo)))
 
-export const fetchToMutationEffectR = <
-    RORK extends (...i: P) => ReaderObservableResource<R, E, A>,
-    SS extends S,
-    S,
-    R = RORK extends (...i: any) => ReaderObservableResource<infer I, any, any> ? I : never,
-    E = RORK extends (...i: any) => ReaderObservableResource<any, infer I, any> ? I : never,
-    A = RORK extends (...i: any) => ReaderObservableResource<any, any, infer I> ? I : never,
-    P extends Array<any> = Parameters<RORK>
->(
-    mapTo: (s: SS) => (i: RES.Resource<E, A>) => S
-) => (rork: RORK) => (r: R) => (...i: P) => pipe(rork(...i)(r), o => (s: SS) => o.pipe(RXoP.map(mapTo(s))))
+export const fetchToMutationEffectR =
+    <
+        RORK extends (...i: P) => ReaderObservableResource<R, E, A>,
+        SS extends S,
+        S,
+        R = RORK extends (...i: any) => ReaderObservableResource<infer I, any, any> ? I : never,
+        E = RORK extends (...i: any) => ReaderObservableResource<any, infer I, any> ? I : never,
+        A = RORK extends (...i: any) => ReaderObservableResource<any, any, infer I> ? I : never,
+        P extends Array<any> = Parameters<RORK>
+    >(
+        mapTo: (s: SS) => (i: RES.Resource<E, A>) => S
+    ) =>
+    (rork: RORK) =>
+    (r: R) =>
+    (...i: P) =>
+        pipe(rork(...i)(r), o => (s: SS) => o.pipe(RXoP.map(mapTo(s))))
 
 // -------------------------------------------------------------------------------------
 // instances
@@ -218,13 +224,14 @@ export const ap: <R, E, A>(
 ) => <B>(fab: ReaderObservableResource<R, E, (a: A) => B>) => ReaderObservableResource<R, E, B> = fa => fab => r =>
     pipe(fab(r), OR.ap(fa(r)))
 
-export const chainW = <A, R2, E2, B>(f: (a: A) => ReaderObservableResource<R2, E2, B>) => <R1, E1>(
-    ma: ReaderObservableResource<R1, E1, A>
-): ReaderObservableResource<R1 & R2, E1 | E2, B> => r =>
-    pipe(
-        ma(r),
-        OR.chainW(a => f(a)(r))
-    )
+export const chainW =
+    <A, R2, E2, B>(f: (a: A) => ReaderObservableResource<R2, E2, B>) =>
+    <R1, E1>(ma: ReaderObservableResource<R1, E1, A>): ReaderObservableResource<R1 & R2, E1 | E2, B> =>
+    r =>
+        pipe(
+            ma(r),
+            OR.chainW(a => f(a)(r))
+        )
 
 export const chain: <R, E, A, B>(
     f: (a: A) => ReaderObservableResource<R, E, B>
@@ -252,9 +259,8 @@ export const chainFirst: <R, E, A, B>(
 
 export const chainFirstW: <R2, E2, A, B>(
     f: (a: A) => ReaderObservableResource<R2, E2, B>
-) => <R1, E1>(
-    ma: ReaderObservableResource<R1, E1, A>
-) => ReaderObservableResource<R1 & R2, E1 | E2, A> = chainFirst as any
+) => <R1, E1>(ma: ReaderObservableResource<R1, E1, A>) => ReaderObservableResource<R1 & R2, E1 | E2, A> =
+    chainFirst as any
 
 export function orElseW<R, R1, E, M, A, B>(
     onLeft: (e: E) => ReaderObservableResource<R1, M, B>

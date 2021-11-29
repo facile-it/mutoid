@@ -118,15 +118,18 @@ export const match: <E, A, R>(
     onFail: (r: E) => Observable<R>
 ) => (ma: ObservableResource<E, A>) => Observable<R> = flow(RES.match, R.chain)
 
-export const fetchToMutationEffect = <
-    AX extends (...i: I) => Observable<R>,
-    SS extends S,
-    S,
-    I extends Array<any> = Parameters<AX>,
-    R = AX extends (...args: any) => Observable<infer RR> ? RR : never
->(
-    mapTo: (s: SS) => (i: R) => S
-) => (ax: AX) => flow(ax, o => (s: SS) => o.pipe(RXoP.map(mapTo(s))))
+export const fetchToMutationEffect =
+    <
+        AX extends (...i: I) => Observable<R>,
+        SS extends S,
+        S,
+        I extends Array<any> = Parameters<AX>,
+        R = AX extends (...args: any) => Observable<infer RR> ? RR : never
+    >(
+        mapTo: (s: SS) => (i: R) => S
+    ) =>
+    (ax: AX) =>
+        flow(ax, o => (s: SS) => o.pipe(RXoP.map(mapTo(s))))
 
 // -------------------------------------------------------------------------------------
 // instances
@@ -226,28 +229,27 @@ export const ap = <E, A>(
         R.ap(fa)
     )
 
-export const chainW = <A, E2, B>(f: (a: A) => ObservableResource<E2, B>) => <E1>(
-    ma: ObservableResource<E1, A>
-): ObservableResource<E1 | E2, B> =>
-    pipe(
-        ma,
-        R.chain(
-            RES.match(
-                () => init,
-                () => submitted,
-                f,
-                e => fail<E1 | E2, B>(e)
+export const chainW =
+    <A, E2, B>(f: (a: A) => ObservableResource<E2, B>) =>
+    <E1>(ma: ObservableResource<E1, A>): ObservableResource<E1 | E2, B> =>
+        pipe(
+            ma,
+            R.chain(
+                RES.match(
+                    () => init,
+                    () => submitted,
+                    f,
+                    e => fail<E1 | E2, B>(e)
+                )
             )
         )
-    )
 
 export const chain: <A, E, B>(
     f: (a: A) => ObservableResource<E, B>
 ) => (ma: ObservableResource<E, A>) => ObservableResource<E, B> = chainW
 
-export const flatten: <E, A>(mma: ObservableResource<E, ObservableResource<E, A>>) => ObservableResource<E, A> = chain(
-    identity
-)
+export const flatten: <E, A>(mma: ObservableResource<E, ObservableResource<E, A>>) => ObservableResource<E, A> =
+    chain(identity)
 
 // -------------------------------------------------------------------------------------
 // combinators
@@ -327,33 +329,33 @@ function isAjaxError(e: any): e is AjaxError {
     return Object.prototype.hasOwnProperty.call(dict, e.name)
 }
 
-const decodeResponse = <DS extends RES.ResourceDecoders>(decoders: DS) => <AE>(
-    response: AjaxResponse | AjaxError | RES.ResourceAjaxFail<AE>
-): RES.ResourceTypeOfAcknowledged<DS, AE> => {
-    if (isResourceAjaxFail(response)) {
-        return response as RES.ResourceTypeOfFail<DS, AE>
-    }
+const decodeResponse =
+    <DS extends RES.ResourceDecoders>(decoders: DS) =>
+    <AE>(response: AjaxResponse | AjaxError | RES.ResourceAjaxFail<AE>): RES.ResourceTypeOfAcknowledged<DS, AE> => {
+        if (isResourceAjaxFail(response)) {
+            return response as RES.ResourceTypeOfFail<DS, AE>
+        }
 
-    const status = response.status as StatusCode
-    const decoder = decoders[status]
+        const status = response.status as StatusCode
+        const decoder = decoders[status]
 
-    if (decoder) {
-        return pipe(
-            decoder(response.response),
-            E.map(payload => RES.done({ status, payload }) as RES.ResourceTypeOfDone<DS>),
-            E.getOrElseW(
-                e =>
-                    RES.fail({
-                        type: 'decodeError',
-                        detail: e,
-                        statusCode: response.status,
-                    }) as RES.ResourceTypeOfFail<DS, AE>
+        if (decoder) {
+            return pipe(
+                decoder(response.response),
+                E.map(payload => RES.done({ status, payload }) as RES.ResourceTypeOfDone<DS>),
+                E.getOrElseW(
+                    e =>
+                        RES.fail({
+                            type: 'decodeError',
+                            detail: e,
+                            statusCode: response.status,
+                        }) as RES.ResourceTypeOfFail<DS, AE>
+                )
             )
-        )
-    }
+        }
 
-    return RES.fail({
-        type: response.status === 0 ? 'networkError' : 'unexpectedResponse',
-        detail: response,
-    }) as RES.ResourceTypeOfFail<DS, AE>
-}
+        return RES.fail({
+            type: response.status === 0 ? 'networkError' : 'unexpectedResponse',
+            detail: response,
+        }) as RES.ResourceTypeOfFail<DS, AE>
+    }

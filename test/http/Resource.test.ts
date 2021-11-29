@@ -1,8 +1,7 @@
 import * as fc from 'fast-check'
 import * as laws from 'fp-ts-laws'
-import * as Eq from 'fp-ts/Eq'
-import { showString } from 'fp-ts/Show'
 import { pipe } from 'fp-ts/function'
+import * as String from 'fp-ts/string'
 import * as _ from '../../src/http/Resource'
 
 describe('Resource', () => {
@@ -107,26 +106,26 @@ describe('Resource', () => {
         test('Functor', () => {
             laws.functor(_.Functor)(
                 a => getResource(fc.string(), a),
-                Eqa => _.getEq(Eq.eqString, Eqa)
+                Eqa => _.getEq(String.Eq, Eqa)
             )
         })
 
         test('Apply', () => {
             laws.apply(_.Apply)(
                 a => getResource(fc.string(), a),
-                Eqa => _.getEq(Eq.eqString, Eqa)
+                Eqa => _.getEq(String.Eq, Eqa)
             )
         })
 
         test('Applicative', () => {
             laws.applicative(_.Applicative)(
                 a => getResource(fc.string(), a),
-                Eqa => _.getEq(Eq.eqString, Eqa)
+                Eqa => _.getEq(String.Eq, Eqa)
             )
         })
 
         test('Monad', () => {
-            laws.monad(_.Monad)(Eqa => _.getEq(Eq.eqString, Eqa))
+            laws.monad(_.Monad)(Eqa => _.getEq(String.Eq, Eqa))
         })
     })
 
@@ -212,7 +211,7 @@ describe('Resource', () => {
 
     describe('getShow', () => {
         test('show', () => {
-            const S = _.getShow(showString, showString)
+            const S = _.getShow(String.Show, String.Show)
             expect(S.show(_.init)).toStrictEqual('init')
             expect(S.show(_.submitted)).toStrictEqual('submitted')
             expect(S.show(_.fail('a'))).toStrictEqual(`fail("a")`)
@@ -222,18 +221,16 @@ describe('Resource', () => {
 
     describe('getEq', () => {
         test('eq', () => {
-            const S = _.getEq(Eq.eqStrict, Eq.eqStrict)
+            const S = _.getEq(String.Eq, String.Eq)
 
             expect(S.equals(_.init, _.init)).toStrictEqual(true)
             expect(S.equals(_.init, _.submitted)).toStrictEqual(false)
             expect(S.equals(_.submitted, _.submitted)).toStrictEqual(true)
             expect(S.equals(_.submitted, _.init)).toStrictEqual(false)
 
-            expect(S.equals(_.done(1), _.done('1'))).toStrictEqual(false)
             expect(S.equals(_.done('1'), _.done('1'))).toStrictEqual(true)
 
             expect(S.equals(_.fail('1'), _.fail('1'))).toStrictEqual(true)
-            expect(S.equals(_.fail('1'), _.fail(1))).toStrictEqual(false)
         })
     })
 })

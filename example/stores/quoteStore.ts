@@ -48,23 +48,35 @@ export const quoteStore = () => MS.ctor({ name: 'quote', initState: quoteState }
 
 export const fetchQuoteMutation = pipe(
     fetchQuote,
-    ROR.fetchToMutationEffectR((s: QuoteState) => (quote): QuoteState => ({ ...s, quote })),
+    ROR.fetchToMutationEffectR(
+        (s: QuoteState) =>
+            (quote): QuoteState => ({ ...s, quote })
+    ),
     MS.ctorMutationCR('fetchQuoteMutation')
 )
 
 export const fetchQuoteMutationWithParams = pipe(
     fetchQuoteWithTokenAndParams,
-    ROR.fetchToMutationEffectR((s: QuoteState) => (quote): QuoteState => ({ ...s, quote })),
+    ROR.fetchToMutationEffectR(
+        (s: QuoteState) =>
+            (quote): QuoteState => ({ ...s, quote })
+    ),
     MS.ctorMutationCR('fetchQuoteMutationWithParams')
 )
 
 export const fetchQuoteMutationWithDelay = pipe(
     fetchQuoteWithDelay,
-    ROR.fetchToMutationEffectR((s: QuoteState) => (quote): QuoteState => ({ ...s, quote })),
+    ROR.fetchToMutationEffectR(
+        (s: QuoteState) =>
+            (quote): QuoteState => ({ ...s, quote })
+    ),
     MS.ctorMutationCR('fetchQuoteMutationWithDelay')
 )
 
 export const resetQuoteMutation = () =>
-    MS.ctorMutation('resetQuoteMutation', () => (s: QuoteState): Observable<QuoteState> =>
-        of({ ...s, quote: RES.init })
+    MS.ctorMutation(
+        'resetQuoteMutation',
+        () =>
+            (s: QuoteState): Observable<QuoteState> =>
+                of({ ...s, quote: RES.init })
     )

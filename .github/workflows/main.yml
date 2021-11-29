@@ -28,5 +28,5 @@ jobs:
     - run: npm install
     - run: npm run build
     - run: npm run clean
-    - run: npm run test-unit
+    - run: npm run test
     - run: npm run test-type

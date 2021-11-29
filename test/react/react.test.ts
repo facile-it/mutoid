@@ -23,11 +23,13 @@ describe('react', () => {
         const store = MS.ctor({ initState: state, name: 'test' as const })
 
         const mutation = () =>
-            MS.ctorMutation('test_mutation', () => (s: typeof state) =>
-                of({
-                    ...s,
-                    age: 16,
-                })
+            MS.ctorMutation(
+                'test_mutation',
+                () => (s: typeof state) =>
+                    of({
+                        ...s,
+                        age: 16,
+                    })
             )
 
         const { result } = renderHook(() => MR.useMutation(store, mutation))
@@ -47,11 +49,13 @@ describe('react', () => {
         const store = MS.ctor({ initState: state, name: 'test' as const })
 
         const mutation = () =>
-            MS.ctorMutation('test_mutation', () => (s: typeof state) =>
-                of({
-                    ...s,
-                    age: 16,
-                }).pipe(delay(1000))
+            MS.ctorMutation(
+                'test_mutation',
+                () => (s: typeof state) =>
+                    of({
+                        ...s,
+                        age: 16,
+                    }).pipe(delay(1000))
             )
 
         const { result } = renderHook(() => MR.useMutation(store, mutation, { notifierTakeUntil: of(1) }))

@@ -79,24 +79,28 @@ export const parseEnvMutation = () =>
     MS.ctorPartialMutation(
         'parseEnv' as const,
         (s: SessionState): s is SessionStateInit => s.status === 'init',
-        (confEnv: optional, confAccessToken: optional, confUserName: optional) => (s): Observable<SessionState> =>
-            of(
-                pipe(
-                    appEnv.decode(confEnv),
-                    E.map(env => (accessToken: AccessToken) => ({ ...s, env, accessToken })),
-                    E.ap(AccessToken.decode(confAccessToken)),
-                    E.map(sp => (userName: string): Extract<SessionState, { status: 'done' }> => ({
-                        ...sp,
-                        userName,
-                        status: 'done' as const,
-                    })),
-                    E.ap(t.string.decode(confUserName)),
-                    E.getOrElseW(
-                        (): Extract<SessionState, { status: 'error' }> => ({
-                            status: 'error',
-                            message: 'env error',
-                        })
+        (confEnv: optional, confAccessToken: optional, confUserName: optional) =>
+            (s): Observable<SessionState> =>
+                of(
+                    pipe(
+                        appEnv.decode(confEnv),
+                        E.map(env => (accessToken: AccessToken) => ({ ...s, env, accessToken })),
+                        E.ap(AccessToken.decode(confAccessToken)),
+                        E.map(
+                            sp =>
+                                (userName: string): Extract<SessionState, { status: 'done' }> => ({
+                                    ...sp,
+                                    userName,
+                                    status: 'done' as const,
+                                })
+                        ),
+                        E.ap(t.string.decode(confUserName)),
+                        E.getOrElseW(
+                            (): Extract<SessionState, { status: 'error' }> => ({
+                                status: 'error',
+                                message: 'env error',
+                            })
+                        )
                     )
                 )
-            )
     )

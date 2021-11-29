@@ -11,33 +11,46 @@ import { tap, map } from 'rxjs/operators'
 /**
  * @deprecated use chainFirst and fromIO from fp-ts-rxjs Observable module
  */
-const runIOL = <T, R>(c: (t: T) => IO<R>) => (t: T): R => c(t)()
+const runIOL =
+    <T, R>(c: (t: T) => IO<R>) =>
+    (t: T): R =>
+        c(t)()
 
 /**
  * @deprecated use chainFirst and fromIO from fp-ts-rxjs Observable module
  */
-export const chainFirstIO = <T, R>(e: (t: T) => IO<R>): MonoTypeOperatorFunction<T> => source =>
-    source.pipe(tap(runIOL(e)))
+export const chainFirstIO =
+    <T, R>(e: (t: T) => IO<R>): MonoTypeOperatorFunction<T> =>
+    source =>
+        source.pipe(tap(runIOL(e)))
 
 /**
  * @deprecated use chain and fromIO from fp-ts-rxjs Observable module
  */
-export const chainIOK = <T, R>(e: (t: T) => IO<R>): OperatorFunction<T, R> => source => source.pipe(map(runIOL(e)))
+export const chainIOK =
+    <T, R>(e: (t: T) => IO<R>): OperatorFunction<T, R> =>
+    source =>
+        source.pipe(map(runIOL(e)))
 
 /**
  * @deprecated use fromIO from fp-ts-rxjs Observable module
  */
-export const runIO = <T extends IO<R>, R = T extends IO<infer S> ? S : never>(): OperatorFunction<T, R> => source =>
-    source.pipe(map((f): R => f()))
+export const runIO =
+    <T extends IO<R>, R = T extends IO<infer S> ? S : never>(): OperatorFunction<T, R> =>
+    source =>
+        source.pipe(map((f): R => f()))
 
 /**
  * @deprecated wait for either toUnion
  */
-export const extractE = <
-    T extends E.Either<E, R>,
-    E = T extends E.Either<unknown, infer S> ? S : never,
-    R = T extends E.Either<infer S, unknown> ? S : never
->(): OperatorFunction<T, E | R> => source => source.pipe(map(E.getOrElse<E, E | R>(identity)))
+export const extractE =
+    <
+        T extends E.Either<E, R>,
+        E = T extends E.Either<unknown, infer S> ? S : never,
+        R = T extends E.Either<infer S, unknown> ? S : never
+    >(): OperatorFunction<T, E | R> =>
+    source =>
+        source.pipe(map(E.getOrElse<E, E | R>(identity)))
 
 // constructors
 

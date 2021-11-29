@@ -98,5 +98,7 @@ export const StatusCodeMap = {
 
 export type StatusCode = StatusInformational | StatusSuccess | StatusRedirection | StatusClientError | StatusServerError
 
-export const statusPredicate = <S extends Record<number, string>>(s: S) => (e: any): e is keyof S =>
-    typeof (s as any)[e] === 'string'
+export const statusPredicate =
+    <S extends Record<number, string>>(s: S) =>
+    (e: any): e is keyof S =>
+        typeof (s as any)[e] === 'string'

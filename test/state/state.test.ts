@@ -42,11 +42,13 @@ describe('state', () => {
         const task = MS.toTask(store)
 
         MS.mutationRunner(store, () =>
-            MS.ctorMutation('test_mutation', () => s =>
-                of({
-                    ...s,
-                    age: 16,
-                })
+            MS.ctorMutation(
+                'test_mutation',
+                () => s =>
+                    of({
+                        ...s,
+                        age: 16,
+                    })
             )
         )()
 
@@ -70,12 +72,13 @@ describe('state', () => {
             MS.ctorPartialMutation(
                 'test_mutation',
                 (s: state): s is stateDone => s.state === 'done',
-                () => (s: stateDone): Observable<state> =>
-                    of({
-                        ...s,
-                        state: 'done',
-                        age: 16,
-                    })
+                () =>
+                    (s: stateDone): Observable<state> =>
+                        of({
+                            ...s,
+                            state: 'done',
+                            age: 16,
+                        })
             )
         )()
 
@@ -98,11 +101,12 @@ describe('state', () => {
             MS.ctorPartialMutation(
                 'test_mutation',
                 (s: state): s is stateDone => s.state === 'done',
-                () => (s: stateDone): Observable<state> =>
-                    of({
-                        ...s,
-                        age: 16,
-                    })
+                () =>
+                    (s: stateDone): Observable<state> =>
+                        of({
+                            ...s,
+                            age: 16,
+                        })
             )
         )()
 
@@ -119,12 +123,14 @@ describe('state', () => {
         const task = MS.toTask(store)
 
         const mutationRunner = MS.mutationRunner(store, () =>
-            MS.ctorMutation('test_mutation', (name: string, age: number) => s =>
-                of({
-                    ...s,
-                    name: name,
-                    age: age,
-                })
+            MS.ctorMutation(
+                'test_mutation',
+                (name: string, age: number) => s =>
+                    of({
+                        ...s,
+                        name: name,
+                        age: age,
+                    })
             )
         )
 
@@ -147,14 +153,16 @@ describe('state', () => {
             MS.mutationRunner(
                 store,
                 () =>
-                    MS.ctorMutation('test_mutation_1', (name: string, age: number) => s =>
-                        cold('-a', {
-                            a: {
-                                ...s,
-                                name: name,
-                                age: age,
-                            },
-                        })
+                    MS.ctorMutation(
+                        'test_mutation_1',
+                        (name: string, age: number) => s =>
+                            cold('-a', {
+                                a: {
+                                    ...s,
+                                    name: name,
+                                    age: age,
+                                },
+                            })
                     ),
                 {
                     notifierTakeUntil: cold('--a', { a: 1 }),
@@ -164,14 +172,16 @@ describe('state', () => {
             MS.mutationRunner(
                 store,
                 () =>
-                    MS.ctorMutation('test_muation_2', (name: string, age: number) => s =>
-                        cold('---a', {
-                            a: {
-                                ...s,
-                                name: name,
-                                age: age,
-                            },
-                        })
+                    MS.ctorMutation(
+                        'test_muation_2',
+                        (name: string, age: number) => s =>
+                            cold('---a', {
+                                a: {
+                                    ...s,
+                                    name: name,
+                                    age: age,
+                                },
+                            })
                     ),
                 {
                     notifierTakeUntil: cold('--a', { a: 1 }),
