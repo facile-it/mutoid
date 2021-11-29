@@ -1,7 +1,7 @@
 import * as E from 'fp-ts/Either'
+import * as IO from 'fp-ts/IO'
 import * as J from 'fp-ts/Json'
-import * as T from 'fp-ts/Task'
-import * as TO from 'fp-ts/TaskOption'
+import * as O from 'fp-ts/Option'
 import { flow, pipe } from 'fp-ts/function'
 import { cachePoolItemT } from '../io-types'
 import type * as RESFF from '../resourceFetchFactory'
@@ -16,48 +16,48 @@ const namespacedKey = (namespace: string, key: string) => `${namespace}_${key}`
 
 const deleteItemFactory =
     (env: CachePoolWebStorageEnvironment) =>
-    (key: string): T.Task<void> =>
+    (key: string): IO.IO<void> =>
     () => {
         env.storage.removeItem(namespacedKey(env.namespace, key))
-
-        return Promise.resolve()
     }
 
 export const cachePoolWebStorage = (env: CachePoolWebStorageEnvironment): CachePoolAdapter => {
     const deleteItem = deleteItemFactory(env)
 
     return {
+        _tag: 'sync',
         deleteItem,
-        clear: pipe(
-            Object.keys(env.storage)
-                .filter((key: string) => key.indexOf(`${env.namespace}_`) === 0)
-                .map(k => k.slice(env.namespace.length + 1))
-                .map(k => deleteItem(k)),
-            T.sequenceArray
-        ),
-        findItem: (key: string): TO.TaskOption<RESFF.CacheItem> =>
+        clear: () =>
             pipe(
-                env.storage.getItem(namespacedKey(env.namespace, key)),
-                TO.fromNullable,
-                TO.chain(
-                    flow(
-                        J.parse,
-                        E.chainW(cachePoolItemT.decode),
-                        TO.fromEither,
-                        TO.filter(id => id.validUntil >= new Date().getTime()),
-                        TO.map(id => id.item),
-                        TO.altW(() =>
-                            pipe(
-                                deleteItem(key),
-                                TO.fromTask,
-                                TO.chain(() => TO.none)
-                            )
+                Object.keys(env.storage)
+                    .filter((key: string) => key.indexOf(`${env.namespace}_`) === 0)
+                    .map(k => k.slice(env.namespace.length + 1))
+                    .map(k => deleteItem(k)),
+                IO.sequenceArray
+            ),
+        findItem: (key: string): IO.IO<O.Option<RESFF.CacheItem>> => {
+            return () =>
+                pipe(
+                    env.storage.getItem(namespacedKey(env.namespace, key)),
+                    O.fromNullable,
+                    O.chain(
+                        flow(
+                            J.parse,
+                            E.chainW(cachePoolItemT.decode),
+                            O.fromEither,
+                            O.filter(id => id.validUntil >= new Date().getTime()),
+                            O.map(id => id.item),
+                            O.altW(() => {
+                                deleteItem(key)()
+
+                                return O.none
+                            })
                         )
                     )
                 )
-            ),
+        },
         addItem:
-            (key: string, item: RESFF.CacheItem, ttl: number): T.Task<void> =>
+            (key: string, item: RESFF.CacheItem, ttl: number): IO.IO<void> =>
             () => {
                 pipe(
                     cachePoolItemT.encode({
@@ -73,8 +73,6 @@ export const cachePoolWebStorage = (env: CachePoolWebStorageEnvironment): CacheP
                         )
                     )
                 )
-
-                return Promise.resolve()
             },
     }
 }

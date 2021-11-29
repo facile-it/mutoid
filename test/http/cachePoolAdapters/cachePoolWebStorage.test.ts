@@ -5,7 +5,7 @@ import { MockWebStorage } from '../../_mock/MockWebStorage'
 describe('cachePoolWebStorage', () => {
     const systemTime = new Date('2021-01-01').getTime()
 
-    test('deleteItem', async () => {
+    test('deleteItem', () => {
         const storage = new MockWebStorage()
 
         storage.setItem('deleteItem_hei', 'hei')
@@ -18,14 +18,14 @@ describe('cachePoolWebStorage', () => {
 
         expect(storage.length).toBe(2)
 
-        await pool.deleteItem('hei')()
+        pool.deleteItem('hei')()
 
         expect(storage.length).toBe(1)
         expect(storage.getItem('deleteItem_hei')).toBeNull()
         expect(storage.getItem('deleteItem_hei2')).not.toBeNull()
     })
 
-    test('clear', async () => {
+    test('clear', () => {
         const storage = new MockWebStorage()
 
         storage.setItem('notDeleted', 'hei')
@@ -39,14 +39,14 @@ describe('cachePoolWebStorage', () => {
 
         expect(storage.length).toBe(3)
 
-        await pool.clear()
+        pool.clear()()
 
         expect(storage.length).toBe(1)
         expect(storage.getItem('clear_hei')).toBeNull()
         expect(storage.getItem('notDeleted')).not.toBeNull()
     })
 
-    test('findItem', async () => {
+    test('findItem', () => {
         const storage = new MockWebStorage()
 
         jest.useFakeTimers('modern').setSystemTime(systemTime)
@@ -80,9 +80,9 @@ describe('cachePoolWebStorage', () => {
 
         expect(storage.length).toBe(3)
 
-        const itemGood = await pool.findItem('good')()
-        const itemNotValid = await pool.findItem('notValid')()
-        const itemBad = await pool.findItem('bad')()
+        const itemGood = pool.findItem('good')()
+        const itemNotValid = pool.findItem('notValid')()
+        const itemBad = pool.findItem('bad')()
 
         expect(storage.length).toBe(1)
         expect(itemGood).toStrictEqual(some({ status: 200, payload: 'hei' }))
@@ -90,7 +90,7 @@ describe('cachePoolWebStorage', () => {
         expect(itemBad).toStrictEqual(none)
     })
 
-    test('addItem', async () => {
+    test('addItem', () => {
         const storage = new MockWebStorage()
         const pool = cachePoolWebStorage({
             storage: storage,
@@ -99,7 +99,7 @@ describe('cachePoolWebStorage', () => {
 
         jest.useFakeTimers('modern').setSystemTime(systemTime)
 
-        await pool.addItem(
+        pool.addItem(
             'hei',
             {
                 status: 200,
@@ -118,7 +118,7 @@ describe('cachePoolWebStorage', () => {
         })
     })
 
-    test('addItem errorOnStringify', async () => {
+    test('addItem errorOnStringify', () => {
         const storage = new MockWebStorage()
         const pool = cachePoolWebStorage({
             storage: storage,
@@ -128,7 +128,7 @@ describe('cachePoolWebStorage', () => {
         const circular: any = { ref: null }
         circular.ref = circular
 
-        await pool.addItem(
+        pool.addItem(
             'hei',
             {
                 status: 200,
@@ -140,7 +140,7 @@ describe('cachePoolWebStorage', () => {
         expect(storage.length).toBe(0)
     })
 
-    test('addItem errorOnSave', async () => {
+    test('addItem errorOnSave', () => {
         const storage = new MockWebStorage()
 
         Object.defineProperty(storage, 'setItem', {
@@ -154,7 +154,7 @@ describe('cachePoolWebStorage', () => {
             namespace: 'addItem_errorOnSave',
         })
 
-        await pool.addItem(
+        pool.addItem(
             'hei',
             {
                 status: 200,

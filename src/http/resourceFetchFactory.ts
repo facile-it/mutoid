@@ -1,7 +1,8 @@
 import * as E from 'fp-ts/Either'
+import type * as IO from 'fp-ts/IO'
 import * as O from 'fp-ts/Option'
 import type * as R from 'fp-ts/Reader'
-import type * as T from 'fp-ts/Task'
+import * as T from 'fp-ts/Task'
 import type * as TO from 'fp-ts/TaskOption'
 import { Lazy, pipe } from 'fp-ts/function'
 import * as t from 'io-ts'
@@ -19,7 +20,16 @@ import type { StatusCode } from './statusCode'
 
 export type CacheItem<S = StatusCode, P = unknown> = RES.ResourceData<S, P>
 
-export interface CachePool {
+export type CachePool = CachePoolSync | CachePoolAsync
+
+export interface CachePoolSync {
+    _tag: 'sync'
+    findItem: (key: string) => IO.IO<O.Option<CacheItem>>
+    addItem: (key: string, item: CacheItem, ttl: number) => IO.IO<void>
+}
+
+export interface CachePoolAsync {
+    _tag: 'async'
     findItem: (key: string) => TO.TaskOption<CacheItem>
     addItem: (key: string, item: CacheItem, ttl: number) => T.Task<void>
 }
@@ -156,7 +166,9 @@ export const fetchCacheableFactory =
             ROR.fromReader,
             ROR.chainW(cacheKey => (deps: FetchFactoryCacheableDeps) => {
                 return pipe(
-                    deps.cachePool.findItem(cacheKey),
+                    deps.cachePool._tag === 'sync'
+                        ? T.fromIO(deps.cachePool.findItem(cacheKey))
+                        : deps.cachePool.findItem(cacheKey),
                     OR.fromTask,
                     OR.chain(item => {
                         return pipe(
@@ -185,7 +197,14 @@ export const fetchCacheableFactory =
                                 pipe(
                                     runRequest(deps, request, decoderL),
                                     OR.chainFirstW(r =>
-                                        pipe(deps.cachePool.addItem(cacheKey, r as CacheItem, appCacheTtl), OR.doneTask)
+                                        pipe(
+                                            deps.cachePool._tag === 'sync'
+                                                ? T.fromIO(
+                                                      deps.cachePool.addItem(cacheKey, r as CacheItem, appCacheTtl)
+                                                  )
+                                                : deps.cachePool.addItem(cacheKey, r as CacheItem, appCacheTtl),
+                                            OR.doneTask
+                                        )
                                     ),
                                     OR_filterResponse(successCodes, request)
                                 )
