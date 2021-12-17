@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkmutoid_website=self.webpackChunkmutoid_website||[]).push([[433],{8363:function(e){e.exports=JSON.parse('{"allTagsPath":"/mutoid/blog/tags","slug":"hello","name":"hello","count":1,"permalink":"/mutoid/blog/tags/hello"}')}}]);

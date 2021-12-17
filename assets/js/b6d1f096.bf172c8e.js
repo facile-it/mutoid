@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkmutoid_website=self.webpackChunkmutoid_website||[]).push([[751],{801:function(t){t.exports=JSON.parse('{"allTagsPath":"/mutoid/blog/tags","slug":"/mutoid/blog/tags/facile-it","name":"facile.it","count":1,"permalink":"/mutoid/blog/tags/facile-it"}')}}]);

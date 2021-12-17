@@ -13,5 +13,10 @@
         <link href="https://engineering.facile.it/mutoid/blog/welcome"/>
         <updated>2021-07-23T00:00:00.000Z</updated>
         <summary type="html"><![CDATA[Welcome to mutoid docs, this library is a shy contribution to open source]]></summary>
+        <content type="html"><![CDATA[<p>Welcome to mutoid docs, this library is a shy contribution to open source</p>]]></content>
+        <author>
+            <name>Iacopo Pancotti</name>
+            <uri>https://github.com/siuvdlec</uri>
+        </author>
     </entry>
 </feed>

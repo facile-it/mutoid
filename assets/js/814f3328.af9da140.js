@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkmutoid_website=self.webpackChunkmutoid_website||[]).push([[535],{6353:function(e){e.exports=JSON.parse('{"title":"Recent posts","items":[{"title":"Welcome","permalink":"/mutoid/blog/welcome"}]}')}}]);
