@@ -2,7 +2,7 @@ import type { MonadObservable2 } from 'fp-ts-rxjs/MonadObservable'
 import * as R from 'fp-ts-rxjs/Observable'
 import type { ObservableEither } from 'fp-ts-rxjs/lib/ObservableEither'
 import type { Applicative2 } from 'fp-ts/Applicative'
-import type { Apply2 } from 'fp-ts/Apply'
+import { Apply2, apS as apS_ } from 'fp-ts/Apply'
 import type { Bifunctor2 } from 'fp-ts/Bifunctor'
 import { Chain2, chainFirst as chainFirst_ } from 'fp-ts/Chain'
 import * as E from 'fp-ts/Either'
@@ -311,6 +311,19 @@ export const filterOrElse: {
     ) => ObservableResource<E, B>
     <E, A>(predicate: Predicate<A>, onFalse: (a: A) => E): (ma: ObservableResource<E, A>) => ObservableResource<E, A>
 } = filterOrElseW
+
+// -------------------------------------------------------------------------------------
+// pipeable sequence S
+// -------------------------------------------------------------------------------------
+
+export const apS = apS_(Apply)
+
+export const apSW: <A, N extends string, E2, B>(
+    name: Exclude<N, keyof A>,
+    fb: ObservableResource<E2, B>
+) => <E1>(
+    fa: ObservableResource<E1, A>
+) => ObservableResource<E1 | E2, { readonly [K in keyof A | N]: K extends keyof A ? A[K] : B }> = apS as any
 
 // -------------------------------------------------------------------------------------
 // utils
