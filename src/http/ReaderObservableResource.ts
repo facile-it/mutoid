@@ -1,7 +1,7 @@
 import type { ReaderObservableEither } from 'fp-ts-rxjs/ReaderObservableEither'
 import type { MonadObservable3 } from 'fp-ts-rxjs/lib/MonadObservable'
 import type { Applicative3 } from 'fp-ts/Applicative'
-import type { Apply3 } from 'fp-ts/Apply'
+import { Apply3, apS as apS_ } from 'fp-ts/Apply'
 import type { Bifunctor3 } from 'fp-ts/Bifunctor'
 import { Chain3, chainFirst as chainFirst_ } from 'fp-ts/Chain'
 import type { Functor3 } from 'fp-ts/Functor'
@@ -324,3 +324,17 @@ export const bindW: <K extends string, R2, E2, A, B>(
 ) => <R1, E1>(
     fa: ReaderObservableResource<R1, E1, A>
 ) => ReaderObservableResource<R1 & R2, E1 | E2, { [P in keyof A | K]: P extends keyof A ? A[P] : B }> = bind as any
+
+// -------------------------------------------------------------------------------------
+// pipeable sequence S
+// -------------------------------------------------------------------------------------
+
+export const apS = apS_(Applicative)
+
+export const apSW: <A, N extends string, R2, E2, B>(
+    name: Exclude<N, keyof A>,
+    fb: ReaderObservableResource<R2, E2, B>
+) => <R1, E1>(
+    fa: ReaderObservableResource<R1, E1, A>
+) => ReaderObservableResource<R1 & R2, E1 | E2, { readonly [K in keyof A | N]: K extends keyof A ? A[K] : B }> =
+    apS as any

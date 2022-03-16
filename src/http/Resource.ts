@@ -1,5 +1,5 @@
 import type { Applicative2 as RES } from 'fp-ts/Applicative'
-import type { Apply2 } from 'fp-ts/Apply'
+import { Apply2, apS as apS_ } from 'fp-ts/Apply'
 import type { Bifunctor2 } from 'fp-ts/Bifunctor'
 import * as E from 'fp-ts/Either'
 import * as Eq from 'fp-ts/Eq'
@@ -387,3 +387,34 @@ export const chainW =
         isDone(ma) ? f(ma.data) : ma
 
 export const chain: <E, A, B>(f: (a: A) => Resource<E, B>) => (ma: Resource<E, A>) => Resource<E, B> = chainW
+
+// -------------------------------------------------------------------------------------
+// do notation
+// -------------------------------------------------------------------------------------
+
+// export const Do: Resource<never, Record<string, never>> = of(_.emptyRecord)
+
+// export const bindTo = bindTo_(Functor)
+
+// export const bind = bind_(Chain)
+
+// /**
+//  * @since 2.8.0
+//  */
+// export const bindW: <N extends string, A, E2, B>(
+//     name: Exclude<N, keyof A>,
+//     f: (a: A) => Either<E2, B>
+// ) => <E1>(fa: Either<E1, A>) => Either<E1 | E2, { readonly [K in keyof A | N]: K extends keyof A ? A[K] : B }> =
+//     bind as any
+
+// -------------------------------------------------------------------------------------
+// pipeable sequence S
+// -------------------------------------------------------------------------------------
+
+export const apS = apS_(Apply)
+
+export const apSW: <A, N extends string, E2, B>(
+    name: Exclude<N, keyof A>,
+    fb: Resource<E2, B>
+) => <E1>(fa: Resource<E1, A>) => Resource<E1 | E2, { readonly [K in keyof A | N]: K extends keyof A ? A[K] : B }> =
+    apS as any
