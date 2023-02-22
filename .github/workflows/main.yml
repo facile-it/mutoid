@@ -24,9 +24,9 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
-    - run: npm install -g npm@^7.6
-    - run: npm install
-    - run: npm run build
-    - run: npm run clean
-    - run: npm run test
-    - run: npm run test-type
+    - run: npm install -g pnpm
+    - run: pnpm install --frozen-lockfile
+    # - run: npm run build
+    # - run: npm run clean
+    - run: pnpm run -F mutoid test
+    - run: pnpm run -F mutoid test:type
