@@ -1,0 +1,31 @@
+{
+    "name": "mutoid-example",
+    "version": "0.0.1",
+    "description": "Reactive library for data fetching, caching, state management",
+    "private": true,
+    "scripts": {
+        "dev": "USERNAME=\"${USER}\" webpack serve --config webpack.config.ts --mode development --hot"
+    },
+    "sideEffects": false,
+    "dependencies": {
+        "fp-ts": "2.10.5",
+        "fp-ts-rxjs": "^0.6",
+        "io-ts": "^2.2.10",
+        "io-ts-types": "^0.5.11",
+        "react": "^17.0.2",
+        "react-dom": "^17.0.2",
+        "rxjs": "^6.6.3",
+        "mutoid": "workspace:^"
+    },
+    "devDependencies": {
+        "@types/react": "^17.0.2",
+        "@types/react-dom": "^17.0.1",
+        "@types/webpack": "^5.28.0",
+        "fork-ts-checker-webpack-plugin": "^6.2.0",
+        "html-webpack-plugin": "^5.3.1",
+        "ts-loader": "^9.2.6",
+        "webpack": "^5.65.0",
+        "webpack-cli": "^4.9.1",
+        "webpack-dev-server": "^4.6.0"
+    }
+}
