@@ -1,0 +1,94 @@
+{
+    "scripts": {
+        "lint": "eslint . --ext .ts,.tsx",
+        "test": "jest",
+        "test:type": "dtslint dtslint",
+        "clean": "rm -rf dist",
+        "prebuild": "npm run clean",
+        "build": "tsc -p ./tsconfig.build.json && ts-node scripts/build",
+        "postbuild": "prettier --loglevel=silent --write \"./dist/**/*.ts\"",
+        "prepublishOnly": "ts-node scripts/pre-publish",
+        "prerelease": "npm run build",
+        "release": "ts-node scripts/release",
+        "postrelease": "npm run clean"
+    },
+    "name": "mutoid",
+    "version": "0.5.0-rc.3",
+    "description": "Reactive library for data fetching, caching, state management",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/facile-it/mutoid.git"
+    },
+    "author": "Iacopo <siuvdlec@gmail.com>",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/facile-it/mutoid/issues"
+    },
+    "homepage": "https://engineering.facile.it/mutoid",
+    "main": "index.js",
+    "module": "index.js",
+    "typings": "index.d.ts",
+    "sideEffects": false,
+    "engines": {
+        "node": ">=14"
+    },
+    "devDependencies": {
+        "@testing-library/react-hooks": "^7.0.2",
+        "@types/jest": "^29.4.0",
+        "@types/react": "^17.0.2",
+        "@types/react-dom": "^17.0.1",
+        "dtslint": "github:gcanti/dtslint",
+        "fast-check": "^2.25.0",
+        "fp-ts": "2.10.5",
+        "fp-ts-laws": "^0.3.0",
+        "fp-ts-rxjs": "^0.6",
+        "io-ts": "^2.2.10",
+        "jest": "^29.4.3",
+        "react": "^17.0.2",
+        "react-dom": "^17.0.2",
+        "react-test-renderer": "^17.0.1",
+        "rxjs": "^6.6.3"
+    },
+    "peerDependencies": {
+        "fp-ts": "^2.10.5",
+        "fp-ts-rxjs": "^0.6.15",
+        "io-ts": "^2.2.10",
+        "react": "^16.8 || ^17.0",
+        "rxjs": "^6.6"
+    },
+    "peerDependenciesMeta": {
+        "io-ts": {
+            "optional": true
+        },
+        "react": {
+            "optional": true
+        }
+    },
+    "tags": [
+        "typescript",
+        "reactive",
+        "algebraic-data-types",
+        "reactivex",
+        "rxjs",
+        "fp-ts",
+        "fp-ts-rxjs",
+        "io-ts",
+        "react"
+    ],
+    "keywords": [
+        "typescript",
+        "reactive",
+        "algebraic-data-types",
+        "reactivex",
+        "rxjs",
+        "fp-ts",
+        "fp-ts-rxjs",
+        "io-ts",
+        "react",
+        "isomorphic"
+    ],
+    "dependencies": {
+        "jest-environment-jsdom": "^29.4.3",
+        "ts-jest": "^29.0.5"
+    }
+}
