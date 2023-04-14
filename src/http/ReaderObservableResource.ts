@@ -1,5 +1,5 @@
-import type { ReaderObservableEither } from 'fp-ts-rxjs/ReaderObservableEither'
-import type { MonadObservable3 } from 'fp-ts-rxjs/lib/MonadObservable'
+import type { MonadObservable3 } from 'fp-ts-reactive/lib/MonadObservable'
+import type { ReaderObservableEither } from 'fp-ts-reactive/lib/ReaderObservableEither'
 import type { Applicative3 } from 'fp-ts/Applicative'
 import type { Apply3 } from 'fp-ts/Apply'
 import type { Bifunctor3 } from 'fp-ts/Bifunctor'

@@ -1,7 +1,7 @@
 import { renderHook, act } from '@testing-library/react-hooks'
 import { identity } from 'fp-ts/function'
 import * as t from 'io-ts'
-import { of } from 'rxjs'
+import { firstValueFrom, of } from 'rxjs'
 import type { AjaxResponse } from 'rxjs/ajax'
 import { delay, take } from 'rxjs/operators'
 import * as OR from '../../src/http/ObservableResource'
@@ -74,7 +74,7 @@ describe('react', () => {
         const ajax = of({
             status: 200,
             response: 'hello',
-        } as AjaxResponse)
+        } as AjaxResponse<unknown>)
 
         const resource = () =>
             OR.fromAjax(ajax, {
@@ -96,7 +96,7 @@ describe('react', () => {
         const ajax = of({
             status: 200,
             response: 'hello',
-        } as AjaxResponse)
+        } as AjaxResponse<unknown>)
 
         const resource = () => (d: { ajax: typeof ajax }) =>
             OR.fromAjax(d.ajax, {
@@ -118,7 +118,7 @@ describe('react', () => {
         const ajax = of({
             status: 200,
             response: 'hello',
-        } as AjaxResponse)
+        } as AjaxResponse<unknown>)
 
         const resource = () => (d: { ajax: typeof ajax }) =>
             OR.fromAjax(d.ajax.pipe(delay(1000)), {
@@ -140,7 +140,7 @@ describe('react', () => {
         const ajax = of({
             status: 200,
             response: 'hello',
-        } as AjaxResponse)
+        } as AjaxResponse<unknown>)
 
         const resource = () =>
             OR.fromAjax(ajax.pipe(delay(1000)), {
@@ -162,7 +162,7 @@ describe('react', () => {
         const ajax = of({
             status: 200,
             response: 'hello',
-        } as AjaxResponse)
+        } as AjaxResponse<unknown>)
 
         const resource = () =>
             OR.fromAjax(ajax, {
@@ -203,7 +203,7 @@ describe('react', () => {
             result.current.state$.next({ name: 'boom' })
         })
 
-        const s = await result.current.state$.pipe(take(1)).toPromise()
+        const s = await firstValueFrom(result.current.state$.pipe(take(1)))
         expect(s.name).toBe('boom')
     })
 })

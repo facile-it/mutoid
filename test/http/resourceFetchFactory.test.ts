@@ -1,7 +1,7 @@
 import * as E from 'fp-ts/Either'
 import * as R from 'fp-ts/Reader'
 import * as t from 'io-ts'
-import { of, throwError } from 'rxjs'
+import { lastValueFrom, of, throwError } from 'rxjs'
 import type { ajax } from 'rxjs/ajax'
 import { cachePoolWebStorage } from '../../src/http/cachePoolAdapters/cachePoolWebStorage'
 import * as RESFF from '../../src/http/resourceFetchFactory'
@@ -75,7 +75,7 @@ describe('resourceFetchFactory fetchFactory', () => {
                 status: 200,
                 response: 'hello',
             })) as any as typeof ajax
-        const r = await ROR({ ajax: ajaxMock, logger }).toPromise()
+        const r = await lastValueFrom(ROR({ ajax: ajaxMock, logger }))
         expect(r).toStrictEqual({ _tag: 'done', data: { status: 200, payload: 'hello' } })
         expect(logger.mock.calls.length).toBe(0)
     })
@@ -88,7 +88,7 @@ describe('resourceFetchFactory fetchFactory', () => {
                 status: 404,
                 response: 'any response',
             })) as any as typeof ajax
-        const r = await ROR({ ajax: ajaxMock, logger }).toPromise()
+        const r = await lastValueFrom(ROR({ ajax: ajaxMock, logger }))
 
         expect(r).toStrictEqual({
             _tag: 'fail',
@@ -112,7 +112,7 @@ describe('resourceFetchFactory fetchFactory', () => {
                 status: 301,
                 response: 'any response',
             })) as any as typeof ajax
-        const r = await ROR({ ajax: ajaxMock, logger }).toPromise()
+        const r = await lastValueFrom(ROR({ ajax: ajaxMock, logger }))
 
         expect(r).toStrictEqual({
             _tag: 'fail',
@@ -136,7 +136,7 @@ describe('resourceFetchFactory fetchFactory', () => {
                 status: 400,
                 response: 'any response',
             })) as any as typeof ajax
-        const r = await ROR({ ajax: ajaxMock, logger }).toPromise()
+        const r = await lastValueFrom(ROR({ ajax: ajaxMock, logger }))
 
         expect(r).toStrictEqual({
             _tag: 'fail',
@@ -160,7 +160,7 @@ describe('resourceFetchFactory fetchFactory', () => {
                 status: 500,
                 response: 'any response',
             })) as any as typeof ajax
-        const r = await ROR({ ajax: ajaxMock, logger }).toPromise()
+        const r = await lastValueFrom(ROR({ ajax: ajaxMock, logger }))
 
         expect(r).toStrictEqual({
             _tag: 'fail',
@@ -184,7 +184,7 @@ describe('resourceFetchFactory fetchFactory', () => {
                 status: 0,
                 response: 'any response',
             })) as any as typeof ajax
-        const r = await ROR({ ajax: ajaxMock, logger }).toPromise()
+        const r = await lastValueFrom(ROR({ ajax: ajaxMock, logger }))
 
         expect(r).toStrictEqual({
             _tag: 'fail',
@@ -204,7 +204,7 @@ describe('resourceFetchFactory fetchFactory', () => {
         const logger = jest.fn()
 
         const ajaxMock = (() => throwError('hello error')) as any as typeof ajax
-        const r = await ROR({ ajax: ajaxMock, logger }).toPromise()
+        const r = await lastValueFrom(ROR({ ajax: ajaxMock, logger }))
 
         expect(r).toStrictEqual({
             _tag: 'fail',
@@ -227,7 +227,7 @@ describe('resourceFetchFactory fetchFactory', () => {
                 status: 200,
                 response: 1,
             })) as any as typeof ajax
-        const r = await ROR({ ajax: ajaxMock, logger }).toPromise()
+        const r = await lastValueFrom(ROR({ ajax: ajaxMock, logger }))
 
         expect(r).toStrictEqual({
             _tag: 'fail',
@@ -285,7 +285,7 @@ describe('resourceFetchFactory fetchCacheableFactory', () => {
                 response: 'hello',
             })) as any as typeof ajax
 
-        const r = await ROR({ ajax: ajaxMock, logger, cachePool, session: 'session' }).toPromise()
+        const r = await lastValueFrom(ROR({ ajax: ajaxMock, logger, cachePool, session: 'session' }))
 
         expect(r).toStrictEqual({ _tag: 'done', data: { status: 200, payload: 'hello' } })
 
@@ -315,7 +315,7 @@ describe('resourceFetchFactory fetchCacheableFactory', () => {
                 response: 'hello',
             })) as any as typeof ajax
 
-        const r = await ROR({ ajax: ajaxMock, logger, cachePool, session: 'session' }).toPromise()
+        const r = await lastValueFrom(ROR({ ajax: ajaxMock, logger, cachePool, session: 'session' }))
 
         expect(r).toStrictEqual({ _tag: 'done', data: { status: 200, payload: 'hello' } })
 
@@ -345,7 +345,7 @@ describe('resourceFetchFactory fetchCacheableFactory', () => {
                 response: 'hello',
             })) as any as typeof ajax
 
-        const r = await ROR({ ajax: ajaxMock, logger, cachePool, session: 'session' }).toPromise()
+        const r = await lastValueFrom(ROR({ ajax: ajaxMock, logger, cachePool, session: 'session' }))
 
         expect(r).toStrictEqual({ _tag: 'done', data: { status: 200, payload: 'hello' } })
 
@@ -401,7 +401,7 @@ describe('resourceFetchFactory fetchCacheableFactory with no appCacheTtl', () =>
                 response: 'hello',
             })) as any as typeof ajax
 
-        const r = await ROR({ ajax: ajaxMock, logger, cachePool, session: 'session' }).toPromise()
+        const r = await lastValueFrom(ROR({ ajax: ajaxMock, logger, cachePool, session: 'session' }))
 
         expect(r).toStrictEqual({ _tag: 'done', data: { status: 200, payload: 'hello' } })
 

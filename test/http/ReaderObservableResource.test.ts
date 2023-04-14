@@ -1,4 +1,5 @@
 import { pipe } from 'fp-ts/function'
+import { firstValueFrom } from 'rxjs'
 import * as _ from '../../src/http/ReaderObservableResource'
 import * as RES from '../../src/http/Resource'
 
@@ -8,7 +9,7 @@ describe('ReaderObservableResource', () => {
         const lengthR = (s: string): _.ReaderObservableResource<never, string, number> => _.done(s.length)
         const double = (n: number): number => n * 2
 
-        const run = <E, A>(ror: _.ReaderObservableResource<never, E, A>) => ror({} as never).toPromise()
+        const run = <E, A>(ror: _.ReaderObservableResource<never, E, A>) => firstValueFrom(ror({} as never))
 
         test('map', async () => {
             expect(await run(pipe(_.done('abc'), _.map(length)))).toStrictEqual(RES.done(3))
@@ -42,11 +43,13 @@ describe('ReaderObservableResource', () => {
 
     test('do notation', async () => {
         expect(
-            await pipe(
-                _.done<string, string, number>(1),
-                _.bindTo('a'),
-                _.bind('b', () => _.done('b'))
-            )('hello').toPromise()
+            await firstValueFrom(
+                pipe(
+                    _.done<string, string, number>(1),
+                    _.bindTo('a'),
+                    _.bind('b', () => _.done('b'))
+                )('hello')
+            )
         ).toStrictEqual(RES.done({ a: 1, b: 'b' }))
     })
 })

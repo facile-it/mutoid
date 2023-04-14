@@ -1,5 +1,5 @@
 import type * as T from 'fp-ts/Task'
-import { BehaviorSubject, Observable, Subscription } from 'rxjs'
+import { BehaviorSubject, Observable, Subscription, firstValueFrom } from 'rxjs'
 import { switchMap, take, takeUntil, takeWhile, tap } from 'rxjs/operators'
 import type { AllMutationName, MutationName, StoreName } from './stores'
 
@@ -98,7 +98,7 @@ export const ctorPartialMutationCR =
 export const toTask =
     <N extends StoreName, S>(store: Store<N, S>): T.Task<S> =>
     () =>
-        store.state$.pipe(take(1)).toPromise()
+        firstValueFrom(store.state$.pipe(take(1)))
 
 export interface BaseOptions {
     notifierTakeUntil?: Observable<unknown>
