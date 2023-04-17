@@ -32,7 +32,13 @@ export const fetchQuoteWithTokenAndParams = (id: number) =>
 // example: simple fetch with params
 
 export const fetchSimple = (id: number, from: string) => (deps: { ajax: typeof ajax }) =>
-    OR.fromAjax(deps.ajax(`https://ron-swanson-quotes.herokuapp.com/v2/quotes?id=${id}&from=${from}`), quoteDecoders())
+    OR.fromAjax(
+        deps.ajax({
+            url: `https://ron-swanson-quotes.herokuapp.com/v2/quotes?id=${id}&from=${from}`,
+            crossDomain: true,
+        }),
+        quoteDecoders()
+    )
 
 // example: fetch with delay
 
