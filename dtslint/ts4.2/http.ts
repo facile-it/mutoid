@@ -7,7 +7,7 @@ import { map } from 'rxjs/operators'
 import * as OR from '../../src/http/ObservableResource'
 import * as MRE from '../../src/http/Resource'
 
-declare const ajaxFetchUnknownFail: Observable<AjaxResponse>
+declare const ajaxFetchUnknownFail: Observable<AjaxResponse<unknown>>
 declare const decoderDataString: t.Decode<unknown, { data: string }>
 declare const decoderDataNumber: t.Decode<unknown, { data: number }>
 declare const decoders: {
@@ -19,7 +19,7 @@ declare const decoders: {
 // $ExpectType ObservableResourceTypeOf<{ 200: Decode<unknown, { data: string; }>; 400: Decode<unknown, { data: number; }>; }, never>
 const resourceUnknownFail = OR.fromAjax(ajaxFetchUnknownFail, decoders)
 
-declare const ajaxFetchWithFail: Observable<AjaxResponse | MRE.ResourceAjaxFail<string>>
+declare const ajaxFetchWithFail: Observable<AjaxResponse<unknown> | MRE.ResourceAjaxFail<string>>
 
 // eslint-disable-next-line max-len
 // $ExpectType ObservableResourceTypeOf<{ 200: Decode<unknown, { data: string; }>; 400: Decode<unknown, { data: number; }>; }, string>
