@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.1
+
+-   Replace `fp-ts-rxjs` peerDependencies with `fp-ts-reactive`
+
+-   Upgraded `rxjs` requirement `rxjs@7.8`
+
 ## 0.5.0
 
 -   Added in http module `resourceFetchFactory`, `io-types`, `cachePoolAdapters`

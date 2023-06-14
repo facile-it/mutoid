@@ -1,6 +1,6 @@
-import type { MonadObservable2 } from 'fp-ts-rxjs/MonadObservable'
-import * as R from 'fp-ts-rxjs/Observable'
-import type { ObservableEither } from 'fp-ts-rxjs/lib/ObservableEither'
+import type { MonadObservable2 } from 'fp-ts-reactive/MonadObservable'
+import * as R from 'fp-ts-reactive/Observable'
+import type { ObservableEither } from 'fp-ts-reactive/lib/ObservableEither'
 import type { Applicative2 } from 'fp-ts/Applicative'
 import type { Apply2 } from 'fp-ts/Apply'
 import type { Bifunctor2 } from 'fp-ts/Bifunctor'
@@ -17,8 +17,6 @@ import { flow, identity, Predicate, Refinement } from 'fp-ts/function'
 import { pipe } from 'fp-ts/function'
 import { Observable, concat } from 'rxjs'
 import type { AjaxError, AjaxResponse } from 'rxjs/ajax'
-// eslint-disable-next-line rxjs/no-internal
-import type { AjaxErrorNames } from 'rxjs/internal/observable/dom/AjaxObservable'
 import * as RXoP from 'rxjs/operators'
 import * as RES from './Resource'
 import type { StatusCode } from './statusCode'
@@ -59,7 +57,7 @@ export const ajaxFailObservable: <AE = never, A = never>(
     e: Observable<RES.ResourceAjaxError<AE>>
 ) => ObservableResource<RES.ResourceAjaxError<AE>, A> = R.map(RES.ajaxFail)
 
-export type ObservableAjax<AE = never> = Observable<AjaxResponse | RES.ResourceAjaxFail<AE>>
+export type ObservableAjax<AE = never, R = any> = Observable<AjaxResponse<R> | RES.ResourceAjaxFail<AE>>
 
 export const fromAjax = <DS extends RES.ResourceDecoders, AE = never>(
     ajax$: ObservableAjax<AE>,
@@ -316,7 +314,7 @@ export const filterOrElse: {
 // utils
 // -------------------------------------------------------------------------------------
 
-const dict: { [k in AjaxErrorNames]: true } = {
+const dict = {
     AjaxError: true,
     AjaxTimeoutError: true,
 }
@@ -331,7 +329,9 @@ function isAjaxError(e: any): e is AjaxError {
 
 const decodeResponse =
     <DS extends RES.ResourceDecoders>(decoders: DS) =>
-    <AE>(response: AjaxResponse | AjaxError | RES.ResourceAjaxFail<AE>): RES.ResourceTypeOfAcknowledged<DS, AE> => {
+    <AE>(
+        response: AjaxResponse<unknown> | AjaxError | RES.ResourceAjaxFail<AE>
+    ): RES.ResourceTypeOfAcknowledged<DS, AE> => {
         if (isResourceAjaxFail(response)) {
             return response as RES.ResourceTypeOfFail<DS, AE>
         }

@@ -7,7 +7,7 @@ import type * as TO from 'fp-ts/TaskOption'
 import { Lazy, pipe } from 'fp-ts/function'
 import * as t from 'io-ts'
 import { PathReporter } from 'io-ts/PathReporter'
-import type { ajax, AjaxRequest } from 'rxjs/ajax'
+import type { ajax, AjaxConfig } from 'rxjs/ajax'
 import * as OR from './ObservableResource'
 import * as ROR from './ReaderObservableResource'
 import type * as RES from './Resource'
@@ -98,7 +98,7 @@ export type ResourceBad = t.TypeOf<typeof resourceBadT>
 // Request
 // -------------------------------------------------------------------------------------
 
-interface EndpointRequestAjaxRequest extends AjaxRequest {
+interface EndpointRequestAjaxRequest extends AjaxConfig {
     url: string
     headers?: Record<string, string>
 }

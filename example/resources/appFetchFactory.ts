@@ -33,6 +33,7 @@ export const appEndpointRequest =
             DS.serializeUrl(new URLSearchParams()),
             DS.toQueryString
         )}`,
+        crossDomain: true,
     })
 
 const fetchWithErrorLog = RESFF.fetchFactory({ loggerFail: logError })
@@ -62,6 +63,7 @@ export const appEndpointRequestCacheable =
             DS.serializeUrl(new URLSearchParams()),
             DS.toQueryString
         )}`,
+        crossDomain: true,
     })
 
 const fetchCacheableWithErrorLog = RESFF.fetchCacheableFactory({

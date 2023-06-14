@@ -52,7 +52,7 @@ export type ResourceAjaxError<AE = never> =
       }
     | (AE extends never ? never : AppErr<AE>)
 
-export type ResourceError<DE, AE = never> =
+export type ResourceError<DE, AE = never, R = any> =
     | {
           readonly type: 'decodeError'
           readonly statusCode: StatusCode
@@ -64,7 +64,7 @@ export type ResourceError<DE, AE = never> =
       }
     | {
           readonly type: 'unexpectedResponse'
-          readonly detail: AjaxResponse | AjaxError
+          readonly detail: AjaxResponse<R> | AjaxError
       }
     | ResourceAjaxError<AE>
 

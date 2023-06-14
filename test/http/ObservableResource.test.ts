@@ -1,7 +1,7 @@
 import * as E from 'fp-ts/Either'
 import { pipe } from 'fp-ts/function'
 import * as t from 'io-ts'
-import { of } from 'rxjs'
+import { firstValueFrom, of } from 'rxjs'
 import type { AjaxError, AjaxResponse } from 'rxjs/ajax'
 import { TestScheduler } from 'rxjs/testing'
 import * as _ from '../../src/http/ObservableResource'
@@ -20,7 +20,7 @@ describe('ObservableResource', () => {
         const lengthR = (s: string): _.ObservableResource<string, number> => _.done(s.length)
         const double = (n: number): number => n * 2
 
-        const run = <E, A>(ror: _.ObservableResource<E, A>) => ror.toPromise()
+        const run = <E, A>(ror: _.ObservableResource<E, A>) => firstValueFrom(ror)
 
         test('map', async () => {
             expect(await run(pipe(_.done('abc'), _.map(length)))).toStrictEqual(RES.done(3))
@@ -59,11 +59,11 @@ describe('ObservableResource', () => {
 
     test('fromAjax done 200', () => {
         testSchedulerBuilder().run(({ cold, expectObservable }) => {
-            const ajax = cold<AjaxResponse>('--a', {
+            const ajax = cold<AjaxResponse<unknown>>('--a', {
                 a: {
                     status: 200,
                     response: 'hello',
-                } as AjaxResponse,
+                } as AjaxResponse<unknown>,
             })
 
             const resource = _.fromAjax(ajax, {
@@ -79,11 +79,11 @@ describe('ObservableResource', () => {
 
     test('fromAjax done notExpected response', () => {
         testSchedulerBuilder().run(({ cold, expectObservable }) => {
-            const ajax = cold<AjaxResponse>('--a', {
+            const ajax = cold<AjaxResponse<unknown>>('--a', {
                 a: {
                     status: 201,
                     response: 'hello',
-                } as AjaxResponse,
+                } as AjaxResponse<unknown>,
             })
 
             const resource = _.fromAjax(ajax, {
@@ -114,7 +114,7 @@ describe('ObservableResource', () => {
                 name: 'AjaxError',
             } as AjaxError
 
-            const ajax = cold<AjaxResponse>('--#', undefined, ajaxError)
+            const ajax = cold<AjaxResponse<unknown>>('--#', undefined, ajaxError)
 
             const resource = _.fromAjax(ajax, {
                 200: t.string.decode,
@@ -141,7 +141,7 @@ describe('ObservableResource', () => {
                 name: 'AjaxError',
             } as AjaxError
 
-            const ajax = cold<AjaxResponse>('--#', undefined, ajaxError)
+            const ajax = cold<AjaxResponse<unknown>>('--#', undefined, ajaxError)
 
             const resource = _.fromAjax(ajax, {
                 200: t.string.decode,
@@ -169,7 +169,7 @@ describe('ObservableResource', () => {
                 name: 'AjaxErrorWrong',
             } as AjaxError
 
-            const ajax = cold<AjaxResponse>('--#', undefined, ajaxError)
+            const ajax = cold<AjaxResponse<unknown>>('--#', undefined, ajaxError)
 
             const resource = _.fromAjax(ajax, {
                 200: t.string.decode,
@@ -190,13 +190,13 @@ describe('ObservableResource', () => {
 
     test('fromAjax fail decodeError', () => {
         testSchedulerBuilder().run(({ cold, expectObservable }) => {
-            const ajax = cold<AjaxResponse>('--a', {
+            const ajax = cold<AjaxResponse<unknown>>('--a', {
                 a: {
                     status: 200,
                     response: {
                         data: 'hello',
                     },
-                } as AjaxResponse,
+                } as AjaxResponse<unknown>,
             })
 
             const resource = _.fromAjax(ajax, {
@@ -264,7 +264,7 @@ describe('ObservableResource', () => {
             response: {
                 name: 'hey',
             },
-        } as AjaxResponse)
+        } as AjaxResponse<unknown>)
 
         const mutation = () =>
             pipe(
