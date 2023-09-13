@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.5.1
+## 0.6.0
 
 -   Replace `fp-ts-rxjs` peerDependencies with `fp-ts-reactive`
 

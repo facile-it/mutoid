@@ -19,6 +19,7 @@
         "importsNotUsedAsValues": "error",
         "importHelpers": false,
         "noUncheckedIndexedAccess": true,
+        "skipLibCheck": true
     },
     "include": [
         "./example",
