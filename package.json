@@ -19,7 +19,7 @@
         "postrelease": "npm run clean"
     },
     "name": "mutoid",
-    "version": "0.5.0-rc.3",
+    "version": "0.6.0-rc.0",
     "description": "Reactive library for data fetching, caching, state management",
     "repository": {
         "type": "git",
