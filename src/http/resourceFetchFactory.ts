@@ -280,7 +280,7 @@ const filterOnFalse =
             }
         }
 
-        if (r.status >= 400 && r.status <= 499) {
+        if ((r.status as StatusCode) >= 400 && (r.status as StatusCode) <= 499) {
             return {
                 type: 'rejected',
                 error: 'clientError',
