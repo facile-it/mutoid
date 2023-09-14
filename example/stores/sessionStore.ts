@@ -80,7 +80,7 @@ export const parseEnvMutation = () =>
         'parseEnv' as const,
         (s: SessionState): s is SessionStateInit => s.status === 'init',
         (confEnv: optional, confAccessToken: optional, confUserName: optional) =>
-            (s): Observable<SessionState> =>
+            (s: SessionState): Observable<SessionState> =>
                 of(
                     pipe(
                         appEnv.decode(confEnv),
