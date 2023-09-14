@@ -118,14 +118,15 @@ describe('state', () => {
     })
 
     test('mutationRunner with paylod', async () => {
-        const store = MS.ctor({ initState: { name: 'mutoid', age: 15 }, name: 'state' })
+        const state = { name: 'mutoid', age: 15 }
+        const store = MS.ctor({ initState: state, name: 'state' })
 
         const task = MS.toTask(store)
 
         const mutationRunner = MS.mutationRunner(store, () =>
             MS.ctorMutation(
                 'test_mutation',
-                (name: string, age: number) => s =>
+                (name: string, age: number) => (s: typeof state) =>
                     of({
                         ...s,
                         name: name,
@@ -143,7 +144,8 @@ describe('state', () => {
     })
 
     test('mutationRunner with paylod takeuntil', () => {
-        const store = MS.ctor({ initState: { name: 'mutoid', age: 15 }, name: 'test' })
+        const state = { name: 'mutoid', age: 15 }
+        const store = MS.ctor({ initState: state, name: 'test' })
 
         const testScheduler = new TestScheduler((actual, expected) => {
             expect(actual).toStrictEqual(expected)
@@ -155,7 +157,7 @@ describe('state', () => {
                 () =>
                     MS.ctorMutation(
                         'test_mutation_1',
-                        (name: string, age: number) => s =>
+                        (name: string, age: number) => (s: typeof state) =>
                             cold('-a', {
                                 a: {
                                     ...s,
@@ -174,7 +176,7 @@ describe('state', () => {
                 () =>
                     MS.ctorMutation(
                         'test_muation_2',
-                        (name: string, age: number) => s =>
+                        (name: string, age: number) => (s: typeof state) =>
                             cold('---a', {
                                 a: {
                                     ...s,
