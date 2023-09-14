@@ -15,5 +15,6 @@
         "skipLibCheck": true,
         "target": "es5",
         "lib": ["DOM", "ESNext"]
-    }
+    },
+    "exclude": ["node_modules"]
 }
