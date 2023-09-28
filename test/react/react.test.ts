@@ -114,6 +114,34 @@ describe('react', () => {
         expect(result.current[0]._tag).toBe('done')
     })
 
+    test('useFetchReaderObservableResource reset', () => {
+        const ajax = of({
+            status: 200,
+            response: 'hello',
+        } as AjaxResponse<unknown>)
+
+        const resource = () => (d: { ajax: typeof ajax }) =>
+            OR.fromAjax(d.ajax, {
+                200: t.string.decode,
+            })
+
+        const { result } = renderHook(() => MR.useFetchReaderObservableResource(resource, { ajax }))
+
+        expect(result.current[0]._tag).toBe('init')
+
+        act(() => {
+            result.current[1]()
+        })
+
+        expect(result.current[0]._tag).toBe('done')
+
+        act(() => {
+            result.current[2]()
+        })
+
+        expect(result.current[0]._tag).toBe('init')
+    })
+
     test('useFetchReaderObservableResource unsubscribe on unMount', async () => {
         const ajax = of({
             status: 200,
