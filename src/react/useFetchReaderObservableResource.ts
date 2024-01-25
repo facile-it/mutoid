@@ -18,7 +18,7 @@ export function useFetchReaderObservableResource<
         notifierTakeUntil?: Observable<unknown>
         iniState?: RES.Resource<E, A>
     }
-): [RES.Resource<E, A>, (...p: P) => void] {
+): [RES.Resource<E, A>, (...p: P) => void, () => void] {
     const [value, setValue] = useState<RES.Resource<E, A>>(options?.iniState || RES.init)
     const [subscriptionRef, subscriptionUnsubscribe] = useSubscriptionRef()
 
@@ -48,5 +48,8 @@ export function useFetchReaderObservableResource<
             },
             [subscriptionRef, subscriptionUnsubscribe]
         ),
+        useCallback(() => {
+            setValue({ _tag: 'init' })
+        }, []),
     ]
 }
