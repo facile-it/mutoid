@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Lazy } from 'fp-ts/function'
-import { Observable } from 'rxjs'
+import type { Observable } from 'rxjs'
 import * as MS from '../../src/state'
 
 declare module '../../src/state/stores' {

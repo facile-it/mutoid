@@ -5,7 +5,8 @@ import * as A from 'fp-ts/ReadonlyArray'
 import * as TE from 'fp-ts/TaskEither'
 import { flow, pipe } from 'fp-ts/function'
 import * as path from 'path'
-import { FileSystem, fileSystem } from './FileSystem'
+import type { FileSystem } from './FileSystem'
+import { fileSystem } from './FileSystem'
 import { run } from './run'
 
 type Build<A> = RTE.ReaderTaskEither<FileSystem, Error, A>

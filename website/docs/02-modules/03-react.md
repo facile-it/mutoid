@@ -28,7 +28,6 @@ Deprecated. Use instead `useFetchReaderObservableResource`. You can also use `us
 ## useFetchReaderObservableResource
 
 ```jsx
-import * as React from 'react'
 import { ajax } from 'rxjs/ajax'
 import * as RES from 'mutoid/http/Resource'
 import * as ROR from 'mutoid/http/ReaderObservableResource'

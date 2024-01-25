@@ -1,14 +1,11 @@
 import { pipe } from 'fp-ts/function'
-import { Observable, of } from 'rxjs'
+import type { Observable } from 'rxjs'
+import { of } from 'rxjs'
 import * as ROR from '../../src/http/ReaderObservableResource'
 import * as RES from '../../src/http/Resource'
 import * as MS from '../../src/state'
-import {
-    fetchQuote,
-    fetchQuoteWithDelay,
-    fetchQuoteWithTokenAndParams,
-    QuoteResource,
-} from '../resources/quoteResource'
+import type { QuoteResource } from '../resources/quoteResource'
+import { fetchQuote, fetchQuoteWithDelay, fetchQuoteWithTokenAndParams } from '../resources/quoteResource'
 
 declare module '../../src/state/stores' {
     interface Stores {

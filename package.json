@@ -2,7 +2,7 @@
     "scripts": {
         "dev-server": "USERNAME=\"${USER}\" webpack serve --config example/webpack.config.ts --mode development --hot",
         "lint": "eslint . --ext .ts,.tsx",
-        "lint-fix": "eslint . --ext .ts,.tsx --fix",
+        "tsc": "tsc",
         "prettier": "prettier --check \"{src,test,dtslint,example}/**/*.{ts,tsx}\"",
         "prettier-fix": "prettier --write \"./{src,test,dtslint,example}/**/*.ts\"",
         "pretest": "npm run lint && npm run prettier",
@@ -39,6 +39,7 @@
         "node": ">=14"
     },
     "devDependencies": {
+        "@facile-it/tsconfig": "^0.2.0",
         "@testing-library/react": "^14.1.2",
         "@types/glob": "^7.2.0",
         "@types/jest": "^29.5.11",

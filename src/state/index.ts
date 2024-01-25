@@ -1,5 +1,6 @@
 import type * as T from 'fp-ts/Task'
-import { BehaviorSubject, Observable, Subscription, firstValueFrom } from 'rxjs'
+import type { Observable, Subscription } from 'rxjs'
+import { BehaviorSubject, firstValueFrom } from 'rxjs'
 import { switchMap, take, takeUntil, takeWhile, tap } from 'rxjs/operators'
 import type { AllMutationName, MutationName, StoreName } from './stores'
 
@@ -114,7 +115,7 @@ export function mutationRunner<
     S,
     SS extends S,
     R extends Record<K, unknown>,
-    K extends string
+    K extends string,
 >(
     store: Store<N, S>,
     mutationR: (deps: R) => Mutation<NM, P, S, SS>,
@@ -126,7 +127,7 @@ export function mutationRunner<
     NM extends MutationName<N>,
     P extends Array<unknown>,
     S,
-    SS extends S
+    SS extends S,
     // no deps overload
 >(store: Store<N, S>, mutationL: () => Mutation<NM, P, S, SS>, options?: BaseOptions): (...p: P) => Subscription
 export function mutationRunner<
@@ -136,7 +137,7 @@ export function mutationRunner<
     S,
     SS extends S,
     R extends Record<K, unknown>,
-    K extends never
+    K extends never,
 >(
     store: Store<N, S>,
     mutationR: (deps?: R) => Mutation<NM, P, S, SS>,

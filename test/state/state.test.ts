@@ -1,4 +1,5 @@
-import { of, Observable } from 'rxjs'
+import type { Observable } from 'rxjs'
+import { of } from 'rxjs'
 import { TestScheduler } from 'rxjs/testing'
 import * as MS from '../../src/state/index'
 

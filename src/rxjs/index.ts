@@ -3,7 +3,8 @@
 import * as E from 'fp-ts/Either'
 import type { IO } from 'fp-ts/IO'
 import { identity } from 'fp-ts/function'
-import { MonoTypeOperatorFunction, OperatorFunction, Observable, Observer } from 'rxjs'
+import type { MonoTypeOperatorFunction, OperatorFunction, Observer } from 'rxjs'
+import { Observable } from 'rxjs'
 import { tap, map } from 'rxjs/operators'
 
 // operators
@@ -47,7 +48,7 @@ export const extractE =
     <
         T extends E.Either<E, R>,
         E = T extends E.Either<unknown, infer S> ? S : never,
-        R = T extends E.Either<infer S, unknown> ? S : never
+        R = T extends E.Either<infer S, unknown> ? S : never,
     >(): OperatorFunction<T, E | R> =>
     source =>
         source.pipe(map(E.getOrElse<E, E | R>(identity)))

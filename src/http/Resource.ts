@@ -6,7 +6,8 @@ import * as Eq from 'fp-ts/Eq'
 import type { Functor2 } from 'fp-ts/Functor'
 import type { Monad2 } from 'fp-ts/Monad'
 import type { Show } from 'fp-ts/Show'
-import { constFalse, flow, pipe, Predicate, Refinement } from 'fp-ts/function'
+import type { Predicate, Refinement } from 'fp-ts/function'
+import { constFalse, flow, pipe } from 'fp-ts/function'
 import type { AjaxError, AjaxResponse } from 'rxjs/ajax'
 import type { StatusCode } from './statusCode'
 
@@ -339,9 +340,10 @@ export function orElseW<E, M, A, B>(onFail: (e: E) => Resource<M, B>): (ma: Reso
 export const orElse: <E, A, M>(onFail: (e: E) => Resource<M, A>) => (ma: Resource<E, A>) => Resource<M, A> = orElseW
 
 export const filterOrElseW: {
-    <A, B extends A, E2>(refinement: Refinement<A, B>, onFalse: (a: A) => E2): <E1>(
-        ma: Resource<E1, A>
-    ) => Resource<E1 | E2, B>
+    <A, B extends A, E2>(
+        refinement: Refinement<A, B>,
+        onFalse: (a: A) => E2
+    ): <E1>(ma: Resource<E1, A>) => Resource<E1 | E2, B>
     <A, E2>(predicate: Predicate<A>, onFalse: (a: A) => E2): <E1>(ma: Resource<E1, A>) => Resource<E1 | E2, A>
 } = <A, E2>(predicate: Predicate<A>, onFalse: (a: A) => E2): (<E1>(ma: Resource<E1, A>) => Resource<E1 | E2, A>) =>
     chainW(a => (predicate(a) ? done(a) : fail(onFalse(a))))

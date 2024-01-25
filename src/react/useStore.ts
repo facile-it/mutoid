@@ -1,5 +1,6 @@
 import type { Lazy } from 'fp-ts/function'
-import { MutableRefObject, useRef } from 'react'
+import type { MutableRefObject } from 'react'
+import { useRef } from 'react'
 import type * as MS from '../state'
 import type { StoreName } from '../state/stores'
 

@@ -10,7 +10,7 @@ export function useFetchReaderObservableResource<
     R = F extends (...p: any) => ROR.ReaderObservableResource<infer T, any, any> ? T : never,
     E = F extends (...p: any) => ROR.ReaderObservableResource<any, infer T, any> ? T : never,
     A = F extends (...p: any) => ROR.ReaderObservableResource<any, any, infer T> ? T : never,
-    P extends Array<unknown> = Parameters<F>
+    P extends Array<unknown> = Parameters<F>,
 >(
     fetch: F,
     deps: R,

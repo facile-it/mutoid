@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { pipe } from 'fp-ts/function'
-import * as t from 'io-ts'
-import { Observable } from 'rxjs'
-import { AjaxResponse } from 'rxjs/ajax'
+import type * as t from 'io-ts'
+import type { Observable } from 'rxjs'
+import type { AjaxResponse } from 'rxjs/ajax'
 import { map } from 'rxjs/operators'
 import * as OR from '../../src/http/ObservableResource'
-import * as MRE from '../../src/http/Resource'
+import type * as MRE from '../../src/http/Resource'
 
 declare const ajaxFetchUnknownFail: Observable<AjaxResponse<unknown>>
 declare const decoderDataString: t.Decode<unknown, { data: string }>
