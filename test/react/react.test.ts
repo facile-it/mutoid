@@ -1,4 +1,4 @@
-import { renderHook, act } from '@testing-library/react-hooks'
+import { renderHook, act } from '@testing-library/react'
 import { identity } from 'fp-ts/function'
 import * as t from 'io-ts'
 import { firstValueFrom, of } from 'rxjs'

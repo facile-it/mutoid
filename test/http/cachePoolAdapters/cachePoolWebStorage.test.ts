@@ -49,7 +49,7 @@ describe('cachePoolWebStorage', () => {
     test('findItem', () => {
         const storage = new MockWebStorage()
 
-        jest.useFakeTimers('modern').setSystemTime(systemTime)
+        jest.useFakeTimers().setSystemTime(systemTime)
 
         storage.setItem(
             'findItem_good',
@@ -97,7 +97,7 @@ describe('cachePoolWebStorage', () => {
             namespace: 'addItem',
         })
 
-        jest.useFakeTimers('modern').setSystemTime(systemTime)
+        jest.useFakeTimers().setSystemTime(systemTime)
 
         pool.addItem(
             'hei',
