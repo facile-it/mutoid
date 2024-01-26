@@ -28,11 +28,11 @@ describe('state', () => {
 
         const task = MS.toTask(store)
 
-        store.state$.next({ name: 'hey' })
+        store.setState({ name: 'hey' })
         const stateUpdatedHey = await task()
         expect(stateUpdatedHey.name).toBe('hey')
 
-        store.state$.next({ name: 'ho' })
+        store.setState({ name: 'ho' })
         const stateUpdatedResultHo = await task()
         expect(stateUpdatedResultHo.name).toBe('ho')
     })

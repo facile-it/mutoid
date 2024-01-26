@@ -1,8 +1,5 @@
 {
     "extends": "@facile-it/tsconfig/tsconfig-react.json",
-    "compilerOptions": {
-        "target": "es5",
-        "module": "commonjs",
-    },
-    "include": ["./example", "./src", "./test", "./scripts"],
+    "include": ["./example", "./src", "./test"],
+    "exclude": ["node_modules"],
 }

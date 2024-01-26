@@ -1,6 +1,6 @@
 import type * as T from 'fp-ts/Task'
-import type { Observable, Subscription } from 'rxjs'
-import { BehaviorSubject, firstValueFrom } from 'rxjs'
+import type { Subscriber, Subscription } from 'rxjs'
+import { BehaviorSubject, firstValueFrom, Observable } from 'rxjs'
 import { switchMap, take, takeUntil, takeWhile, tap } from 'rxjs/operators'
 import type { AllMutationName, MutationName, StoreName } from './stores'
 
@@ -23,7 +23,10 @@ type NotifySubject<N extends StoreName, S> = Readonly<
 
 type StoreOpaque<N extends StoreName, S> = Readonly<{
     name: N
-    state$: BehaviorSubject<S>
+    subscribe: (listener: () => void) => () => void
+    getState: () => S
+    setState: (s: S) => void
+    state$: Observable<S>
     notifier$: BehaviorSubject<NotifySubject<N, S>>
     initState: S
 }>
@@ -43,9 +46,39 @@ export interface Mutation<NM, P extends Array<unknown>, S, SS extends S> extends
 // constructor
 
 export const ctor = <N extends StoreName, S>(c: { name: N; initState: S }): Store<N, S> => {
+    const subscribers = new Set<Subscriber<S>>()
+    let currentState = c.initState
+
+    const getState = () => currentState
+
+    const setState = (s: S) => {
+        currentState = s
+        for (const subscriber of subscribers) {
+            subscriber.next(s)
+        }
+    }
+
+    const state$ = new Observable<S>(subscriber => {
+        subscriber.next(currentState)
+        subscribers.add(subscriber)
+        return () => subscribers.delete(subscriber)
+    })
+
+    const subscribe = (listener: () => void) => {
+        const sub = state$.subscribe(() => {
+            listener()
+        })
+        return () => {
+            sub.unsubscribe()
+        }
+    }
+
     return {
         name: c.name,
-        state$: new BehaviorSubject<S>(c.initState),
+        subscribe,
+        getState,
+        setState,
+        state$,
         notifier$: new BehaviorSubject<NotifySubject<N, S>>({ type: 'initStore', name: c.name }),
         initState: c.initState,
     }
@@ -178,7 +211,7 @@ export function mutationRunner<
 
         // can't use eta reduction
         return sequence.subscribe({
-            next: s => store.state$.next(s),
+            next: s => store.setState(s),
             complete: () =>
                 toTask(store)().then(s => store.notifier$.next({ ...baseNotify(s, new Date()), type: 'mutationEnd' })),
         })

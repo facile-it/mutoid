@@ -228,7 +228,7 @@ describe('react', () => {
         expect(result.current.name).toBe('test')
 
         act(() => {
-            result.current.state$.next({ name: 'boom' })
+            result.current.setState({ name: 'boom' })
         })
 
         const s = await firstValueFrom(result.current.state$.pipe(take(1)))

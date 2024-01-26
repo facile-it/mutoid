@@ -3,5 +3,8 @@
     "extends": "facile/react",
     "parserOptions": {
         "project": "./tsconfig.eslint.json"
+    },
+    "env": {
+        "node": true
     }
 }
