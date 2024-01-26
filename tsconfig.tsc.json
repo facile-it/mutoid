@@ -1,0 +1,5 @@
+{
+    "extends": "@facile-it/tsconfig/tsconfig-react.json",
+    "include": ["./example", "./src", "./test"],
+    "exclude": ["node_modules"]
+}
