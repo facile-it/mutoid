@@ -4,5 +4,5 @@
         "target": "es5",
         "module": "commonjs",
     },
-    "include": ["**/*.ts", "**/*.tsx"],
+    "include": ["**/*.ts"],
 }

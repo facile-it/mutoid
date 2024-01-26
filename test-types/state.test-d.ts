@@ -1,9 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { Lazy } from 'fp-ts/function'
-import type { Observable } from 'rxjs'
-import * as MS from '../../src/state'
+import type { Observable, Subscription } from 'rxjs'
+import { expectType, expectError } from 'tsd'
+import * as MS from '../src/state'
 
-declare module '../../src/state/stores' {
+declare module '../src/state/stores' {
     interface Stores {
         store: 'mutation' | 'mutationWithOneParam' | 'mutationWithTwoParam'
         store_2: 'mutationString'
@@ -24,14 +23,14 @@ declare const mutationWithTwoParam: {
     effect: (id: number, name: string) => (s: string) => Observable<string>
 }
 
-// $ExpectType () => Subscription
 const d = MS.mutationRunner(storeString, () => mutation)
+expectType<() => Subscription>(d)
 
-// $ExpectType (id: number) => Subscription
 const d1 = MS.mutationRunner(storeString, () => mutationWithOneParam)
+expectType<(id: number) => Subscription>(d1)
 
-// $ExpectType (id: number, name: string) => Subscription
 const d2 = MS.mutationRunner(storeString, () => mutationWithTwoParam)
+expectType<(id: number, name: string) => Subscription>(d2)
 
 declare const storeNumber: MS.Store<'store_2', number>
 declare const mutationString: {
@@ -39,5 +38,4 @@ declare const mutationString: {
     effect: () => (s: number) => Observable<string>
 }
 
-// $ExpectError
-const e = MS.mutationRunner(storeNumber, () => mutationString)
+expectError(MS.mutationRunner(storeNumber, () => mutationString))
