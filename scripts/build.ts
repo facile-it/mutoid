@@ -65,7 +65,9 @@ const fixReact: Build<void> = D => {
 
     return pipe(
         D.readFile(fPath),
-        TE.map(data => data.replace(/export declare/g, `import { StoreName } from '../state/stores'\nexport declare`)),
+        TE.map(data =>
+            data.replace(/export declare/g, `import type { StoreName } from '../state/stores';\nexport declare`)
+        ),
         TE.map(data => data.replace(/extends "_S"/g, 'extends StoreName')),
         TE.chain(data => D.writeFile(fPath, data))
     )

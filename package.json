@@ -9,7 +9,7 @@
         "clean": "rm -rf dist",
         "prebuild": "npm run clean",
         "build": "tsc -p ./tsconfig.build.json && ts-node scripts/build",
-        "postbuild": "prettier --loglevel=silent --write \"./dist/**/*.ts\"",
+        "postbuild": "prettier \"dist/**/*.ts\" --write",
         "prepublishOnly": "ts-node scripts/pre-publish",
         "prerelease": "npm run build",
         "release": "ts-node scripts/release",
