@@ -1,10 +1,8 @@
-import type { MonadObservable2 } from 'fp-ts-reactive/MonadObservable'
-import * as R from 'fp-ts-reactive/Observable'
-import type { ObservableEither } from 'fp-ts-reactive/lib/ObservableEither'
 import type { Applicative2 } from 'fp-ts/Applicative'
 import type { Apply2 } from 'fp-ts/Apply'
 import type { Bifunctor2 } from 'fp-ts/Bifunctor'
-import { Chain2, chainFirst as chainFirst_ } from 'fp-ts/Chain'
+import type { Chain2 } from 'fp-ts/Chain'
+import { chainFirst as chainFirst_ } from 'fp-ts/Chain'
 import * as E from 'fp-ts/Either'
 import type { Functor2 } from 'fp-ts/Functor'
 import type { IO } from 'fp-ts/IO'
@@ -13,9 +11,13 @@ import type { MonadIO2 } from 'fp-ts/MonadIO'
 import type { MonadTask2 } from 'fp-ts/MonadTask'
 import type * as T from 'fp-ts/Task'
 import type * as TE from 'fp-ts/TaskEither'
-import { flow, identity, Predicate, Refinement } from 'fp-ts/function'
-import { pipe } from 'fp-ts/function'
-import { Observable, concat } from 'rxjs'
+import type { Predicate, Refinement } from 'fp-ts/function'
+import { flow, identity, pipe } from 'fp-ts/function'
+import type { MonadObservable2 } from 'fp-ts-reactive/MonadObservable'
+import * as R from 'fp-ts-reactive/Observable'
+import type { ObservableEither } from 'fp-ts-reactive/lib/ObservableEither'
+import type { Observable } from 'rxjs'
+import { concat } from 'rxjs'
 import type { AjaxError, AjaxResponse } from 'rxjs/ajax'
 import * as RXoP from 'rxjs/operators'
 import * as RES from './Resource'
@@ -122,7 +124,7 @@ export const fetchToMutationEffect =
         SS extends S,
         S,
         I extends Array<any> = Parameters<AX>,
-        R = AX extends (...args: any) => Observable<infer RR> ? RR : never
+        R = AX extends (...args: any) => Observable<infer RR> ? RR : never,
     >(
         mapTo: (s: SS) => (i: R) => S
     ) =>
@@ -291,12 +293,14 @@ export const orElse: <E, A, M>(
 ) => (ma: ObservableResource<E, A>) => ObservableResource<M, A> = orElseW
 
 export const filterOrElseW: {
-    <A, B extends A, E2>(refinement: Refinement<A, B>, onFalse: (a: A) => E2): <E1>(
-        ma: ObservableResource<E1, A>
-    ) => ObservableResource<E1 | E2, B>
-    <A, E2>(predicate: Predicate<A>, onFalse: (a: A) => E2): <E1>(
-        ma: ObservableResource<E1, A>
-    ) => ObservableResource<E1 | E2, A>
+    <A, B extends A, E2>(
+        refinement: Refinement<A, B>,
+        onFalse: (a: A) => E2
+    ): <E1>(ma: ObservableResource<E1, A>) => ObservableResource<E1 | E2, B>
+    <A, E2>(
+        predicate: Predicate<A>,
+        onFalse: (a: A) => E2
+    ): <E1>(ma: ObservableResource<E1, A>) => ObservableResource<E1 | E2, A>
 } = <A, E2>(
     predicate: Predicate<A>,
     onFalse: (a: A) => E2
@@ -304,9 +308,10 @@ export const filterOrElseW: {
     chainW(a => (predicate(a) ? done(a) : fail(onFalse(a))))
 
 export const filterOrElse: {
-    <E, A, B extends A>(refinement: Refinement<A, B>, onFalse: (a: A) => E): (
-        ma: ObservableResource<E, A>
-    ) => ObservableResource<E, B>
+    <E, A, B extends A>(
+        refinement: Refinement<A, B>,
+        onFalse: (a: A) => E
+    ): (ma: ObservableResource<E, A>) => ObservableResource<E, B>
     <E, A>(predicate: Predicate<A>, onFalse: (a: A) => E): (ma: ObservableResource<E, A>) => ObservableResource<E, A>
 } = filterOrElseW
 

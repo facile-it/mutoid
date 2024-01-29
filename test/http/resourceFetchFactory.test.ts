@@ -295,7 +295,7 @@ describe('resourceFetchFactory fetchCacheableFactory', () => {
     })
 
     test('fetchCacheableFactory 200 in cache', async () => {
-        jest.useFakeTimers('modern').setSystemTime(systemTime)
+        jest.useFakeTimers().setSystemTime(systemTime)
 
         storage.setItem(
             'fetchCacheableFactory_session_key',
@@ -325,7 +325,7 @@ describe('resourceFetchFactory fetchCacheableFactory', () => {
     })
 
     test('fetchCacheableFactory 200 in cache decode fail', async () => {
-        jest.useFakeTimers('modern').setSystemTime(systemTime)
+        jest.useFakeTimers().setSystemTime(systemTime)
 
         storage.setItem(
             'fetchCacheableFactory_session_key',

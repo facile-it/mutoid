@@ -1,7 +1,6 @@
 import * as C from 'fp-ts/Console'
 import * as T from 'fp-ts/Task'
-import { identity } from 'fp-ts/function'
-import { pipe } from 'fp-ts/function'
+import { identity, pipe } from 'fp-ts/function'
 import * as React from 'react'
 import { Subject } from 'rxjs'
 import { ajax } from 'rxjs/ajax'
@@ -11,21 +10,21 @@ import type * as RESFF from '../src/http/resourceFetchFactory'
 import * as MR from '../src/react'
 import { useStore } from '../src/react/useStore'
 import * as MS from '../src/state'
+import type { QuoteResource } from './resources/quoteResource'
 import {
     fetchQuoteCached,
     fetchQuoteSeq,
     fetchQuoteSeqPar,
     fetchQuoteWithDelay,
     fetchSimple,
-    QuoteResource,
 } from './resources/quoteResource'
+import type { QuoteStore } from './stores/quoteStore'
 import {
     quoteStore,
     fetchQuoteMutation,
     fetchQuoteMutationWithDelay,
     fetchQuoteMutationWithParams,
     resetQuoteMutation,
-    QuoteStore,
 } from './stores/quoteStore'
 import { sessionStore, parseEnvMutation, SessionStoreContext, useSessionStore } from './stores/sessionStore'
 

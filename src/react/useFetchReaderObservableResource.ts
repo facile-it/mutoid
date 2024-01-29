@@ -10,7 +10,7 @@ export function useFetchReaderObservableResource<
     R = F extends (...p: any) => ROR.ReaderObservableResource<infer T, any, any> ? T : never,
     E = F extends (...p: any) => ROR.ReaderObservableResource<any, infer T, any> ? T : never,
     A = F extends (...p: any) => ROR.ReaderObservableResource<any, any, infer T> ? T : never,
-    P extends Array<unknown> = Parameters<F>
+    P extends Array<unknown> = Parameters<F>,
 >(
     fetch: F,
     deps: R,
@@ -19,37 +19,37 @@ export function useFetchReaderObservableResource<
         iniState?: RES.Resource<E, A>
     }
 ): [RES.Resource<E, A>, (...p: P) => void, () => void] {
-    const [value, setValue] = useState<RES.Resource<E, A>>(options?.iniState || RES.init)
+    const [value, setValue] = useState<RES.Resource<E, A>>(options?.iniState ?? RES.init)
     const [subscriptionRef, subscriptionUnsubscribe] = useSubscriptionRef()
 
     const fetchRef = useRef(fetch)
     const depsRef = useRef(deps)
-    const notifierTakeUntilRef = useRef(options?.notifierTakeUntil)
+    const optionsRef = useRef(options)
 
     useEffect(() => {
         fetchRef.current = fetch
         depsRef.current = deps
-        notifierTakeUntilRef.current = options?.notifierTakeUntil
+        optionsRef.current = options
     }, [fetch, deps, options])
 
-    return [
-        value,
-        useCallback(
-            (...p: P) => {
-                subscriptionUnsubscribe()
+    const dispatch = useCallback(
+        (...p: P) => {
+            subscriptionUnsubscribe()
 
-                const resource$ = fetchRef.current(...p)(depsRef.current)
+            const resource$ = fetchRef.current(...p)(depsRef.current)
 
-                const resourceTaken$ = notifierTakeUntilRef.current
-                    ? resource$.pipe(takeUntil(notifierTakeUntilRef.current))
-                    : resource$
+            const resourceTaken$ = optionsRef.current?.notifierTakeUntil
+                ? resource$.pipe(takeUntil(optionsRef.current.notifierTakeUntil))
+                : resource$
 
-                subscriptionRef.current = resourceTaken$.subscribe(setValue)
-            },
-            [subscriptionRef, subscriptionUnsubscribe]
-        ),
-        useCallback(() => {
-            setValue({ _tag: 'init' })
-        }, []),
-    ]
+            subscriptionRef.current = resourceTaken$.subscribe(setValue)
+        },
+        [subscriptionRef, subscriptionUnsubscribe]
+    )
+
+    const resetState = useCallback(() => {
+        setValue(optionsRef.current?.iniState ?? RES.init)
+    }, [])
+
+    return [value, dispatch, resetState]
 }

@@ -1,16 +1,18 @@
-import type { MonadObservable3 } from 'fp-ts-reactive/lib/MonadObservable'
-import type { ReaderObservableEither } from 'fp-ts-reactive/lib/ReaderObservableEither'
 import type { Applicative3 } from 'fp-ts/Applicative'
 import type { Apply3 } from 'fp-ts/Apply'
 import type { Bifunctor3 } from 'fp-ts/Bifunctor'
-import { Chain3, chainFirst as chainFirst_ } from 'fp-ts/Chain'
+import type { Chain3 } from 'fp-ts/Chain'
+import { chainFirst as chainFirst_ } from 'fp-ts/Chain'
 import type { Functor3 } from 'fp-ts/Functor'
 import type { Monad3 } from 'fp-ts/Monad'
 import type { MonadIO3 } from 'fp-ts/MonadIO'
 import type { MonadTask3 } from 'fp-ts/MonadTask'
 import * as R from 'fp-ts/Reader'
 import type * as RTE from 'fp-ts/ReaderTaskEither'
-import { flow, identity, pipe, Predicate, Refinement } from 'fp-ts/function'
+import type { Predicate, Refinement } from 'fp-ts/function'
+import { flow, identity, pipe } from 'fp-ts/function'
+import type { MonadObservable3 } from 'fp-ts-reactive/lib/MonadObservable'
+import type { ReaderObservableEither } from 'fp-ts-reactive/lib/ReaderObservableEither'
 import type { Observable } from 'rxjs'
 import * as RXoP from 'rxjs/operators'
 import * as OR from './ObservableResource'
@@ -106,7 +108,7 @@ export const fetchToMutationEffectR =
         R = RORK extends (...i: any) => ReaderObservableResource<infer I, any, any> ? I : never,
         E = RORK extends (...i: any) => ReaderObservableResource<any, infer I, any> ? I : never,
         A = RORK extends (...i: any) => ReaderObservableResource<any, any, infer I> ? I : never,
-        P extends Array<any> = Parameters<RORK>
+        P extends Array<any> = Parameters<RORK>,
     >(
         mapTo: (s: SS) => (i: RES.Resource<E, A>) => S
     ) =>
@@ -273,12 +275,14 @@ export const orElse: <R, E, A, M>(
 ) => (ma: ReaderObservableResource<R, E, A>) => ReaderObservableResource<R, M, A> = orElseW
 
 export const filterOrElseW: {
-    <A, B extends A, E2>(refinement: Refinement<A, B>, onFalse: (a: A) => E2): <R, E1>(
-        ma: ReaderObservableResource<R, E1, A>
-    ) => ReaderObservableResource<R, E1 | E2, B>
-    <A, E2>(predicate: Predicate<A>, onFalse: (a: A) => E2): <R, E1>(
-        ma: ReaderObservableResource<R, E1, A>
-    ) => ReaderObservableResource<R, E1 | E2, A>
+    <A, B extends A, E2>(
+        refinement: Refinement<A, B>,
+        onFalse: (a: A) => E2
+    ): <R, E1>(ma: ReaderObservableResource<R, E1, A>) => ReaderObservableResource<R, E1 | E2, B>
+    <A, E2>(
+        predicate: Predicate<A>,
+        onFalse: (a: A) => E2
+    ): <R, E1>(ma: ReaderObservableResource<R, E1, A>) => ReaderObservableResource<R, E1 | E2, A>
 } = <A, E2>(
     predicate: Predicate<A>,
     onFalse: (a: A) => E2
@@ -286,12 +290,14 @@ export const filterOrElseW: {
     chainW(a => (predicate(a) ? done(a) : fail(onFalse(a))))
 
 export const filterOrElse: {
-    <E, A, B extends A>(refinement: Refinement<A, B>, onFalse: (a: A) => E): <R>(
-        ma: ReaderObservableResource<R, E, A>
-    ) => ReaderObservableResource<R, E, B>
-    <E, A>(predicate: Predicate<A>, onFalse: (a: A) => E): <R>(
-        ma: ReaderObservableResource<R, E, A>
-    ) => ReaderObservableResource<R, E, A>
+    <E, A, B extends A>(
+        refinement: Refinement<A, B>,
+        onFalse: (a: A) => E
+    ): <R>(ma: ReaderObservableResource<R, E, A>) => ReaderObservableResource<R, E, B>
+    <E, A>(
+        predicate: Predicate<A>,
+        onFalse: (a: A) => E
+    ): <R>(ma: ReaderObservableResource<R, E, A>) => ReaderObservableResource<R, E, A>
 } = filterOrElseW
 
 // -------------------------------------------------------------------------------------
@@ -303,7 +309,7 @@ export const Do: ReaderObservableResource<unknown, never, Record<string, unknown
 export const bindTo = <K extends string, R, E, A>(
     name: K
 ): ((fa: ReaderObservableResource<R, E, A>) => ReaderObservableResource<R, E, { [P in K]: A }>) =>
-    map(a => ({ [name]: a } as { [P in K]: A }))
+    map(a => ({ [name]: a }) as { [P in K]: A })
 
 export const bind = <K extends string, R, E, A, B>(
     name: Exclude<K, keyof A>,
@@ -314,7 +320,7 @@ export const bind = <K extends string, R, E, A, B>(
     chain(a =>
         pipe(
             f(a),
-            map(b => ({ ...a, [name]: b } as any))
+            map(b => ({ ...a, [name]: b }) as any)
         )
     )
 

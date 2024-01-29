@@ -17,7 +17,7 @@ export function useResourceFetcher<
     MR extends { _tag: unknown } = MA extends (...c: any) => any ? ReturnType<MA> : never,
     E = F extends (...p: any) => OR.ObservableResource<infer T, any> ? T : never,
     A = F extends (...p: any) => OR.ObservableResource<any, infer T> ? T : never,
-    P extends Array<unknown> = Parameters<F>
+    P extends Array<unknown> = Parameters<F>,
 >(
     fetch: F,
     options?: {

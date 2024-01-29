@@ -1,4 +1,5 @@
-import { Lazy, pipe } from 'fp-ts/function'
+import type { Lazy } from 'fp-ts/function'
+import { pipe } from 'fp-ts/function'
 import { map, take } from 'rxjs/operators'
 import * as ROR from '../../src/http/ReaderObservableResource'
 import * as RES from '../../src/http/Resource'

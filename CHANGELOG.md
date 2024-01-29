@@ -1,10 +1,12 @@
 # Changelog
 
-## 0.6.0
+## 0.6.0-rc
 
--   Upgraded `rxjs` requirement `rxjs@7.8`
+-   Upgraded peerDependencies: `rxjs@^7.8`, `react@^17.0.2 || ^18.2.0`
 
--   Replace `fp-ts-rxjs` peerDependencies with `fp-ts-reactive`
+-   Replace `fp-ts-rxjs` peerDependency with `fp-ts-reactive`
+
+-   New peerDependency `use-sync-external-store`
 
 ## 0.5.0
 

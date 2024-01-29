@@ -1,5 +1,6 @@
 import * as t from 'io-ts'
-import { StatusCode, StatusCodeMap, statusPredicate } from '../statusCode'
+import type { StatusCode } from '../statusCode'
+import { StatusCodeMap, statusPredicate } from '../statusCode'
 
 const allStatusPredicate = statusPredicate(StatusCodeMap)
 const allStatusPredicateWithZero = (u: unknown): u is StatusCode | 0 => allStatusPredicate(u) || u === 0

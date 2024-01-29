@@ -1,20 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
-import { distinctUntilChanged } from 'rxjs/operators'
+import { useSyncExternalStoreWithSelector } from 'use-sync-external-store/shim/with-selector'
 import type * as MS from '../state'
 import type { StoreName } from '../state/stores'
 
 export const useSelector = <N extends StoreName, S, T>(store: MS.Store<N, S>, map: (s: S) => T): T => {
-    const [value, setValue] = useState<T>(() => map(store.initState))
+    const formState = useSyncExternalStoreWithSelector(store.subscribe, store.getState, store.getState, map)
 
-    const state$ = store.state$
-
-    useEffect(() => {
-        const subscription = state$.pipe(distinctUntilChanged()).subscribe(s => setValue(map(s)))
-
-        return () => {
-            subscription.unsubscribe()
-        }
-    }, [state$, map])
-
-    return useMemo(() => value, [value])
+    return formState
 }

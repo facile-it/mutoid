@@ -4,7 +4,8 @@ import * as O from 'fp-ts/Option'
 import type * as R from 'fp-ts/Reader'
 import * as T from 'fp-ts/Task'
 import type * as TO from 'fp-ts/TaskOption'
-import { Lazy, pipe } from 'fp-ts/function'
+import type { Lazy } from 'fp-ts/function'
+import { pipe } from 'fp-ts/function'
 import * as t from 'io-ts'
 import { PathReporter } from 'io-ts/PathReporter'
 import type { ajax, AjaxConfig } from 'rxjs/ajax'
@@ -265,7 +266,7 @@ const filterOnFalse =
         K extends StatusCode,
         DS extends {
             [k in K]?: (i: unknown) => E.Either<t.Errors, any>
-        }
+        },
     >(
         request: EndpointRequest
     ) =>
@@ -309,7 +310,7 @@ const OR_filterResponse = <
     DS extends {
         [k in K]?: (i: unknown) => E.Either<t.Errors, any>
     },
-    SC extends keyof DS
+    SC extends keyof DS,
 >(
     successCodes: Array<SC>,
     request: EndpointRequest

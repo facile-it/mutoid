@@ -11,7 +11,7 @@ export function useMutation<
     S,
     SS extends S,
     D extends Record<K, unknown>,
-    K extends never
+    K extends never,
 >(
     s: MS.Store<N, S>,
     mutationL: (deps: D) => MS.Mutation<NM, P, S, SS>,
@@ -29,7 +29,7 @@ export function useMutation<
     S,
     SS extends S,
     D extends Record<K, unknown>,
-    K extends never
+    K extends never,
 >(
     s: MS.Store<N, S>,
     mutationL: (deps?: D) => MS.Mutation<NM, P, S, SS>,

@@ -9,7 +9,7 @@ export function useFetchObservableResource<
     F extends (...p: any) => OR.ObservableResource<E, A>,
     E = F extends (...p: any) => OR.ObservableResource<infer T, any> ? T : never,
     A = F extends (...p: any) => OR.ObservableResource<any, infer T> ? T : never,
-    P extends Array<unknown> = Parameters<F>
+    P extends Array<unknown> = Parameters<F>,
 >(
     fetch: F,
     options?: {

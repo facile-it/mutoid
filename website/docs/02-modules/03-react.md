@@ -28,7 +28,6 @@ Deprecated. Use instead `useFetchReaderObservableResource`. You can also use `us
 ## useFetchReaderObservableResource
 
 ```jsx
-import * as React from 'react'
 import { ajax } from 'rxjs/ajax'
 import * as RES from 'mutoid/http/Resource'
 import * as ROR from 'mutoid/http/ReaderObservableResource'
@@ -47,7 +46,7 @@ export const userFetcher = (id: number) => (deps: { ajax: typeof ajax }) =>
     OR.fromAjax(deps.ajax(`https://api.io/user/${id}`), userDecoders)
 
 const App: React.FC<{ id: number }> = ({ id }) => {
-    const [userResource, dispatch] = useFetchReaderObservableResource(userFetcher, { ajax })
+    const [userResource, dispatch, resetState] = useFetchReaderObservableResource(userFetcher, { ajax })
 
     React.useEffect(() => {
         dispatch(id)
@@ -69,10 +68,15 @@ const App: React.FC<{ id: number }> = ({ id }) => {
             <button onClick={() => dispatch(id)} type="button">
                 Refetch
             </button>
+            <button onClick={resetState} type="button">
+                Reset
+            </button>
         </>
     )
 }
 ```
+
+All _unsubscriptions_ are automatically managed by the Hook and you don't need to care about it in your useEffect.
 
 ## useFetchObservableResource
 

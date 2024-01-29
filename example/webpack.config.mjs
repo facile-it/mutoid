@@ -1,9 +1,9 @@
 import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin'
 import HtmlWebpackPlugin from 'html-webpack-plugin'
-import * as webpack from 'webpack'
-import * as path from 'path'
+import webpack from 'webpack'
+import path from 'path'
 
-const config = (_: unknown, argv: { mode: string }): webpack.Configuration & { devServer: unknown } => ({
+const config = (_, argv) => ({
     entry: './example/index.tsx',
     devtool: argv.mode === 'production' ? 'source-map' : 'inline-source-map',
     resolve: {
@@ -14,7 +14,7 @@ const config = (_: unknown, argv: { mode: string }): webpack.Configuration & { d
         port: 9000,
     },
     output: {
-        path: path.join(__dirname, '/dist'),
+        path: path.join(new URL('.', import.meta.url).pathname, 'dist'),
         filename: 'bundle.js',
     },
     module: {

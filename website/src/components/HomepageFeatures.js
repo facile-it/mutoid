@@ -14,7 +14,7 @@ const FeatureList = [
     },
     {
         title: 'Reactive',
-        img: 'https://raw.githubusercontent.com/ReactiveX/rxjs/master/docs_app/assets/Rx_Logo_S.png',
+        img: 'https://raw.githubusercontent.com/ReactiveX/rxjs/master/resources/CI-CD/logo/svg/RxJs_Logo_Basic.svg',
         description: (
             <>
                 Reactive programming, <b>RxJs</b> particularly: asynchronous code is gonna be easier

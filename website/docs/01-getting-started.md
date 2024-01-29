@@ -15,11 +15,12 @@ npm install mutoid
 
 -   [`rxjs`](https://github.com/ReactiveX/rxjs)
 -   [`fp-ts`](https://github.com/gcanti/fp-ts)
--   [`fp-ts-rxjs`](https://github.com/gcanti/fp-ts-rxjs)
+-   [`fp-ts-reactive`](https://github.com/siuvdlec/fp-ts-reactive)
 
 #### Optional peer dependencies
 
 -   [`react`](https://github.com/facebook/react) _required if you use react module_
+-   [`use-sync-external-store`](https://www.npmjs.com/package/use-sync-external-store) _required if you use react module_
 -   [`io-ts`](https://github.com/gcanti/io-ts) _required if you use http cache module_
 
 <br/>

@@ -1,4 +1,4 @@
-import { renderHook, act } from '@testing-library/react-hooks'
+import { renderHook, act } from '@testing-library/react'
 import { identity } from 'fp-ts/function'
 import * as t from 'io-ts'
 import { firstValueFrom, of } from 'rxjs'
@@ -228,7 +228,7 @@ describe('react', () => {
         expect(result.current.name).toBe('test')
 
         act(() => {
-            result.current.state$.next({ name: 'boom' })
+            result.current.setState({ name: 'boom' })
         })
 
         const s = await firstValueFrom(result.current.state$.pipe(take(1)))

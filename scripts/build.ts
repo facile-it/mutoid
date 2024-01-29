@@ -5,7 +5,8 @@ import * as A from 'fp-ts/ReadonlyArray'
 import * as TE from 'fp-ts/TaskEither'
 import { flow, pipe } from 'fp-ts/function'
 import * as path from 'path'
-import { FileSystem, fileSystem } from './FileSystem'
+import type { FileSystem } from './FileSystem'
+import { fileSystem } from './FileSystem'
 import { run } from './run'
 
 type Build<A> = RTE.ReaderTaskEither<FileSystem, Error, A>
@@ -64,7 +65,9 @@ const fixReact: Build<void> = D => {
 
     return pipe(
         D.readFile(fPath),
-        TE.map(data => data.replace(/export declare/g, `import { StoreName } from '../state/stores'\nexport declare`)),
+        TE.map(data =>
+            data.replace(/export declare/g, `import type { StoreName } from '../state/stores';\nexport declare`)
+        ),
         TE.map(data => data.replace(/extends "_S"/g, 'extends StoreName')),
         TE.chain(data => D.writeFile(fPath, data))
     )

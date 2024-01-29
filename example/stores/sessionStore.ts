@@ -2,7 +2,8 @@ import * as E from 'fp-ts/Either'
 import { pipe } from 'fp-ts/function'
 import * as t from 'io-ts'
 import * as React from 'react'
-import { Observable, of } from 'rxjs'
+import type { Observable } from 'rxjs'
+import { of } from 'rxjs'
 import * as MS from '../../src/state'
 
 declare module '../../src/state/stores' {
