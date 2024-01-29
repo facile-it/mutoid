@@ -20,6 +20,7 @@ npm install mutoid
 #### Optional peer dependencies
 
 -   [`react`](https://github.com/facebook/react) _required if you use react module_
+-   [`use-sync-external-store`](https://www.npmjs.com/package/use-sync-external-store) _required if you use react module_
 -   [`io-ts`](https://github.com/gcanti/io-ts) _required if you use http cache module_
 
 <br/>

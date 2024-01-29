@@ -88,6 +88,9 @@
         },
         "react": {
             "optional": true
+        },
+        "use-sync-external-store": {
+            "optional": true
         }
     },
     "tags": [
