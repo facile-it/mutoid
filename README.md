@@ -8,20 +8,8 @@ Reactive library for data fetching, caching, state management (also) for isomorp
 npm install mutoid
 ```
 
-If you want to use [`io-ts`](https://github.com/gcanti/io-ts) decoder in data fetching or cache
-
-```sh
-npm install io-ts
-```
-
-If you want also to use it with [`react`](https://github.com/facebook/react)
-
-```sh
-npm install react
-```
-
-**Note** [`rxjs`](https://github.com/ReactiveX/rxjs), [`fp-ts`](https://github.com/gcanti/fp-ts),[`fp-ts-rxjs`](https://github.com/gcanti/fp-ts-rxjs) are required peer dependencies.
-Instead [`react`](https://github.com/facebook/react) and [`io-ts`](https://github.com/gcanti/io-ts) are an optional peer dependencies.
+**Note** [`rxjs`](https://github.com/ReactiveX/rxjs), [`fp-ts`](https://github.com/gcanti/fp-ts),[`fp-ts-reactive`](https://github.com/siuvdlec/fp-ts-reactive) are required peer dependencies.
+Instead [`react`](https://github.com/facebook/react), [`use-sync-external-store`](https://www.npmjs.com/package/use-sync-external-store) and [`io-ts`](https://github.com/gcanti/io-ts) are an optional peer dependencies.
 
 ## Documentation
 
@@ -33,20 +21,14 @@ If you want to see a simple [app](https://github.com/facile-it/mutoid/tree/maste
 If you clone this repo, you can run the example with
 
 ```console
-npm install
+npm ci
 npm run dev-server
 ```
 
-## Test
-
-### Unit, lint and cs
+## Test, lint & tsc
 
 ```console
+npm run lint
+npm run tsc
 npm run test
-```
-
-### Type level
-
-```console
-npm run test-type
 ```
