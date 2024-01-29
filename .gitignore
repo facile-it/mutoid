@@ -3,4 +3,4 @@ dist
 .idea
 coverage
 yarn-error.log
-tsconfig.tsbuildinfo
+*.tsbuildinfo

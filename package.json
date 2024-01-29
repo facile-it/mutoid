@@ -2,7 +2,7 @@
     "scripts": {
         "dev-server": "USERNAME=\"${USER}\" webpack serve --config example/webpack.config.mjs --mode development --hot",
         "lint": "eslint . --ext .ts,.tsx",
-        "tsc": "tsc -p ./tsconfig.tsc.json",
+        "tsc": "tsc",
         "test": "npm run test-unit && npm run test-types",
         "test-unit": "jest",
         "test-types": "tsd --typings test-types/index.d.ts --files test-types/**/*",

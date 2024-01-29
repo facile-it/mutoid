@@ -1,7 +1,7 @@
 import type * as T from 'fp-ts/Task'
 import type { Subscriber, Subscription } from 'rxjs'
 import { BehaviorSubject, firstValueFrom, Observable } from 'rxjs'
-import { switchMap, take, takeUntil, takeWhile, tap } from 'rxjs/operators'
+import { take, takeUntil } from 'rxjs/operators'
 import type { AllMutationName, MutationName, StoreName } from './stores'
 
 // type
@@ -141,6 +141,14 @@ export interface DepsOptions<R extends Record<string, unknown>> {
     deps: R
 }
 
+const buildRun = <SS, S>(pm: (state: SS) => Observable<S>, s: SS, notifierTakeUntil?: Observable<unknown>) => {
+    if (notifierTakeUntil) {
+        return pm(s).pipe(takeUntil(notifierTakeUntil))
+    }
+
+    return pm(s)
+}
+
 export function mutationRunner<
     N extends StoreName,
     NM extends MutationName<N>,
@@ -175,45 +183,33 @@ export function mutationRunner<
     store: Store<N, S>,
     mutationR: (deps?: R) => Mutation<NM, P, S, SS>,
     options?: BaseOptions & Partial<DepsOptions<R>>
-): (...p: P) => Subscription {
+): (...p: P) => Subscription | null {
     return (...payload) => {
         const mutation = mutationR(options?.deps)
 
         const baseNotify = (state: S, date: Date) => ({
             name: store.name,
             mutationName: mutation.name,
-            state: state,
+            state,
             date: date.toISOString(),
             payload: payload,
         })
 
-        const sequence = store.state$.pipe(
-            take(1),
-            tap(s => store.notifier$.next({ ...baseNotify(s, new Date()), type: 'mutationLoad' })),
-            takeWhile((s): s is SS => {
-                if (mutation.filterPredicate) {
-                    return mutation.filterPredicate(s)
-                }
+        store.notifier$.next({ ...baseNotify(store.getState(), new Date()), type: 'mutationLoad' })
 
-                return true
-            }),
-            tap(s => store.notifier$.next({ ...baseNotify(s, new Date()), type: 'mutationStart' })),
-            switchMap(s => {
-                const pm = mutation.effect(...payload)
+        const s = store.getState()
 
-                if (options?.notifierTakeUntil) {
-                    return pm(s).pipe(takeUntil(options.notifierTakeUntil))
-                }
+        if (mutation.filterPredicate && mutation.filterPredicate(s) === false) {
+            return null
+        }
 
-                return pm(s)
-            })
-        )
+        store.notifier$.next({ ...baseNotify(store.getState(), new Date()), type: 'mutationStart' })
 
-        // can't use eta reduction
-        return sequence.subscribe({
-            next: s => store.setState(s),
-            complete: () =>
-                toTask(store)().then(s => store.notifier$.next({ ...baseNotify(s, new Date()), type: 'mutationEnd' })),
+        const pm = mutation.effect(...payload)
+
+        return buildRun(pm, s as SS, options?.notifierTakeUntil).subscribe({
+            next: ns => store.setState(ns),
+            complete: () => store.notifier$.next({ ...baseNotify(store.getState(), new Date()), type: 'mutationEnd' }),
         })
     }
 }
