@@ -15,7 +15,7 @@ npm install mutoid
 
 -   [`rxjs`](https://github.com/ReactiveX/rxjs)
 -   [`fp-ts`](https://github.com/gcanti/fp-ts)
--   [`fp-ts-rxjs`](https://github.com/gcanti/fp-ts-rxjs)
+-   [`fp-ts-reactive`](https://github.com/siuvdlec/fp-ts-reactive)
 
 #### Optional peer dependencies
 

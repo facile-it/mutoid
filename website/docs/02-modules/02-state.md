@@ -32,13 +32,7 @@ import { pipe } from 'fp-ts/pipeable'
 import * as T from 'fp-ts/Task'
 import * as C from 'fp-ts/Console'
 
-const program = pipe(
-    MS.toTask(appStore),
-    T.map(s => `Hello ${s.userName}`),
-    T.chainIOK(C.log)
-)
-
-program()
+const currentState = appStore.getState()
 ```
 
 _If you use a lazy store, make sure to use the correct instance_
@@ -51,7 +45,13 @@ _If you use a lazy store, make sure to use the correct instance_
 declare const store: Store<S>
 declare const id: number
 
-const identityMutation = () => MS.ctorMutation('mutation', (id: number) => (currentState: S): Observable<S> => of(s))
+const identityMutation = () =>
+    MS.ctorMutation(
+        'mutation',
+        (id: number) =>
+            (currentState: S): Observable<S> =>
+                of(s)
+    )
 
 const mutation = MS.mutationRunner(store, identityMutation)
 
@@ -69,7 +69,12 @@ declare const deps: {
 }
 
 const identityMutation = (deps: typeof deps) =>
-    MS.ctorMutation('mutation', (id: number) => (currentState: S): Observable<S> => of(s))
+    MS.ctorMutation(
+        'mutation',
+        (id: number) =>
+            (currentState: S): Observable<S> =>
+                of(s)
+    )
 
 const mutation = MS.mutationRunner(store, identityMutation, { deps: { someService } })
 
@@ -89,7 +94,9 @@ const identityPartialMutation = () =>
     MS.ctorPartialMutation(
         'partialMutation',
         (currentState: S): currentState is SS => currentState.type === 'ss',
-        (id: number) => (currentState: SS): Observable<S> => of(s)
+        (id: number) =>
+            (currentState: SS): Observable<S> =>
+                of(s)
     )
 
 const mutation = MS.mutationRunner(store, identityPartialMutation)
