@@ -44,7 +44,7 @@ const useResourceCacheDeps = () => ({
     }),
 })
 
-const renderQuoteResource = (quote: QuoteResource): React.ReactChild => {
+const renderQuoteResource = (quote: QuoteResource) => {
     return pipe(
         quote,
         RES.map(r => r.payload),
@@ -52,7 +52,7 @@ const renderQuoteResource = (quote: QuoteResource): React.ReactChild => {
     )
 }
 
-const renderQuotes = (quote: RES.Resource<RESFF.ResourceBad, Array<string>>): React.ReactChild => {
+const renderQuotes = (quote: RES.Resource<RESFF.ResourceBad, Array<string>>) => {
     return pipe(
         quote,
         RES.matchD({
