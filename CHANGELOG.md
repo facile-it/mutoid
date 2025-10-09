@@ -1,8 +1,8 @@
 # Changelog
 
-## 0.6.0-rc
+## 0.6.0
 
--   Upgraded peerDependencies: `rxjs@^7.8`, `react@^17.0.2 || ^18.2.0`
+-   Upgraded peerDependencies: `rxjs@^7.8`, `react@^17.0.2 || ^18.2.0 || ^19.1.0`
 
 -   Replace `fp-ts-rxjs` peerDependency with `fp-ts-reactive`
 
